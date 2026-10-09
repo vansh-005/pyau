@@ -1,0 +1,580 @@
+{
+ "fixtureId": "east-delhi-sample-v1",
+ "label": "Sample scenario: one summer afternoon in an East Delhi zone",
+ "provenance": "Synthetic. Coordinates sit in a real East Delhi area so the map looks real; every host, request and temperature value is invented for the demo. No real person or business is represented.",
+ "scenarioDate": "2026-05-21",
+ "timezone": "Asia/Kolkata",
+ "zone": {
+  "id": "zone-east-delhi-sample",
+  "name": "East Delhi sample zone",
+  "center": {
+   "lat": 28.6305,
+   "lng": 77.2775
+  }
+ },
+ "policy": {
+  "id": "demo-coverage-v1",
+  "validationStatus": "unvalidated_demo_policy",
+  "heatMetric": "apparent_temperature_c",
+  "heatThresholdC": 42,
+  "coverageRadiusMeters": 500,
+  "need": "water",
+  "maxCandidatesPerCluster": 3,
+  "maxAsksPerHostPerDay": 1,
+  "askTimeoutSecondsLive": 1200,
+  "askTimeoutSecondsDemo": 45,
+  "pauseAfterProblemReports": 2,
+  "pauseWindowHours": 3
+ },
+ "heatProfile": {
+  "source": "synthetic",
+  "note": "Hourly apparent temperature; each value covers [hour, hour+1). Illustrative, not observed.",
+  "hourly": {
+   "06:00": 34,
+   "07:00": 35,
+   "08:00": 37,
+   "09:00": 38,
+   "10:00": 39,
+   "11:00": 40,
+   "12:00": 41,
+   "13:00": 43,
+   "14:00": 45,
+   "15:00": 44,
+   "16:00": 41,
+   "17:00": 39,
+   "18:00": 37,
+   "19:00": 35
+  }
+ },
+ "hosts": [
+  {
+   "id": "H1",
+   "label": "Sample host · Chai stall",
+   "kind": "listed",
+   "lat": 28.6334,
+   "lng": 77.2768,
+   "offers": [
+    "water",
+    "shade"
+   ],
+   "hours": [
+    "09:00",
+    "20:00"
+   ],
+   "confirmedForScenarioDate": true,
+   "paused": false,
+   "consentToAsks": true
+  },
+  {
+   "id": "H2",
+   "label": "Sample host · Pharmacy",
+   "kind": "listed",
+   "lat": 28.6262,
+   "lng": 77.2725,
+   "offers": [
+    "water",
+    "shade",
+    "toilet"
+   ],
+   "hours": [
+    "10:00",
+    "21:00"
+   ],
+   "confirmedForScenarioDate": true,
+   "paused": false,
+   "consentToAsks": true
+  },
+  {
+   "id": "H3",
+   "label": "Sample host · Temple pyau",
+   "kind": "listed",
+   "lat": 28.6283,
+   "lng": 77.2826,
+   "offers": [
+    "water"
+   ],
+   "hours": [
+    "06:00",
+    "12:00"
+   ],
+   "confirmedForScenarioDate": true,
+   "paused": false,
+   "consentToAsks": false
+  },
+  {
+   "id": "H4",
+   "label": "Sample host · Kirana store",
+   "kind": "listed",
+   "lat": 28.6276,
+   "lng": 77.2836,
+   "offers": [
+    "water"
+   ],
+   "hours": [
+    "10:00",
+    "22:00"
+   ],
+   "confirmedForScenarioDate": false,
+   "paused": false,
+   "consentToAsks": true
+  },
+  {
+   "id": "H5",
+   "label": "Sample host · RWA office (standby)",
+   "kind": "standby",
+   "lat": 28.6292,
+   "lng": 77.2842,
+   "offers": [
+    "water",
+    "shade",
+    "charging"
+   ],
+   "hours": [
+    "11:00",
+    "19:00"
+   ],
+   "confirmedForScenarioDate": false,
+   "paused": false,
+   "consentToAsks": true
+  },
+  {
+   "id": "H6",
+   "label": "Sample host · Dhaba",
+   "kind": "listed",
+   "lat": 28.6326,
+   "lng": 77.2779,
+   "offers": [
+    "water",
+    "food"
+   ],
+   "hours": [
+    "08:00",
+    "23:00"
+   ],
+   "confirmedForScenarioDate": true,
+   "paused": true,
+   "pausedReason": "2 rider problem reports within 3 hours",
+   "consentToAsks": true
+  }
+ ],
+ "requests": [
+  {
+   "id": "A01",
+   "clusterId": "A",
+   "lat": 28.632859,
+   "lng": 77.277049,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "A02",
+   "clusterId": "A",
+   "lat": 28.633427,
+   "lng": 77.276731,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "A03",
+   "clusterId": "A",
+   "lat": 28.632417,
+   "lng": 77.276967,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "A04",
+   "clusterId": "A",
+   "lat": 28.633242,
+   "lng": 77.277781,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "A05",
+   "clusterId": "A",
+   "lat": 28.633312,
+   "lng": 77.276931,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "A06",
+   "clusterId": "A",
+   "lat": 28.632984,
+   "lng": 77.276836,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "A07",
+   "clusterId": "A",
+   "lat": 28.633068,
+   "lng": 77.276517,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "A08",
+   "clusterId": "A",
+   "lat": 28.632433,
+   "lng": 77.277161,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "A09",
+   "clusterId": "A",
+   "lat": 28.63245,
+   "lng": 77.276938,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "A10",
+   "clusterId": "A",
+   "lat": 28.632117,
+   "lng": 77.27696,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "B01",
+   "clusterId": "B",
+   "lat": 28.627973,
+   "lng": 77.282536,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "B02",
+   "clusterId": "B",
+   "lat": 28.627665,
+   "lng": 77.282565,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "B03",
+   "clusterId": "B",
+   "lat": 28.627715,
+   "lng": 77.282522,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "B04",
+   "clusterId": "B",
+   "lat": 28.627576,
+   "lng": 77.283017,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "B05",
+   "clusterId": "B",
+   "lat": 28.627793,
+   "lng": 77.283401,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "B06",
+   "clusterId": "B",
+   "lat": 28.627176,
+   "lng": 77.283281,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "B07",
+   "clusterId": "B",
+   "lat": 28.628422,
+   "lng": 77.283594,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "B08",
+   "clusterId": "B",
+   "lat": 28.627159,
+   "lng": 77.283401,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "B09",
+   "clusterId": "B",
+   "lat": 28.627962,
+   "lng": 77.284055,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "B10",
+   "clusterId": "B",
+   "lat": 28.627754,
+   "lng": 77.283718,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "B11",
+   "clusterId": "B",
+   "lat": 28.627746,
+   "lng": 77.282811,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "B12",
+   "clusterId": "B",
+   "lat": 28.627593,
+   "lng": 77.282659,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "B13",
+   "clusterId": "B",
+   "lat": 28.627652,
+   "lng": 77.282498,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "B14",
+   "clusterId": "B",
+   "lat": 28.62868,
+   "lng": 77.283464,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "B15",
+   "clusterId": "B",
+   "lat": 28.62729,
+   "lng": 77.283305,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "B16",
+   "clusterId": "B",
+   "lat": 28.628028,
+   "lng": 77.283764,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "B17",
+   "clusterId": "B",
+   "lat": 28.628195,
+   "lng": 77.282637,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "B18",
+   "clusterId": "B",
+   "lat": 28.627696,
+   "lng": 77.28194,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "C01",
+   "clusterId": "C",
+   "lat": 28.62703,
+   "lng": 77.271826,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "C02",
+   "clusterId": "C",
+   "lat": 28.625691,
+   "lng": 77.272199,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "C03",
+   "clusterId": "C",
+   "lat": 28.626358,
+   "lng": 77.272728,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "C04",
+   "clusterId": "C",
+   "lat": 28.625982,
+   "lng": 77.27169,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "C05",
+   "clusterId": "C",
+   "lat": 28.625891,
+   "lng": 77.271648,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "C06",
+   "clusterId": "C",
+   "lat": 28.626628,
+   "lng": 77.271876,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "C07",
+   "clusterId": "C",
+   "lat": 28.625829,
+   "lng": 77.271852,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "C08",
+   "clusterId": "C",
+   "lat": 28.62603,
+   "lng": 77.271101,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "C09",
+   "clusterId": "C",
+   "lat": 28.627203,
+   "lng": 77.271908,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "C10",
+   "clusterId": "C",
+   "lat": 28.625965,
+   "lng": 77.271902,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "C11",
+   "clusterId": "C",
+   "lat": 28.626921,
+   "lng": 77.272222,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "C12",
+   "clusterId": "C",
+   "lat": 28.62663,
+   "lng": 77.272048,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "D01",
+   "clusterId": "D",
+   "lat": 28.638443,
+   "lng": 77.290151,
+   "hour": "13:00",
+   "need": "water"
+  },
+  {
+   "id": "D02",
+   "clusterId": "D",
+   "lat": 28.637829,
+   "lng": 77.290178,
+   "hour": "14:00",
+   "need": "water"
+  },
+  {
+   "id": "D03",
+   "clusterId": "D",
+   "lat": 28.637901,
+   "lng": 77.290709,
+   "hour": "15:00",
+   "need": "water"
+  },
+  {
+   "id": "D04",
+   "clusterId": "D",
+   "lat": 28.63848,
+   "lng": 77.289841,
+   "hour": "13:00",
+   "need": "water"
+  }
+ ],
+ "demoScript": {
+  "plannerRun": "Coverage agent finds cluster B uncovered and cluster D with no candidates.",
+  "outreach": [
+   {
+    "clusterId": "B",
+    "askOrder": [
+     "H4",
+     "H5"
+    ],
+    "responses": {
+     "H4": "no_response_timeout",
+     "H5": "accepted"
+    },
+    "acceptedWindow": [
+     "12:00",
+     "17:00"
+    ]
+   }
+  ],
+  "riderQuery": {
+   "text": "bhaiya paani kahan milega?",
+   "lat": 28.6281,
+   "lng": 77.2829,
+   "atHour": "14:00",
+   "note": "Asked after H5 accepts; nearest open confirmed water point is H5."
+  }
+ },
+ "expected": {
+  "heatWindow": [
+   "13:00",
+   "16:00"
+  ],
+  "requestsInWindow": 44,
+  "clusters": {
+   "A": 10,
+   "B": 18,
+   "C": 12,
+   "D": 4
+  },
+  "before": {
+   "covered": 22,
+   "coveragePercent": 50.0,
+   "uncoveredClusters": [
+    "B",
+    "D"
+   ]
+  },
+  "candidates": {
+   "B": [
+    "H4",
+    "H5"
+   ],
+   "D": []
+  },
+  "after": {
+   "covered": 40,
+   "coveragePercent": 90.9,
+   "uncoveredClusters": [
+    "D"
+   ]
+  },
+  "unresolved": [
+   "Cluster D: 4 requests, no host within 500 m — needs a new host or a municipal water point"
+  ],
+  "riderQueryNearest": "H5"
+ }
+}
