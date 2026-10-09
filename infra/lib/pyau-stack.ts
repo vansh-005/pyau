@@ -109,16 +109,18 @@ export class PyauStack extends cdk.Stack {
     });
     api.addRoutes({ path: "/health", methods: [apigwv2.HttpMethod.GET], integration });
     api.addRoutes({ path: "/auth/whoami", methods: [apigwv2.HttpMethod.GET], integration, authorizer });
-    api.addRoutes({ path: "/demo/{proxy+}", methods: [apigwv2.HttpMethod.ANY], integration });
-    api.addRoutes({ path: "/zones/{proxy+}", methods: [apigwv2.HttpMethod.ANY], integration });
-    api.addRoutes({ path: "/help/{proxy+}", methods: [apigwv2.HttpMethod.POST], integration });
+    // Explicit methods (not ANY) so API Gateway answers CORS preflight itself.
+    const methods = [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST, apigwv2.HttpMethod.PATCH, apigwv2.HttpMethod.DELETE];
+    for (const prefix of ["demo", "zones", "help", "runs", "proposals", "asks", "hosts", "points", "replays", "schedules"]) {
+      api.addRoutes({ path: `/${prefix}/{proxy+}`, methods, integration });
+    }
 
     // ---- Amplify Hosting (manual zip deploys via scripts/deploy_web.py) ----
     const amp = new amplify.CfnApp(this, "WebApp", {
       name: "pyau-web",
       customRules: [
         {
-          source: "</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp|mp3)$)([^.]+$)/>",
+          source: "</^[^.]+$|[.](?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp|mp3|mjs|wasm|webmanifest|mp4|pbf)$)([^.]+$)/>",
           target: "/index.html",
           status: "200",
         },
