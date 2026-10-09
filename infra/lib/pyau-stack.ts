@@ -15,6 +15,8 @@ import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations
 import { HttpJwtAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as cr from "aws-cdk-lib/custom-resources";
 import * as ecrAssets from "aws-cdk-lib/aws-ecr-assets";
+import * as sfn from "aws-cdk-lib/aws-stepfunctions";
+import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
 
 export class PyauStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -130,6 +132,110 @@ export class PyauStack extends cdk.Stack {
       }),
     );
 
+    // ---- Workflow: CoverageRun (Standard) with task tokens for approval and each host ask ----
+    const workflowFn = new lambda.Function(this, "WorkflowFn", {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: backendCode,
+      handler: "services.workflow.handlers.handler",
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+      logRetention: logs.RetentionDays.ONE_WEEK,
+      environment: { TABLE_NAME: table.tableName, BUCKET_NAME: bucket.bucketName, LOG_LEVEL: "INFO" },
+    });
+    table.grantReadWriteData(workflowFn);
+
+    const J = sfn.JsonPath;
+    const lambdaRetry = { errors: ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException"], interval: cdk.Duration.seconds(2), maxAttempts: 2, backoffRate: 2 };
+    const step = (id: string, name: string, extra: Record<string, unknown>, opts: Partial<tasks.LambdaInvokeProps> = {}) =>
+      new tasks.LambdaInvoke(this, id, {
+        stateName: id,
+        lambdaFunction: workflowFn,
+        payload: sfn.TaskInput.fromObject({ step: name, sessionId: J.stringAt("$.sessionId"), runId: J.stringAt("$.runId"), zoneId: J.stringAt("$.zoneId"), ...extra }),
+        payloadResponseOnly: true,
+        ...opts,
+      });
+
+    const planWithAgent = new tasks.LambdaInvoke(this, "PlanWithAgent", {
+      lambdaFunction: agentFn,
+      payload: sfn.TaskInput.fromObject({ sessionId: J.stringAt("$.sessionId"), zoneId: J.stringAt("$.zoneId"), runId: J.stringAt("$.runId") }),
+      payloadResponseOnly: true,
+      resultPath: "$.plan",
+    });
+    planWithAgent.addRetry(lambdaRetry);
+
+    const awaitApproval = new tasks.LambdaInvoke(this, "AwaitApproval", {
+      lambdaFunction: workflowFn,
+      integrationPattern: sfn.IntegrationPattern.WAIT_FOR_TASK_TOKEN,
+      payload: sfn.TaskInput.fromObject({ step: "store_approval_token", sessionId: J.stringAt("$.sessionId"), runId: J.stringAt("$.runId"), token: J.taskToken }),
+      taskTimeout: sfn.Timeout.at("$.approvalTimeoutSeconds"),
+      resultPath: "$.approved",
+    });
+    const expireApproval = step("ApprovalExpired", "expire_approval", {}, { resultPath: sfn.JsonPath.DISCARD });
+    const markRejected = step("PlanRejected", "mark_rejected", {}, { resultPath: sfn.JsonPath.DISCARD });
+    awaitApproval.addCatch(expireApproval, { errors: [sfn.Errors.TIMEOUT], resultPath: "$.error" });
+    awaitApproval.addCatch(markRejected, { errors: ["REJECTED"], resultPath: "$.error" });
+    expireApproval.next(new sfn.Succeed(this, "ApprovalExpiredEnd"));
+    markRejected.next(new sfn.Succeed(this, "RejectedEnd"));
+
+    // Per-gap loop: PickNextHost -> AskHost (token + timeout) -> PublishPoint | MarkTimedOut -> PickNextHost | MarkUnresolved
+    const gapCtx = {
+      zoneId: J.stringAt("$.zoneId"), date: J.stringAt("$.date"), gap: J.objectAt("$.gap"), askTimeoutSeconds: J.numberAt("$.askTimeoutSeconds"),
+    };
+    const pickNextHost = step("PickNextHost", "pick_next_host", gapCtx, { resultPath: "$.pick" });
+    const askHost = new tasks.LambdaInvoke(this, "AskHost", {
+      lambdaFunction: workflowFn,
+      integrationPattern: sfn.IntegrationPattern.WAIT_FOR_TASK_TOKEN,
+      payload: sfn.TaskInput.fromObject({ step: "ask_host", sessionId: J.stringAt("$.sessionId"), runId: J.stringAt("$.runId"), zoneId: J.stringAt("$.zoneId"), date: J.stringAt("$.date"), gap: J.objectAt("$.gap"), pick: J.objectAt("$.pick"), token: J.taskToken }),
+      taskTimeout: sfn.Timeout.at("$.pick.sfnTimeoutSeconds"),
+      resultPath: "$.answer",
+    });
+    const markTimedOut = step("MarkTimedOut", "mark_timed_out", { gap: J.objectAt("$.gap"), pick: J.objectAt("$.pick") }, { resultPath: "$.timedOutResult" });
+    const publishPoint = step("PublishPoint", "publish_point", { gap: J.objectAt("$.gap"), pick: J.objectAt("$.pick"), answer: J.objectAt("$.answer") }, { resultPath: "$.published" });
+    const markUnresolved = step("MarkUnresolved", "mark_unresolved", { gap: J.objectAt("$.gap") }, { resultPath: "$.unresolved" });
+    askHost.addCatch(markTimedOut, { errors: [sfn.Errors.TIMEOUT], resultPath: "$.error" });
+    markTimedOut.next(pickNextHost);
+    const hasHost = new sfn.Choice(this, "HasHost");
+    const decision = new sfn.Choice(this, "HostDecision");
+    pickNextHost.next(hasHost);
+    hasHost.when(sfn.Condition.booleanEquals("$.pick.hasHost", true), askHost).otherwise(markUnresolved);
+    askHost.next(decision);
+    decision.when(sfn.Condition.stringEquals("$.answer.decision", "accepted"), publishPoint).otherwise(pickNextHost);
+
+    const outreach = new sfn.Map(this, "OutreachPerGap", {
+      itemsPath: "$.approved.gaps",
+      maxConcurrency: 3,
+      itemSelector: {
+        sessionId: J.stringAt("$.sessionId"), runId: J.stringAt("$.runId"), zoneId: J.stringAt("$.zoneId"), date: J.stringAt("$.date"),
+        askTimeoutSeconds: J.numberAt("$.askTimeoutSeconds"), gap: J.objectAt("$$.Map.Item.Value"),
+      },
+      resultPath: "$.outreach",
+    });
+    outreach.itemProcessor(pickNextHost);
+
+    const summarize = step("Summarize", "summarize", { approved: J.objectAt("$.approved") }, { resultPath: "$.summary" });
+    const planChoice = new sfn.Choice(this, "HasProposal");
+    planChoice
+      .when(sfn.Condition.stringEquals("$.plan.status", "PROPOSED"), awaitApproval)
+      .when(sfn.Condition.stringEquals("$.plan.status", "FAILED"), new sfn.Fail(this, "PlanFailed", { error: "PLAN_FAILED", cause: "The agent did not produce a valid proposal (see run events)" }))
+      .otherwise(new sfn.Succeed(this, "NothingToDo"));
+    awaitApproval.next(outreach);
+    outreach.next(summarize);
+    summarize.next(new sfn.Succeed(this, "Done"));
+    planWithAgent.next(planChoice);
+
+    const smLogs = new logs.LogGroup(this, "CoverageRunLogs", { retention: logs.RetentionDays.ONE_WEEK, removalPolicy: cdk.RemovalPolicy.DESTROY });
+    const stateMachine = new sfn.StateMachine(this, "CoverageRun", {
+      stateMachineName: "pyau-CoverageRun",
+      stateMachineType: sfn.StateMachineType.STANDARD,
+      definitionBody: sfn.DefinitionBody.fromChainable(planWithAgent),
+      logs: { destination: smLogs, level: sfn.LogLevel.ALL, includeExecutionData: false }, // no execution data: task tokens never reach logs
+      tracingEnabled: false,
+    });
+    apiFn.addEnvironment("STATE_MACHINE_ARN", stateMachine.stateMachineArn);
+    apiFn.addEnvironment("BEDROCK_MODEL_ID", bedrockModelId);
+    stateMachine.grantStartExecution(apiFn);
+    apiFn.addToRolePolicy(new iam.PolicyStatement({ actions: ["states:SendTaskSuccess", "states:SendTaskFailure"], resources: ["*"] }));
+
     // ---- API ----
     const authorizer = new HttpJwtAuthorizer("Jwt", `https://cognito-idp.${region}.amazonaws.com/${pool.userPoolId}`, {
       jwtAudience: [client.userPoolClientId],
@@ -196,6 +302,8 @@ export class PyauStack extends cdk.Stack {
     // ---- Outputs ----
     new cdk.CfnOutput(this, "AgentFunctionName", { value: agentFn.functionName });
     new cdk.CfnOutput(this, "BedrockModelId", { value: bedrockModelId });
+    new cdk.CfnOutput(this, "StateMachineArn", { value: stateMachine.stateMachineArn });
+    new cdk.CfnOutput(this, "StateMachineLogGroup", { value: smLogs.logGroupName });
     new cdk.CfnOutput(this, "ApiUrl", { value: api.apiEndpoint });
     new cdk.CfnOutput(this, "UserPoolId", { value: pool.userPoolId });
     new cdk.CfnOutput(this, "UserPoolClientId", { value: client.userPoolClientId });

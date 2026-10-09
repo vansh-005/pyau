@@ -1,0 +1,38 @@
+{
+ "runId": "3b451ea8b54783838e1f",
+ "sessionId": "b62fb654d962",
+ "executionName": "3b451ea8b54783838e1f",
+ "executionStatus": "SUCCEEDED",
+ "seconds": 75,
+ "coverageBefore": {
+  "covered": 22,
+  "percent": 50,
+  "total": 44
+ },
+ "coverageAfter": {
+  "covered": 40,
+  "total": 44,
+  "percent": 90.9,
+  "uncoveredClusters": [
+   "D"
+  ]
+ },
+ "modelId": "global.amazon.nova-2-lite-v1:0",
+ "statesEntered": [
+  "PlanWithAgent",
+  "HasProposal",
+  "AwaitApproval",
+  "OutreachPerGap",
+  "PickNextHost",
+  "HasHost",
+  "AskHost",
+  "MarkTimedOut",
+  "PickNextHost",
+  "HasHost",
+  "AskHost",
+  "HostDecision",
+  "PublishPoint",
+  "Summarize",
+  "Done"
+ ]
+}

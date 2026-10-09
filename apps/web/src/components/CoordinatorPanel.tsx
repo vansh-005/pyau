@@ -1,67 +1,88 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCoverage, type MapResponse } from "../api";
+import { isTerminal, type useRun } from "../hooks";
+import { AgentPanel } from "./AgentPanel";
 import { HeatCurve } from "./HeatCurve";
 import { MapView } from "./MapView";
+import { OutreachBoard } from "./OutreachBoard";
+import { PlanReview } from "./PlanReview";
 
 export interface CoordinatorPanelProps {
   sessionId: string;
   zoneId: string;
   token: string;
   map: MapResponse;
+  run: ReturnType<typeof useRun>;
 }
 
-/** Coordinator centre: heat curve, the API's coverage number, cluster map. Agent run + approval + outreach board join in T06–T07. */
-export function CoordinatorPanel({ sessionId, zoneId, token, map }: CoordinatorPanelProps) {
+/** Coordinator centre: heat curve, the API's coverage number, cluster map, agent receipts, plan review, outreach board. */
+export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: CoordinatorPanelProps) {
   const cov = useQuery({
     queryKey: ["coverage", sessionId],
     queryFn: () => getCoverage(zoneId, sessionId, token),
-    refetchInterval: 4000,
+    refetchInterval: () => (document.hidden ? false : 4000),
   });
   const d = cov.data;
+  const detail = run.detail;
+  const status = detail?.run.status;
+  const busy = !!status && !isTerminal(status);
   return (
-    <div className="flex h-full flex-col gap-3 overflow-auto p-4">
+    <div className="flex h-full flex-col gap-3 overflow-hidden p-3">
       {cov.error && <p className="m-0 text-gap">{(cov.error as Error).message}</p>}
       {d && (
-        <>
-          <div className="grid grid-cols-[1fr_auto] gap-4">
-            <section className="card p-3">
-              <h2 className="m-0 mb-1 text-base font-semibold">Tomorrow's heat · {d.date}</h2>
-              <HeatCurve data={d} />
-            </section>
-            <section className="card flex min-w-[250px] flex-col justify-center p-4" aria-live="polite">
-              {d.heat.status !== "OK" || !d.coverage ? (
-                <p className="m-0 font-semibold text-heat">
-                  {d.heat.status === "INSUFFICIENT_DATA" ? "Insufficient forecast data — not treated as safe" : "No hours at or above the demo threshold"}
+        <div className="grid shrink-0 grid-cols-[1fr_330px] gap-3">
+          <section className="card p-2">
+            <h2 className="m-0 text-base font-semibold">Tomorrow's heat · {d.date}</h2>
+            <HeatCurve data={d} />
+          </section>
+          <section className="card flex flex-col justify-center p-3" aria-live="polite">
+            {d.heat.status !== "OK" || !d.coverage ? (
+              <p className="m-0 font-semibold text-heat">
+                {d.heat.status === "INSUFFICIENT_DATA" ? "Insufficient forecast data — not treated as safe" : "No hours at or above the demo threshold"}
+              </p>
+            ) : (
+              <>
+                <p className="m-0 font-serif text-[48px] font-semibold leading-none" style={{ color: (d.coverage.percent ?? 0) >= 80 ? "#2e7d4f" : "#b3261e" }}>
+                  {d.coverage.percent === null ? "—" : `${d.coverage.percent}%`}
                 </p>
-              ) : (
-                <>
-                  <p className="m-0 font-serif text-[48px] font-semibold leading-none" style={{ color: (d.coverage.percent ?? 0) >= 80 ? "#2e7d4f" : "#b3261e" }}>
-                    {d.coverage.percent === null ? "—" : `${d.coverage.percent}%`}
-                  </p>
-                  <p className="m-0 mt-2 text-base">
-                    of <strong className="font-mono">{d.coverage.total}</strong> rider requests are near an open water point during{" "}
-                    <strong className="font-mono">{d.coverage.window[0]}–{d.coverage.window[1]}</strong>
-                  </p>
-                  <p className="m-0 mt-1 font-mono text-sm text-muted">
-                    {d.coverage.covered}/{d.coverage.total} · radius {d.policy.coverageRadiusMeters} m
-                  </p>
-                  <p className="m-0 mt-2 text-sm font-medium text-gap">
-                    {d.coverage.uncoveredClusters.length
-                      ? `Uncovered: cluster ${d.coverage.uncoveredClusters.join(", ")}`
-                      : "Every cluster covered"}
-                  </p>
-                </>
-              )}
-              <p className="m-0 mt-2 text-xs text-muted">
-                Demo policy, {d.policy.validationStatus.replaceAll("_", " ")}. Sample scenario data.
+                <p className="m-0 mt-1 text-base leading-snug">
+                  of <strong className="font-mono">{d.coverage.total}</strong> rider requests are near an open water point,{" "}
+                  <strong className="font-mono">{d.coverage.window[0]}–{d.coverage.window[1]}</strong>
+                </p>
+                <p className="m-0 mt-1 font-mono text-sm text-muted">{d.coverage.covered}/{d.coverage.total} · radius {d.policy.coverageRadiusMeters} m</p>
+                <p className="m-0 mt-1 text-sm font-semibold text-gap">
+                  {d.coverage.uncoveredClusters.length ? `Uncovered: cluster ${d.coverage.uncoveredClusters.join(", ")}` : "Every cluster covered"}
+                </p>
+              </>
+            )}
+            <p className="m-0 mt-1 text-xs text-muted">Demo policy ({d.policy.heatThresholdC} °C, unvalidated). Sample scenario.</p>
+          </section>
+        </div>
+      )}
+      <div className="grid min-h-0 flex-1 grid-cols-[1fr_1.15fr] gap-3">
+        <section className="card relative min-h-[260px] overflow-hidden">
+          {d && <MapView center={map.zone.center} zoom={15} hosts={map.hosts} clusters={d.clusters} fitAll />}
+        </section>
+        <div className="min-h-0 space-y-3 overflow-auto pr-1">
+          <AgentPanel events={run.events} detail={detail} onRun={() => void run.start()} canRun={!busy} startError={run.startError} />
+          {detail?.proposal && ["PROPOSED", "APPROVED", "REJECTED", "EXPIRED"].includes(detail.proposal.status) && (
+            <PlanReview proposal={detail.proposal} sessionId={sessionId} token={token} onDone={run.refresh} />
+          )}
+          {detail?.proposal && detail.proposal.status === "APPROVED" && (
+            <OutreachBoard proposal={detail.proposal} detail={detail} events={run.events} />
+          )}
+          {status === "COMPLETED" && detail?.coverage.current && (
+            <section className="card p-3">
+              <h2 className="m-0 text-lg font-semibold">Run summary</h2>
+              <p className="m-0 mt-1 text-[15px]">
+                Coverage <span className="font-mono">{detail.coverage.before?.percent}%</span> →{" "}
+                <strong className="font-mono">{detail.coverage.current.percent}% ({detail.coverage.current.covered}/{detail.coverage.current.total})</strong>
+                {detail.coverage.current.uncoveredClusters?.length ? ` · still uncovered: cluster ${detail.coverage.current.uncoveredClusters.join(", ")}` : ""}
               </p>
             </section>
-          </div>
-          <section className="card relative min-h-[300px] flex-1 overflow-hidden">
-            <MapView center={map.zone.center} zoom={15} hosts={map.hosts} clusters={d.clusters} fitAll />
-          </section>
-        </>
-      )}
+          )}
+        </div>
+      </div>
     </div>
   );
 }

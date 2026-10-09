@@ -6,7 +6,9 @@ from pyau_domain.geo import hm
 from pyau_domain.models import Availability, Host
 from pyau_domain.status import host_state
 
-from . import auth, coverage as coveragemod, ddb, help as helpmod, sessions
+from urllib.parse import unquote
+
+from . import asks, auth, coordinator, coverage as coveragemod, ddb, events, help as helpmod, sessions
 
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
@@ -82,6 +84,31 @@ def handler(event, context):
         if method == "POST" and parts == ["help", "find"]:
             out = helpmod.find(json.loads(event.get("body") or "{}"))
             return resp(out.pop("_status", 200), out)
+        body = json.loads(event.get("body") or "{}") if method in ("POST", "PATCH") else {}
+        sid = params.get("sessionId") or body.get("sessionId") or ""
+        needs_demo = (parts[:1] in (["runs"], ["proposals"], ["asks"]) or parts[:1] == ["hosts"]
+                      or (parts[:1] == ["zones"] and len(parts) >= 3 and parts[2] in ("coverage-runs", "runs")))
+        if needs_demo and not demo_session_id(headers, sid):
+            return err(403, "FORBIDDEN", "Valid demo token for this session required")
+        try:
+            if method == "POST" and len(parts) == 3 and parts[0] == "zones" and parts[2] == "coverage-runs":
+                return resp(202, coordinator.start_run(sid, parts[1], body))
+            if method == "GET" and len(parts) == 3 and parts[0] == "zones" and parts[2] == "runs":
+                return resp(200, {"runs": coordinator.list_runs(sid, parts[1])})
+            if method == "GET" and len(parts) == 2 and parts[0] == "runs":
+                return resp(200, coordinator.run_detail(sid, parts[1]))
+            if method == "GET" and len(parts) == 3 and parts[0] == "runs" and parts[2] == "events":
+                evs = events.list_events(sid, parts[1], int(params.get("after") or 0), min(int(params.get("limit") or 100), 100))
+                return resp(200, {"events": evs, "serverTime": __import__("time").time()})
+            if method == "POST" and len(parts) == 3 and parts[0] == "proposals" and parts[2] in ("approve", "reject"):
+                fn = coordinator.approve if parts[2] == "approve" else coordinator.reject
+                return resp(200, fn(sid, unquote(parts[1]), body))
+            if method == "GET" and len(parts) == 3 and parts[0] == "hosts" and parts[2] == "asks":
+                return resp(200, coordinator.host_inbox(sid, parts[1]))
+            if method == "POST" and len(parts) == 3 and parts[0] == "asks" and parts[2] == "respond":
+                return resp(200, coordinator.respond(sid, unquote(parts[1]), body))
+        except coordinator.Api as a:
+            return err(a.status, a.code, a.message, a.retryable)
         if method == "GET" and len(parts) == 3 and parts[0] == "zones" and parts[2] == "coverage":
             sid = params.get("sessionId", "")
             if not demo_session_id(headers, sid):  # coordinator role: demo token (live: Cognito, later)

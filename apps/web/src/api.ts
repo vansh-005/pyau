@@ -91,3 +91,52 @@ export interface CoverageResponse {
 }
 export const getCoverage = (zoneId: string, sessionId: string, token: string) =>
   api<CoverageResponse>("GET", `/zones/${zoneId}/coverage?sessionId=${sessionId}`, undefined, token);
+
+// ---- runs, plan, outreach ----
+export interface Receipt {
+  runId: string; seq: number; at: number; type: string; actor: string; summary: string;
+  toolCallId?: string | null; data: Record<string, unknown>;
+}
+export interface GapMessage { hi: string; en: string; window: [string, string]; trimmed: boolean }
+export interface Gap {
+  clusterId: string; requests: number; hours: [string, string]; priority: number; askWindow: [string, string];
+  candidateOrder: string[]; candidates: { hostId: string; label: string; kind: string; distanceM: number }[];
+  messages: Record<string, GapMessage>; dropped: Record<string, string>;
+}
+export interface Unresolved { clusterId: string; requests: number; recommendation: string; note: string; reason: string }
+export interface CovNum { covered: number; total: number; percent: number | null; uncoveredClusters?: string[] }
+export interface Proposal {
+  id: string; runId: string; revision: number; status: string; gaps: Gap[]; unresolved: Unresolved[]; explanation: string;
+  coverageBefore: CovNum; coverageProjected: CovNum; contentHash: string;
+}
+export interface Ask {
+  id: string; runId: string; clusterId: string; hostId: string; hostLabel?: string; kind: string; message: { hi: string; en: string };
+  window: [string, string]; status: "OPEN" | "ACCEPTED" | "DECLINED" | "TIMED_OUT"; createdAt: number; expiresAt: number;
+  timeoutSeconds: number; answeredAt: number | null;
+}
+export interface Run {
+  id: string; zoneId: string; status: string; date: string; mode: string; modelId: string | null; startedAt: number;
+  finishedAt: number | null; error: string | null; coverageCurrent?: CovNum; summary?: unknown;
+}
+export interface RunDetail {
+  run: Run; proposal: Proposal | null; asks: Ask[]; serverTime: number;
+  coverage: { before: CovNum | null; projectedIfFirstChoicesAccept: CovNum | null; current: CovNum | null };
+}
+export const listRuns = (zoneId: string, sessionId: string, token: string) =>
+  api<{ runs: Run[] }>("GET", `/zones/${zoneId}/runs?sessionId=${sessionId}`, undefined, token);
+export const startRun = (zoneId: string, sessionId: string, token: string, date: string, idempotencyKey: string) =>
+  api<Run>("POST", `/zones/${zoneId}/coverage-runs`, { sessionId, date, idempotencyKey }, token);
+export const getRun = (runId: string, sessionId: string, token: string) =>
+  api<RunDetail>("GET", `/runs/${runId}?sessionId=${sessionId}`, undefined, token);
+export const getEvents = (runId: string, sessionId: string, token: string, after: number) =>
+  api<{ events: Receipt[]; serverTime: number }>("GET", `/runs/${runId}/events?sessionId=${sessionId}&after=${after}`, undefined, token);
+export const approveProposal = (p: Proposal, sessionId: string, token: string, removedHostIds: string[], key: string) =>
+  api<{ ok: boolean; status: string }>("POST", `/proposals/${encodeURIComponent(p.id)}/approve`,
+    { sessionId, contentHash: p.contentHash, revision: p.revision, removedHostIds, acknowledgesGaps: true, idempotencyKey: key }, token);
+export const rejectProposal = (p: Proposal, sessionId: string, token: string, reason: string) =>
+  api<{ ok: boolean }>("POST", `/proposals/${encodeURIComponent(p.id)}/reject`, { sessionId, revision: p.revision, reason }, token);
+export const hostAsks = (hostId: string, sessionId: string, token: string) =>
+  api<{ asks: Ask[]; serverTime: number }>("GET", `/hosts/${hostId}/asks?sessionId=${sessionId}`, undefined, token);
+export const respondAsk = (ask: Ask, sessionId: string, token: string, decision: "accepted" | "declined") =>
+  api<{ ok: boolean; status: string; window?: [string, string] }>("POST", `/asks/${encodeURIComponent(ask.id)}/respond`,
+    { sessionId, actingHostId: ask.hostId, decision, window: decision === "accepted" ? ask.window : undefined, idempotencyKey: `${ask.id}:${decision}` }, token);
