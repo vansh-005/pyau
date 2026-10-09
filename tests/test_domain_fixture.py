@@ -74,3 +74,11 @@ def test_window_end_boundary_is_outside():
 def test_zero_requests_percent_none():
     rep = compute_coverage([], HOSTS, AVAIL, WINDOW, POLICY)
     assert rep.percent is None and rep.total == 0
+
+
+def test_host_states_before_and_after():
+    from pyau_domain.status import host_state
+    before = {h.id: host_state(h, AVAIL)["state"] for h in HOSTS}
+    assert before == {"H1": "live", "H2": "live", "H3": "live", "H4": "not_confirmed", "H5": "standby", "H6": "paused"}
+    after = host_state(HOSTS[4], accepted_h5(), hm("14:00"))
+    assert after["state"] == "live" and after["window"] == ["12:00", "17:00"] and after["openNow"] is True

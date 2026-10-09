@@ -10,3 +10,6 @@ infra/cdk.out/
 .DS_Store
 
 .venv/
+infra/outputs.json
+infra/build/
+infra/dist/
