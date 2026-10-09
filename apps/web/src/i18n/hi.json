@@ -1,0 +1,9 @@
+{
+  "needsNativeReview": true,
+  "needs": { "water": "पानी", "shade": "छाँव", "toilet": "शौचालय", "charging": "चार्ज" },
+  "asking": "ढूँढ रहे हैं…",
+  "playAudio": "आवाज़ सुनें",
+  "route": "रास्ता",
+  "nothingNearby": "500 मीटर में अभी कोई पक्का पॉइंट नहीं",
+  "hostConfirmed": "होस्ट ने पक्का किया"
+}

@@ -1,42 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createDemoSession, getMap, type DemoSession, type MapHost } from "../api";
+import { getMap, type MapHost } from "../api";
+import { useDemoSession } from "../session";
 import { MapView, STATE_STYLE } from "../components/MapView";
-
-const KEY = "pyau.demoSession";
-
-function loadSession(): DemoSession | null {
-  try {
-    return JSON.parse(sessionStorage.getItem(KEY) || "null");
-  } catch {
-    return null;
-  }
-}
 
 /** T03 vertical slice: a demo session + the map with seeded hosts. The full three-panel room arrives in T08. */
 export default function Demo() {
-  const [session, setSession] = useState<DemoSession | null>(loadSession);
+  const { session, error: err, fresh: newSession } = useDemoSession();
   const [selected, setSelected] = useState<MapHost | null>(null);
-  const [err, setErr] = useState("");
-
-  const newSession = useCallback(async () => {
-    setErr("");
-    try {
-      const s = await createDemoSession();
-      try {
-        sessionStorage.setItem(KEY, JSON.stringify(s));
-      } catch {
-        /* storage unavailable: session lives in memory only */
-      }
-      setSession(s);
-    } catch (e) {
-      setErr((e as Error).message);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!session) void newSession();
-  }, [session, newSession]);
 
   const map = useQuery({
     queryKey: ["map", session?.sessionId],

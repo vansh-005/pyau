@@ -49,6 +49,36 @@ def test_password():
             return l.split("=", 1)[1]
 
 
+RIDER_B = {"lat": 28.6281, "lng": 77.2829}  # fixture rider query point, inside cluster B
+
+
+def t04(s):
+    """Rider find: before acceptance (honest 'nothing within 500 m'); after a REAL H5 acceptance record (written the
+    way the workflow will write it) at the scenario-day clock -> H5, ~176 m straight line, Hindi audio."""
+    h = {"x-demo-token": s["token"]}
+    code, c = call("POST", f"/demo/sessions/{s['sessionId']}/clock", {"setLocalTime": "14:00"}, h)
+    assert code == 200 and c["clock"]["time"] == "14:00", (code, c)
+    code, a = call("POST", "/help/find", {"need": "water", **RIDER_B, "sessionId": s["sessionId"]})
+    print("find before accept:", code, a["found"], a["host"] and a["host"]["id"], a["distanceM"], a["answer"]["en"])
+    assert code == 200 and a["found"] is False
+    code, bad = call("POST", f"/demo/sessions/{s['sessionId']}/clock", {"setLocalTime": "14:00"}, {"x-demo-token": "bad"})
+    assert code == 403
+    import boto3 as b3
+    tbl = b3.resource("dynamodb", region_name=REGION).Table(OUT["TableName"])
+    pk = f"S#{s['sessionId']}#ZONE#{s['zoneId']}"
+    tbl.put_item(Item={"PK": pk, "SK": "AVAIL#2026-05-21#H5#accepted_ask", "data": {
+        "hostId": "H5", "date": "2026-05-21", "window": ["12:00", "17:00"], "source": "accepted_ask"}})
+    code, a = call("POST", "/help/find", {"need": "water", **RIDER_B, "sessionId": s["sessionId"]})
+    print("find after accept:", code, a["found"], a["host"]["id"], a["host"]["straightLineM"], a["distanceM"], a["approximate"])
+    print("  hi:", a["answer"]["hi"].encode("utf8").decode("utf8"))
+    assert a["found"] and a["host"]["id"] == "H5" and a["host"]["straightLineM"] == 176
+    assert a["audio"] and a["audio"]["url"].startswith("https://") and a["route"]["line"]
+    with urllib.request.urlopen(a["audio"]["url"], timeout=20) as r:
+        audio = r.read()
+    print("  audio bytes:", len(audio), a["audio"]["voice"], a["audio"]["engine"])
+    assert len(audio) > 5000
+
+
 def main():
     if "--create-test-user" in sys.argv:
         return create_test_user()
@@ -73,6 +103,7 @@ def main():
     print("map", code, {h["id"]: h["state"] for h in m["hosts"]})
     assert {h["id"]: h["state"] for h in m["hosts"]} == {
         "H1": "live", "H2": "live", "H3": "live", "H4": "not_confirmed", "H5": "standby", "H6": "paused"}
+    t04(s)
     print("SMOKE OK")
 
 

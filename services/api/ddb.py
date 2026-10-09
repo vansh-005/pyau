@@ -40,7 +40,7 @@ def get(pk, sk):
 
 
 def query(pk, sk_prefix=None):
-    kc = Key("PK").eq(pk) & (Key("SK").begins_with(sk_prefix) if sk_prefix else Key("SK").gte(""))
+    kc = Key("PK").eq(pk) & Key("SK").begins_with(sk_prefix) if sk_prefix else Key("PK").eq(pk)
     items, kw = [], {"KeyConditionExpression": kc, "ConsistentRead": True}
     while True:
         r = table().query(**kw)

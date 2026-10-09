@@ -30,9 +30,11 @@ export interface MapViewProps {
   zoom?: number;
   onSelectHost?: (h: MapHost) => void;
   className?: string;
+  rider?: { lat: number; lng: number };
+  routeLine?: [number, number][] | null;
 }
 
-export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className }: MapViewProps) {
+export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, rider, routeLine }: MapViewProps) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<MLMap | null>(null);
   const markers = useRef<Marker[]>([]);
@@ -68,6 +70,46 @@ export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className }:
       return new maplibregl.Marker({ element: node, anchor: "bottom" }).setLngLat([h.lng, h.lat]).addTo(m);
     });
   }, [hosts, onSelectHost]);
+
+  const riderMarker = useRef<Marker | null>(null);
+  useEffect(() => {
+    const m = map.current;
+    riderMarker.current?.remove();
+    riderMarker.current = null;
+    if (!m || !rider) return;
+    const dot = document.createElement("div");
+    dot.setAttribute("role", "img");
+    dot.setAttribute("aria-label", "You are here");
+    dot.style.cssText =
+      "width:22px;height:22px;border-radius:50%;background:#c9771c;border:4px solid #fff;box-shadow:0 0 0 3px rgba(201,119,28,.35)";
+    riderMarker.current = new maplibregl.Marker({ element: dot }).setLngLat([rider.lng, rider.lat]).addTo(m);
+  }, [rider?.lat, rider?.lng]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    const apply = () => {
+      const src = m.getSource("route") as maplibregl.GeoJSONSource | undefined;
+      const data = {
+        type: "Feature" as const,
+        properties: {},
+        geometry: { type: "LineString" as const, coordinates: routeLine ?? [] },
+      };
+      if (src) src.setData(data);
+      else if (routeLine) {
+        m.addSource("route", { type: "geojson", data });
+        m.addLayer({ id: "route-casing", type: "line", source: "route", paint: { "line-color": "#fff", "line-width": 9 } });
+        m.addLayer({ id: "route-line", type: "line", source: "route", paint: { "line-color": "#16708f", "line-width": 5 } });
+      }
+      if (routeLine && routeLine.length > 1) {
+        const b = new maplibregl.LngLatBounds(routeLine[0], routeLine[0]);
+        routeLine.forEach((c) => b.extend(c));
+        m.fitBounds(b, { padding: 60, maxZoom: 17, duration: 600 });
+      }
+    };
+    if (m.isStyleLoaded()) apply();
+    else m.once("load", apply);
+  }, [routeLine]);
 
   return <div ref={el} className={className ?? "h-full w-full"} />;
 }

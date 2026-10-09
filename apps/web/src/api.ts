@@ -54,3 +54,24 @@ export async function api<T>(method: string, path: string, body?: unknown, token
 export const createDemoSession = () => api<DemoSession>("POST", "/demo/sessions", {});
 export const getMap = (zoneId: string, sessionId: string) =>
   api<MapResponse>("GET", `/zones/${zoneId}/map?sessionId=${sessionId}`);
+
+export type Need = "water" | "shade" | "toilet" | "charging";
+
+export interface FindResponse {
+  need: Need;
+  found: boolean;
+  clock: { date: string; time: string };
+  host: { id: string; label: string; lat: number; lng: number; closesAt: string; confirmedSource: string; straightLineM: number } | null;
+  route: { distanceM: number; durationS: number; line: [number, number][] } | null;
+  distanceM: number | null;
+  approximate: boolean;
+  answer: { hi: string; en: string };
+  audio: { url: string; voice: string; engine: string; cached: boolean } | null;
+  radiusM: number;
+}
+
+export const helpFind = (b: { need: Need; lat: number; lng: number; sessionId: string; zoneId: string }) =>
+  api<FindResponse>("POST", "/help/find", { ...b, lang: "hi" });
+
+export const setClock = (sessionId: string, token: string, setLocalTime: "18:30" | "14:00") =>
+  api<{ clock: MapResponse["clock"] }>("POST", `/demo/sessions/${sessionId}/clock`, { setLocalTime }, token);

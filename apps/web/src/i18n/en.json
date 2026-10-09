@@ -1,0 +1,8 @@
+{
+  "needs": { "water": "Water", "shade": "Shade", "toilet": "Toilet", "charging": "Charge" },
+  "asking": "Looking…",
+  "playAudio": "Play audio",
+  "route": "Route",
+  "nothingNearby": "No confirmed point within 500 m right now",
+  "hostConfirmed": "Host confirmed"
+}
