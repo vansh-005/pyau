@@ -14,6 +14,7 @@ import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import { HttpJwtAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as cr from "aws-cdk-lib/custom-resources";
+import * as ecrAssets from "aws-cdk-lib/aws-ecr-assets";
 
 export class PyauStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -95,6 +96,40 @@ export class PyauStack extends cdk.Stack {
       }),
     );
 
+    // ---- Agent (Strands on Bedrock) as a Lambda container image ----
+    const bedrockModelId = this.node.tryGetContext("bedrockModelId") ?? "global.amazon.nova-2-lite-v1:0";
+    const baseModelId = bedrockModelId.replace(/^(global|apac|us|eu|in)\./, "");
+    const agentFn = new lambda.DockerImageFunction(this, "AgentFn", {
+      code: lambda.DockerImageCode.fromImageAsset(path.join(__dirname, "..", ".."), {
+        file: "services/agent/Dockerfile",
+        platform: ecrAssets.Platform.LINUX_AMD64,
+      }),
+      timeout: cdk.Duration.seconds(180),
+      memorySize: 1024,
+      logRetention: logs.RetentionDays.ONE_WEEK,
+      environment: {
+        TABLE_NAME: table.tableName,
+        BUCKET_NAME: bucket.bucketName,
+        BEDROCK_REGION: region,
+        BEDROCK_MODEL_ID: bedrockModelId,
+        MAX_AGENT_SECONDS: "120",
+        MAX_TOOL_CALLS: "12",
+        LOG_LEVEL: "INFO",
+      },
+    });
+    table.grantReadWriteData(agentFn);
+    bucket.grantRead(agentFn);
+    // Global inference profile: the profile in this region plus the foundation model in every destination region.
+    agentFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream", "bedrock:Converse", "bedrock:ConverseStream"],
+        resources: [
+          `arn:aws:bedrock:${region}:${this.account}:inference-profile/${bedrockModelId}`,
+          `arn:aws:bedrock:*::foundation-model/${baseModelId}`,
+        ],
+      }),
+    );
+
     // ---- API ----
     const authorizer = new HttpJwtAuthorizer("Jwt", `https://cognito-idp.${region}.amazonaws.com/${pool.userPoolId}`, {
       jwtAudience: [client.userPoolClientId],
@@ -159,6 +194,8 @@ export class PyauStack extends cdk.Stack {
     keyValue.node.addDependency(mapKey);
 
     // ---- Outputs ----
+    new cdk.CfnOutput(this, "AgentFunctionName", { value: agentFn.functionName });
+    new cdk.CfnOutput(this, "BedrockModelId", { value: bedrockModelId });
     new cdk.CfnOutput(this, "ApiUrl", { value: api.apiEndpoint });
     new cdk.CfnOutput(this, "UserPoolId", { value: pool.userPoolId });
     new cdk.CfnOutput(this, "UserPoolClientId", { value: client.userPoolClientId });

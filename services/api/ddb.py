@@ -57,3 +57,29 @@ def batch_put(items, ttl=None):
             if ttl:
                 item["ttl"] = ttl
             w.put_item(Item=to_ddb(item))
+
+
+def update_data(pk, sk, fields: dict, condition=None, cond_values=None, extra_set=None):
+    """SET data.<field> = value for each field (nested update, safe against concurrent writers of other fields)."""
+    names = {"#d": "data"}
+    values = {}
+    sets = []
+    for i, (k, v) in enumerate(fields.items()):
+        names[f"#f{i}"] = k
+        values[f":v{i}"] = to_ddb(v)
+        sets.append(f"#d.#f{i} = :v{i}")
+    for i, (k, v) in enumerate((extra_set or {}).items()):
+        names[f"#x{i}"] = k
+        values[f":x{i}"] = to_ddb(v)
+        sets.append(f"#x{i} = :x{i}")
+    kw = {"Key": {"PK": pk, "SK": sk}, "UpdateExpression": "SET " + ", ".join(sets),
+          "ExpressionAttributeNames": names, "ExpressionAttributeValues": {**values, **(cond_values or {})}}
+    if condition:
+        kw["ConditionExpression"] = condition
+    return table().update_item(**kw)
+
+
+def next_seq(pk, sk="SEQ"):
+    r = table().update_item(Key={"PK": pk, "SK": sk}, UpdateExpression="ADD n :one",
+                            ExpressionAttributeValues={":one": 1}, ReturnValues="UPDATED_NEW")
+    return int(r["Attributes"]["n"])

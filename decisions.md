@@ -46,3 +46,8 @@ All hosts, requests and temperatures in the hero scenario are invented; coordina
 - No AWS Budget; rely on in-app guardrails (1 active run/session, 40 agent runs/day, 7-day logs, 48 h session TTL).
 - Agent model: `global.amazon.nova-2-lite-v1:0`, config value `BEDROCK_MODEL_ID`; agent IAM covers the global inference profile and destination regions. In the first T06 run, check Nova's Hindi (Devanagari, passes submit_proposal) and report before working around weakness.
 - Demo-token HMAC secret lives in Secrets Manager (CDK cannot create SSM SecureString); small monthly cost.
+
+## T06 notes
+- Agent model verified in a real run: `global.amazon.nova-2-lite-v1:0`. Hindi messages: acceptable for short requests (Devanagari, correct प्याऊ after prompt guidance), plain register; all model-written messages are shown to the coordinator before sending and need native review.
+- Prompt policy: askWindow = heat window widened by 1 h each side, clipped to host hours (so the fixture's 12:00-17:00 host acceptance is consistent). Code validates that askWindow contains the heat window.
+- Rider requests logged from the rider screen are stored separately (`RIDERREQ`), not in the coverage denominator, so the sample scenario's 44 stays exact.

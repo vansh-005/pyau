@@ -1,0 +1,5 @@
+*
+!services/
+!packages/domain/pyau_domain/
+!fixtures/east-delhi-demo.json
+**/__pycache__
