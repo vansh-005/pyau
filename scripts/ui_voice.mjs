@@ -1,0 +1,26 @@
+// Real-browser voice check: fake mic fed with a Hindi clip; hold the mic button, release, expect H5 answer + transcript.
+import { chromium } from "playwright-core";
+import { resolve } from "node:path";
+const base = process.argv[2], wav = resolve(process.argv[3] ?? ".tmp/ask-paani.wav");
+const b = await chromium.launch({ channel: "msedge", args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", `--use-file-for-fake-audio-capture=${wav}`] });
+const ctx = await b.newContext({ viewport: { width: 390, height: 780 } });
+const p = await ctx.newPage();
+if (process.env.PYAU_SESSION) await p.addInitScript((s) => sessionStorage.setItem("pyau.demoSession", s), process.env.PYAU_SESSION);
+const errs = [];
+p.on("pageerror", (e) => errs.push(e.message));
+await p.goto(`${base}/ride`, { waitUntil: "load" });
+const mic = p.getByRole("button", { name: "Hold to ask by voice" });
+await mic.waitFor({ timeout: 30000 });
+await p.waitForTimeout(3000);
+const box = await mic.boundingBox();
+await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+await p.mouse.down();
+await p.waitForTimeout(3200);
+await p.mouse.up();
+await p.getByText(/Heard/).waitFor({ timeout: 30000 });
+await p.getByText(/Host confirmed/).first().waitFor({ timeout: 30000 });
+console.log("transcript on screen:", await p.getByText(/Heard/).first().innerText());
+await p.waitForTimeout(3000);
+await p.screenshot({ path: "docs/evidence/t09-voice.png" });
+console.log(errs.join("\n") || "no page errors");
+await b.close();

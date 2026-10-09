@@ -1,10 +1,12 @@
 """Rider help: code-side filtering, route, fixed bilingual template, Polly audio, demand logging (geohash-7 only)."""
+import base64
 import time
 import uuid
 
 from pyau_domain.answer import build_answer, short_label
 from pyau_domain.geo import hm
 from pyau_domain.geohash import encode
+from pyau_domain.intent import need_from_model_word, need_from_text
 from pyau_domain.rider import find_nearest
 
 from . import ddb, routing, state, voice
@@ -73,3 +75,37 @@ def find(body: dict) -> dict:
         "audio": audio,
         "radiusM": st.policy.coverageRadiusMeters,
     }
+
+
+MAX_PCM_BYTES = 8 * 16000 * 2 + 3200  # 8 s of 16 kHz mono s16le (+ 0.1 s slack)
+
+
+def ask_voice(body: dict) -> dict:
+    """Spoken question -> Transcribe hi-IN -> keyword intent (model fallback) -> same answer as /help/find."""
+    from . import transcribe
+
+    try:
+        pcm = base64.b64decode(body.get("audioBase64") or "", validate=True)
+    except Exception:
+        return {"_status": 400, "code": "BAD_REQUEST", "message": "audioBase64 must be base64 16 kHz mono PCM", "retryable": False}
+    if len(pcm) < 3200:
+        return {"_status": 400, "code": "BAD_REQUEST", "message": "Audio too short", "retryable": False}
+    if len(pcm) > MAX_PCM_BYTES:
+        return {"_status": 413, "code": "TOO_LONG", "message": "Hold the button for at most 8 seconds", "retryable": False}
+    try:
+        text = transcribe.transcribe_pcm(pcm)
+    except Exception:
+        return {"_status": 502, "code": "TRANSCRIBE_FAILED", "message": "Couldn't understand the audio right now — please tap a button", "retryable": True}
+    need, via = need_from_text(text), "rules"
+    if not need and text:
+        try:
+            need, via = need_from_model_word(transcribe.model_intent(text)), "model"
+        except Exception:
+            need = None
+    if not need:
+        return {"transcript": text, "need": None, "found": False, "needUnknown": True,
+                "answer": {"hi": "समझ नहीं आया — कृपया बटन दबाएँ।", "en": "Didn't catch that — please tap a button."}}
+    out = find({**body, "need": need})
+    if "_status" in out:
+        return out
+    return {**out, "transcript": text, "intentVia": via, "needUnknown": False}

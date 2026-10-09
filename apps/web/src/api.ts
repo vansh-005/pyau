@@ -140,3 +140,12 @@ export const hostAsks = (hostId: string, sessionId: string, token: string) =>
 export const respondAsk = (ask: Ask, sessionId: string, token: string, decision: "accepted" | "declined") =>
   api<{ ok: boolean; status: string; window?: [string, string] }>("POST", `/asks/${encodeURIComponent(ask.id)}/respond`,
     { sessionId, actingHostId: ask.hostId, decision, window: decision === "accepted" ? ask.window : undefined, idempotencyKey: `${ask.id}:${decision}` }, token);
+
+export interface VoiceResponse extends Partial<FindResponse> {
+  transcript: string;
+  needUnknown: boolean;
+  intentVia?: "rules" | "model";
+  answer: { hi: string; en: string };
+}
+export const askVoice = (b: { audioBase64: string; lat: number; lng: number; sessionId: string; zoneId: string }) =>
+  api<VoiceResponse>("POST", "/help/ask-voice", { ...b, lang: "hi" });

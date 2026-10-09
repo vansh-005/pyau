@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCoverage, type MapResponse } from "../api";
 import { isTerminal, type useRun } from "../hooks";
@@ -26,6 +27,11 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
   const detail = run.detail;
   const status = detail?.run.status;
   const busy = !!status && !isTerminal(status);
+  const scroller = useRef<HTMLDivElement>(null);
+  // New phase (proposal, outreach, summary): show it from the top so the active card is always on screen.
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: 0 });
+  }, [status, detail?.proposal?.status, run.runId]);
   return (
     <div className="flex h-full flex-col gap-3 overflow-hidden p-3">
       {cov.error && <p className="m-0 text-gap">{(cov.error as Error).message}</p>}
@@ -63,14 +69,7 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
         <section className="card relative min-h-[260px] overflow-hidden">
           {d && <MapView center={map.zone.center} zoom={15} hosts={map.hosts} clusters={d.clusters} fitAll />}
         </section>
-        <div className="min-h-0 space-y-3 overflow-auto pr-1">
-          <AgentPanel events={run.events} detail={detail} onRun={() => void run.start()} canRun={!busy} startError={run.startError} />
-          {detail?.proposal && ["PROPOSED", "APPROVED", "REJECTED", "EXPIRED"].includes(detail.proposal.status) && (
-            <PlanReview proposal={detail.proposal} sessionId={sessionId} token={token} onDone={run.refresh} />
-          )}
-          {detail?.proposal && detail.proposal.status === "APPROVED" && (
-            <OutreachBoard proposal={detail.proposal} detail={detail} events={run.events} />
-          )}
+        <div ref={scroller} className="min-h-0 space-y-3 overflow-auto pr-1">
           {status === "COMPLETED" && detail?.coverage.current && (
             <section className="card p-3">
               <h2 className="m-0 text-lg font-semibold">Run summary</h2>
@@ -81,6 +80,13 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
               </p>
             </section>
           )}
+          {detail?.proposal && detail.proposal.status === "APPROVED" && (
+            <OutreachBoard proposal={detail.proposal} detail={detail} events={run.events} />
+          )}
+          {detail?.proposal && ["PROPOSED", "APPROVED", "REJECTED", "EXPIRED"].includes(detail.proposal.status) && (
+            <PlanReview proposal={detail.proposal} sessionId={sessionId} token={token} onDone={run.refresh} />
+          )}
+          <AgentPanel events={run.events} detail={detail} onRun={() => void run.start()} canRun={!busy} startError={run.startError} />
         </div>
       </div>
     </div>

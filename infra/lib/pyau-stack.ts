@@ -74,8 +74,8 @@ export class PyauStack extends cdk.Stack {
       runtime: lambda.Runtime.PYTHON_3_12,
       code: backendCode,
       handler: "services.api.handler.handler",
-      timeout: cdk.Duration.seconds(15),
-      memorySize: 512,
+      timeout: cdk.Duration.seconds(29),
+      memorySize: 1024,
       logRetention: logs.RetentionDays.ONE_WEEK,
       environment: {
         TABLE_NAME: table.tableName,
@@ -233,6 +233,14 @@ export class PyauStack extends cdk.Stack {
     });
     apiFn.addEnvironment("STATE_MACHINE_ARN", stateMachine.stateMachineArn);
     apiFn.addEnvironment("BEDROCK_MODEL_ID", bedrockModelId);
+    apiFn.addEnvironment("BEDROCK_REGION", region);
+    apiFn.addToRolePolicy(new iam.PolicyStatement({ actions: ["transcribe:StartStreamTranscription"], resources: ["*"] }));
+    apiFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["bedrock:InvokeModel", "bedrock:Converse"],
+        resources: [`arn:aws:bedrock:${region}:${this.account}:inference-profile/${bedrockModelId}`, `arn:aws:bedrock:*::foundation-model/${baseModelId}`],
+      }),
+    );
     stateMachine.grantStartExecution(apiFn);
     apiFn.addToRolePolicy(new iam.PolicyStatement({ actions: ["states:SendTaskSuccess", "states:SendTaskFailure"], resources: ["*"] }));
 

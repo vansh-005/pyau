@@ -15,3 +15,4 @@ infra/build/
 infra/dist/
 apps/web/public/maplibre/
 infra/deploy.log
+.tmp/

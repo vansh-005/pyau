@@ -6,15 +6,20 @@ import type { MapHost, HostState, ClusterInfo } from "../api";
 
 maplibregl.setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`);
 
-const STATE_STYLE: Record<HostState, { color: string; fill: boolean; dash: boolean; word: string }> = {
+export type VisualState = HostState | "closed";
+
+const STATE_STYLE: Record<VisualState, { color: string; fill: boolean; dash: boolean; word: string }> = {
   live: { color: "#16708f", fill: true, dash: false, word: "Confirmed today" },
   not_confirmed: { color: "#5b6770", fill: false, dash: false, word: "Not confirmed today" },
   standby: { color: "#7a6fb0", fill: false, dash: true, word: "Standby" },
   paused: { color: "#b3261e", fill: false, dash: false, word: "Paused" },
+  closed: { color: "#5b6770", fill: false, dash: true, word: "Closed now" },
 };
 
 /** Clay-pot glyph: filled = confirmed today, outline = not confirmed, dashed = standby, struck = paused. */
-function potSvg(state: HostState, label: string) {
+export const visualState = (h: MapHost): VisualState => (h.state === "live" && h.openNow === false ? "closed" : h.state);
+
+function potSvg(state: VisualState, label: string) {
   const s = STATE_STYLE[state];
   const fill = s.fill ? s.color : "#ffffff";
   const dash = s.dash ? 'stroke-dasharray="3 2.5"' : "";
@@ -68,7 +73,7 @@ export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, r
       const node = document.createElement("button");
       node.className = "pot-marker";
       node.style.cssText = "background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center";
-      node.innerHTML = `${potSvg(h.state, h.label)}<span style="font:600 12px Inter,sans-serif;background:#fff;border:1px solid #ded6c8;border-radius:6px;padding:0 4px;color:#1d2a33">${h.id}</span>`;
+      node.innerHTML = `${potSvg(visualState(h), h.label)}<span style="font:600 12px Inter,sans-serif;background:#fff;border:1px solid #ded6c8;border-radius:6px;padding:0 4px;color:#1d2a33">${h.id}</span>`;
       node.onclick = () => onSelectHost?.(h);
       return new maplibregl.Marker({ element: node, anchor: "bottom" }).setLngLat([h.lng, h.lat]).addTo(m);
     });

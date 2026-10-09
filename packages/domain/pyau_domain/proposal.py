@@ -13,6 +13,7 @@ from .models import Availability, CoverageReport, DemandRecord, Host, Policy
 RECOMMENDATIONS = {"recruit_host_nearby", "ask_municipal_water_point", "check_platform_rest_point", "accept_gap_low_demand"}
 MAX_MESSAGE_CHARS = 280
 MAX_EXPLANATION_WORDS = 120
+ASK_BUFFER_MIN = 60  # an ask may extend at most 1 h before/after the heat window (modest, predictable asks)
 
 BUTTONS = {
     "yes": {"hi": "हाँ, मैं रखूँगा", "en": "Yes"},
@@ -133,6 +134,10 @@ def validate_proposal(ctx: ProposalContext, gaps: list, unresolved: list, explan
             continue
         if not (hm(aw[0]) <= hw0 and hm(aw[1]) >= hw1):
             errs.append(f"cluster {cid}: askWindow {list(aw)} must contain the heat window {list(ctx.window)}")
+            continue
+        if hm(aw[0]) < hw0 - ASK_BUFFER_MIN or hm(aw[1]) > hw1 + ASK_BUFFER_MIN:
+            lo, hi = fmt_hm(hw0 - ASK_BUFFER_MIN), fmt_hm(hw1 + ASK_BUFFER_MIN)
+            errs.append(f"cluster {cid}: askWindow may extend at most 1 hour beyond the heat window (use within {lo}–{hi})")
             continue
         norm_msgs = {}
         for hid in order:

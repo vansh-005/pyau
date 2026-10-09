@@ -121,3 +121,13 @@ def test_injection_in_host_label_is_data_not_instruction():
     c.hosts = hosts
     errs, p = validate_proposal(c, *good())
     assert errs == [] and p["gaps"][0]["candidateOrder"] == ["H4", "H5"]
+
+
+def test_ask_window_buffer_is_capped_at_one_hour():
+    gaps, unres, ex = good()
+    gaps[0]["askWindow"] = ["11:00", "18:00"]
+    errs, _ = validate_proposal(ctx(), gaps, unres, ex)
+    assert any("at most 1 hour" in e for e in errs)
+    gaps[0]["askWindow"] = ["13:00", "16:00"]
+    gaps[0]["messages"] = {h: {"hi": HI.replace("12:00", "13:00").replace("17:00", "16:00"), "en": EN.replace("12:00", "13:00").replace("17:00", "16:00")} for h in ("H4", "H5")}
+    assert validate_proposal(ctx(), gaps, unres, ex)[0] == []

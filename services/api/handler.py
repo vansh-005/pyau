@@ -81,6 +81,9 @@ def handler(event, context):
             if not demo_session_id(headers, parts[2]):
                 return err(403, "FORBIDDEN", "Valid demo token for this session required")
             return set_clock(parts[2], json.loads(event.get("body") or "{}"))
+        if method == "POST" and parts == ["help", "ask-voice"]:
+            out = helpmod.ask_voice(json.loads(event.get("body") or "{}"))
+            return resp(out.pop("_status", 200), out)
         if method == "POST" and parts == ["help", "find"]:
             out = helpmod.find(json.loads(event.get("body") or "{}"))
             return resp(out.pop("_status", 200), out)

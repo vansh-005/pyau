@@ -14,6 +14,6 @@ shutil.copy(ROOT / "fixtures/east-delhi-demo.json", OUT / "east-delhi-demo.json"
 subprocess.check_call([
     sys.executable, "-m", "pip", "install", "-q", "--target", str(OUT),
     "--platform", "manylinux2014_x86_64", "--implementation", "cp", "--python-version", "3.12",
-    "--only-binary=:all:", "pydantic==2.14.0",
+    "--only-binary=:all:", "pydantic==2.14.0", "amazon-transcribe==0.6.4",
 ])
 print("staged", OUT)

@@ -51,15 +51,16 @@ export function PlanReview({ proposal, sessionId, token, onDone }: { proposal: P
             const c = g.candidates.find((x) => x.hostId === h);
             return (
               <div key={h} className={`mt-1 rounded-lg bg-canvas p-2 ${removed.has(h) ? "opacity-40" : ""}`}>
-                <p className="m-0 flex items-center gap-2 text-[15px] font-semibold">
-                  <span className="font-mono">{i + 1}. {h}</span> {c ? shortName(c.label) : ""}
-                  {c && <span className="font-normal text-muted">· {c.distanceM} m from the cluster centre · {c.kind}</span>}
+                <div className="flex flex-wrap items-baseline gap-x-2 text-[15px]">
+                  <span className="whitespace-nowrap font-mono font-semibold">{i + 1}. {h}</span>
+                  <span className="font-semibold">{c ? shortName(c.label) : ""}</span>
+                  {c && <span className="text-muted">· {c.distanceM} m from cluster centre · {c.kind}</span>}
                   {!decided && (
                     <button className="ml-auto rounded border border-border bg-white px-2 py-0.5 text-sm" onClick={() => toggle(h)}>
                       {removed.has(h) ? "Keep" : "Remove"}
                     </button>
                   )}
-                </p>
+                </div>
                 <p className="hi m-0 mt-1 text-base leading-snug">{m.hi}</p>
                 <p className="m-0 mt-1 text-sm text-muted">{m.en}</p>
                 <p className="m-0 mt-1 font-mono text-sm">window {m.window[0]}–{m.window[1]}{m.trimmed ? " (trimmed to host hours)" : ""} · buttons: हाँ / Yes · नहीं / No</p>
