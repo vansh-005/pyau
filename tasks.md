@@ -31,4 +31,6 @@ Execute in order. Tick only after the acceptance check passes. Time boxes assume
 
 ## Progress log
 
-No implementation milestones completed yet. Append date/time, task IDs, verification evidence, run IDs and blockers below.
+Append date/time, task IDs, verification evidence, run IDs and blockers below.
+
+- 2026-10-10 · T00 (partial, not ticked) · `python scripts/verify_fixture.py` passes; identity/region ok; Strands+Bedrock tool call ok with Nova 2 Lite; Polly Kajal+Aditi hi-IN ok; Transcribe streaming hi-IN ok (`scripts/t00_smoke.py`, `scripts/t00_transcribe.py`). **Blockers:** Anthropic models need the use-case form (Vansh, Bedrock console); no AWS Budget set; Location API key deferred to T02 CDK. Next: T01 domain port.
