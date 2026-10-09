@@ -40,3 +40,9 @@ All hosts, requests and temperatures in the hero scenario are invented; coordina
 | Location API key | Not created yet; `location:ListKeys` works (0 keys). Created by CDK in T02. |
 | AWS Budget | `DescribeBudgets` returns none. Needs Vansh's go-ahead (see tasks.md). |
 | Versions | strands-agents 1.59.0, boto3/botocore 1.43.111, amazon-transcribe 0.6.4, pydantic 2.14.0, Python 3.12.6, Node 24.19, CDK 2.1141 |
+
+## Vansh decisions (10 Oct 2026)
+- CDK bootstrap + routine `PyauStack` deploys to ap-south-1 pre-approved; ask before deleting resources or touching anything outside the stack.
+- No AWS Budget; rely on in-app guardrails (1 active run/session, 40 agent runs/day, 7-day logs, 48 h session TTL).
+- Agent model: `global.amazon.nova-2-lite-v1:0`, config value `BEDROCK_MODEL_ID`; agent IAM covers the global inference profile and destination regions. In the first T06 run, check Nova's Hindi (Devanagari, passes submit_proposal) and report before working around weakness.
+- Demo-token HMAC secret lives in Secrets Manager (CDK cannot create SSM SecureString); small monthly cost.
