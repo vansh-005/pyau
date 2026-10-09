@@ -6,6 +6,7 @@ import "./index.css";
 import Landing from "./pages/Landing";
 import Demo from "./pages/Demo";
 import Ride from "./pages/Ride";
+import Coordinate from "./pages/Coordinate";
 
 const qc = new QueryClient();
 
@@ -17,6 +18,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/" element={<Landing />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/ride" element={<Ride />} />
+          <Route path="/coordinate/:zoneId" element={<Coordinate />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

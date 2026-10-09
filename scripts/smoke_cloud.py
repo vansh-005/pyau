@@ -79,6 +79,18 @@ def t04(s):
     assert len(audio) > 5000
 
 
+def t05(s):
+    h = {"x-demo-token": s["token"]}
+    code, _ = call("GET", f"/zones/{s['zoneId']}/coverage?sessionId={s['sessionId']}")
+    assert code == 403  # no token -> no coordinator view
+    code, c = call("GET", f"/zones/{s['zoneId']}/coverage?sessionId={s['sessionId']}", None, h)
+    cov = c["coverage"]
+    print("coverage:", code, c["heat"]["window"], cov["covered"], "/", cov["total"], cov["percent"], cov["uncoveredClusters"],
+          {k["id"]: k["requests"] for k in c["clusters"]})
+    assert c["heat"]["window"] == ["13:00", "16:00"]
+    assert (cov["covered"], cov["total"], cov["percent"]) == (22, 44, 50.0) and cov["uncoveredClusters"] == ["B", "D"]
+
+
 def main():
     if "--create-test-user" in sys.argv:
         return create_test_user()
@@ -103,6 +115,7 @@ def main():
     print("map", code, {h["id"]: h["state"] for h in m["hosts"]})
     assert {h["id"]: h["state"] for h in m["hosts"]} == {
         "H1": "live", "H2": "live", "H3": "live", "H4": "not_confirmed", "H5": "standby", "H6": "paused"}
+    t05(s)
     t04(s)
     print("SMOKE OK")
 

@@ -6,7 +6,7 @@ from pyau_domain.geo import hm
 from pyau_domain.models import Availability, Host
 from pyau_domain.status import host_state
 
-from . import auth, ddb, help as helpmod, sessions
+from . import auth, coverage as coveragemod, ddb, help as helpmod, sessions
 
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
@@ -82,6 +82,12 @@ def handler(event, context):
         if method == "POST" and parts == ["help", "find"]:
             out = helpmod.find(json.loads(event.get("body") or "{}"))
             return resp(out.pop("_status", 200), out)
+        if method == "GET" and len(parts) == 3 and parts[0] == "zones" and parts[2] == "coverage":
+            sid = params.get("sessionId", "")
+            if not demo_session_id(headers, sid):  # coordinator role: demo token (live: Cognito, later)
+                return err(403, "FORBIDDEN", "Coordinator access required")
+            r = coveragemod.report(sid, parts[1])
+            return resp(200, r) if r else err(404, "NOT_FOUND", "Zone not found")
         if method == "GET" and len(parts) == 3 and parts[0] == "zones" and parts[2] == "map":
             return zone_map(params.get("sessionId", ""), parts[1], params)
         return err(404, "NOT_FOUND", "No such route")

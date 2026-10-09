@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { Map as MLMap, Marker } from "maplibre-gl";
 import { mapStyleUrl } from "../config";
-import type { MapHost, HostState } from "../api";
+import type { MapHost, HostState, ClusterInfo } from "../api";
 
 maplibregl.setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`);
 
@@ -31,10 +31,13 @@ export interface MapViewProps {
   onSelectHost?: (h: MapHost) => void;
   className?: string;
   rider?: { lat: number; lng: number };
+  clusters?: ClusterInfo[];
   routeLine?: [number, number][] | null;
+  /** Fit the view to all hosts and clusters once data is present (coordinator map). */
+  fitAll?: boolean;
 }
 
-export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, rider, routeLine }: MapViewProps) {
+export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, rider, routeLine, clusters, fitAll }: MapViewProps) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<MLMap | null>(null);
   const markers = useRef<Marker[]>([]);
@@ -70,6 +73,35 @@ export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, r
       return new maplibregl.Marker({ element: node, anchor: "bottom" }).setLngLat([h.lng, h.lat]).addTo(m);
     });
   }, [hosts, onSelectHost]);
+
+  const clusterMarkers = useRef<Marker[]>([]);
+  useEffect(() => {
+    const m = map.current;
+    clusterMarkers.current.forEach((x) => x.remove());
+    clusterMarkers.current = [];
+    if (!m || !clusters) return;
+    clusterMarkers.current = clusters.map((c) => {
+      const size = 34 + Math.round(c.requests * 2.2);
+      const color = c.uncovered ? "#b3261e" : "#16708f";
+      const node = document.createElement("div");
+      node.setAttribute("role", "img");
+      node.setAttribute("aria-label", `Cluster ${c.id}: ${c.requests} requests, ${c.uncovered ? "uncovered" : "covered"}`);
+      node.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color}33;border:3px ${c.uncovered ? "dashed" : "solid"} ${color};display:flex;align-items:center;justify-content:center;font:700 14px Inter,sans-serif;color:${color};pointer-events:none`;
+      node.innerHTML = `<span style="background:#fff;border-radius:6px;padding:0 5px;white-space:nowrap">${c.id} · ${c.requests}</span>`;
+      return new maplibregl.Marker({ element: node }).setLngLat([c.lng, c.lat]).addTo(m);
+    });
+  }, [clusters]);
+
+  const fitted = useRef(false);
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !fitAll || fitted.current || !clusters?.length) return;
+    const b = new maplibregl.LngLatBounds();
+    clusters.forEach((c) => b.extend([c.lng, c.lat]));
+    hosts.forEach((h) => b.extend([h.lng, h.lat]));
+    m.fitBounds(b, { padding: 70, maxZoom: 16, duration: 0 });
+    fitted.current = true;
+  }, [clusters, hosts, fitAll]);
 
   const riderMarker = useRef<Marker | null>(null);
   useEffect(() => {

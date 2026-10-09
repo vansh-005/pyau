@@ -32,3 +32,19 @@ def candidate_hosts(
         out.append({"hostId": h.id, "label": h.label, "kind": h.kind, "distanceM": round(haversine(c, h))})
     out.sort(key=lambda x: (x["distanceM"], x["hostId"]))
     return out[: policy.maxCandidatesPerCluster]
+
+
+def cluster_summaries(demand: list[DemandRecord], window: tuple[str, str], policy: Policy, report) -> list[dict]:
+    """Per-cluster centroid + coverage for map circles (uses an existing CoverageReport, never recomputes it)."""
+    out = []
+    for cid, cc in report.byCluster.items():
+        pts = [
+            r for r in demand
+            if r.clusterId == cid and r.need == policy.need and hm(window[0]) <= hm(r.hour) < hm(window[1])
+        ]
+        c = centroid(pts)
+        out.append({
+            "id": cid, "requests": cc.requests, "covered": cc.covered, "uncovered": cc.covered < cc.requests,
+            "nearestHostId": cc.nearestHostId, "distanceM": cc.distanceM, "lat": c["lat"], "lng": c["lng"],
+        })
+    return out

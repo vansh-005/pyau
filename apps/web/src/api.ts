@@ -75,3 +75,19 @@ export const helpFind = (b: { need: Need; lat: number; lng: number; sessionId: s
 
 export const setClock = (sessionId: string, token: string, setLocalTime: "18:30" | "14:00") =>
   api<{ clock: MapResponse["clock"] }>("POST", `/demo/sessions/${sessionId}/clock`, { setLocalTime }, token);
+
+export interface ClusterInfo {
+  id: string; requests: number; covered: number; uncovered: boolean;
+  nearestHostId: string | null; distanceM: number | null; lat: number; lng: number;
+}
+export interface CoverageResponse {
+  zoneId: string; date: string; clock: MapResponse["clock"];
+  policy: { id: string; heatThresholdC: number; coverageRadiusMeters: number; validationStatus: string; need: string };
+  forecast: { mode: string; hourly: Record<string, number> };
+  heat: { status: "OK" | "INSUFFICIENT_DATA" | "NO_HEAT"; window: [string, string] | null; peakC: number | null; missingHours: string[] };
+  coverage: { window: [string, string]; total: number; covered: number; percent: number | null; uncoveredClusters: string[] } | null;
+  clusters: ClusterInfo[];
+  computedAt: number;
+}
+export const getCoverage = (zoneId: string, sessionId: string, token: string) =>
+  api<CoverageResponse>("GET", `/zones/${zoneId}/coverage?sessionId=${sessionId}`, undefined, token);
