@@ -12,7 +12,7 @@ from pyau_domain.coverage import compute_coverage
 from pyau_domain.geo import hm
 from pyau_domain.heat import heat_outlook
 
-from . import asks, ddb, events, runs, sessions, state
+from . import asks, ddb, events, hosts as hostsmod, runs, sessions, state
 
 TERMINAL = {"COMPLETED", "INSUFFICIENT_DATA", "NO_GAPS", "REJECTED", "APPROVAL_EXPIRED", "FAILED"}
 APPROVAL_TIMEOUT_DEMO_S = 900
@@ -70,11 +70,12 @@ def start_run(sid, zone_id, body):
     active = [r for r in list_runs(sid, zone_id) if r["status"] not in TERMINAL]
     if active:
         raise Api(409, "ACTIVE_RUN_EXISTS", f"A run is already active for this zone ({active[0]['id']})")
-    mode = "demo"
-    timeout = st.policy.askTimeoutSecondsDemo
+    mode = "live" if sid == "live" else "demo"
+    timeout = st.policy.askTimeoutSecondsLive if mode == "live" else st.policy.askTimeoutSecondsDemo
+    approval_timeout = 6 * 3600 if mode == "live" else APPROVAL_TIMEOUT_DEMO_S
     run = runs.create_run(sid, zone_id, run_id, date, mode, runs.inputs_hash(st), os.environ.get("BEDROCK_MODEL_ID"))
     payload = {"sessionId": sid, "zoneId": zone_id, "runId": run_id, "mode": mode, "date": date,
-               "askTimeoutSeconds": timeout, "approvalTimeoutSeconds": APPROVAL_TIMEOUT_DEMO_S}
+               "askTimeoutSeconds": timeout, "approvalTimeoutSeconds": approval_timeout}
     try:
         ex = sfn().start_execution(stateMachineArn=os.environ["STATE_MACHINE_ARN"], name=run_id, input=json.dumps(payload))
         arn = ex["executionArn"]
@@ -219,6 +220,8 @@ def respond(sid, ask_id, body):
     moved_on = Api(409, "ALREADY_MOVED_ON", "This request already moved on — thank you.")
     if ask["status"] != "OPEN" or time.time() > ask["expiresAt"]:
         raise moved_on
+    if ask.get("kind") == "freshness":
+        return respond_freshness(sid, ask, ask_id, decision, status_now, key, moved_on)
     window = body.get("window") or ask["window"]
     if decision == "accepted":
         st = state.load(sid, ask_zone(sid, ask))
@@ -249,3 +252,18 @@ def respond(sid, ask_id, body):
 def ask_zone(sid, ask):
     run = runs.get_run(sid, ask["runId"])
     return run["zoneId"]
+
+
+def respond_freshness(sid, ask, ask_id, decision, status_now, key, moved_on):
+    """'Still serving water today?' Yes -> listed_confirmed availability (idempotent); Not today -> declined. No workflow."""
+    if not asks.transition(sid, ask_id, "OPEN", status_now):
+        raise moved_on
+    result = {"ok": True, "status": status_now}
+    if decision == "accepted":
+        try:
+            result.update(hostsmod.confirm_today(sid, ask["zoneId"], ask["hostId"]))
+        except hostsmod.HostError as e:
+            asks.transition(sid, ask_id, status_now, "OPEN")  # roll back so the host can retry after the coordinator acts
+            raise Api(e.status, e.code, e.message)
+    _idem_put(sid, ask["hostId"], "respond", key, result)
+    return result

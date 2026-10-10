@@ -6,7 +6,7 @@ import { HostPanel } from "../components/HostPanel";
 import { PhoneFrame } from "../components/PhoneFrame";
 import { RiderPanel } from "../components/RiderPanel";
 import { useRun } from "../hooks";
-import { RIDER_B, useDemoSession } from "../session";
+import { RIDER_LOCATIONS, useDemoSession } from "../session";
 
 const COACH_KEY = "pyau.coachDismissed";
 
@@ -100,7 +100,7 @@ export default function Demo() {
       {jumpErr && <p className="m-0 px-4 text-gap">{jumpErr}</p>}
       <main className="grid min-h-0 flex-1 grid-cols-[430px_1fr_430px] gap-3 p-3">
         <PhoneFrame title="Rider">
-          <RiderPanel sessionId={sid} zoneId={zone} center={map.data.zone.center} hosts={map.data.hosts} location={RIDER_B} />
+          <RiderPanel sessionId={sid} zoneId={zone} center={map.data.zone.center} hosts={map.data.hosts} locations={RIDER_LOCATIONS} />
         </PhoneFrame>
         <div className="min-h-0 overflow-hidden rounded-2xl">
           <CoordinatorPanel sessionId={sid} zoneId={zone} token={token} map={map.data} run={run} />

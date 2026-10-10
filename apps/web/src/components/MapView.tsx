@@ -40,9 +40,12 @@ export interface MapViewProps {
   routeLine?: [number, number][] | null;
   /** Fit the view to all hosts and clusters once data is present (coordinator map). */
   fitAll?: boolean;
+  /** Draggable registration pin (host sign-up). */
+  pin?: { lat: number; lng: number } | null;
+  onPinMove?: (p: { lat: number; lng: number }) => void;
 }
 
-export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, rider, routeLine, clusters, fitAll }: MapViewProps) {
+export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, rider, routeLine, clusters, fitAll, pin, onPinMove }: MapViewProps) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<MLMap | null>(null);
   const markers = useRef<Marker[]>([]);
@@ -96,6 +99,28 @@ export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, r
       return new maplibregl.Marker({ element: node }).setLngLat([c.lng, c.lat]).addTo(m);
     });
   }, [clusters]);
+
+  const pinMarker = useRef<Marker | null>(null);
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    if (!pin) {
+      pinMarker.current?.remove();
+      pinMarker.current = null;
+      return;
+    }
+    if (pinMarker.current) {
+      pinMarker.current.setLngLat([pin.lng, pin.lat]);
+      return;
+    }
+    const mk = new maplibregl.Marker({ color: "#b5562e", draggable: true }).setLngLat([pin.lng, pin.lat]).addTo(m);
+    mk.getElement().setAttribute("aria-label", "Your place: drag to move");
+    mk.on("dragend", () => {
+      const p = mk.getLngLat();
+      onPinMove?.({ lat: p.lat, lng: p.lng });
+    });
+    pinMarker.current = mk;
+  }, [pin?.lat, pin?.lng]);
 
   const fitted = useRef(false);
   useEffect(() => {

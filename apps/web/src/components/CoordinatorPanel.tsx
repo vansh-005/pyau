@@ -7,6 +7,7 @@ import { HeatCurve } from "./HeatCurve";
 import { MapView } from "./MapView";
 import { OutreachBoard } from "./OutreachBoard";
 import { PlanReview } from "./PlanReview";
+import { ProblemQueue } from "./ProblemQueue";
 
 export interface CoordinatorPanelProps {
   sessionId: string;
@@ -86,6 +87,7 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
           {detail?.proposal && ["PROPOSED", "APPROVED", "REJECTED", "EXPIRED"].includes(detail.proposal.status) && (
             <PlanReview proposal={detail.proposal} sessionId={sessionId} token={token} onDone={run.refresh} />
           )}
+          <ProblemQueue sessionId={sessionId} zoneId={zoneId} token={token} />
           <AgentPanel events={run.events} detail={detail} onRun={() => void run.start()} canRun={!busy} startError={run.startError} />
         </div>
       </div>

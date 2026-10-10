@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { askVoice, helpFind, type FindResponse, type MapHost, type Need } from "../api";
+import { askVoice, helpFind, sendFeedback, type FeedbackKind, type FeedbackResult, type FindResponse, type MapHost, type Need } from "../api";
 import { MAX_RECORD_MS, pcmToBase64, startRecording, type Recording } from "../voice";
 import { MapView } from "./MapView";
 import hi from "../i18n/hi.json";
@@ -10,8 +10,8 @@ export interface RiderPanelProps {
   zoneId: string;
   center: { lat: number; lng: number };
   hosts: MapHost[];
-  /** Scripted rider location (demo): cluster B at the fixture's rider-query point. */
-  location: { lat: number; lng: number };
+  /** Scripted rider locations (demo). The first is the default (cluster B, the fixture's rider-query point). */
+  locations: { id: string; label: string; lat: number; lng: number }[];
   /** Changes when the session state changes so the pot icons refresh. */
   onAnswered?: (a: FindResponse) => void;
 }
@@ -23,7 +23,10 @@ const NEEDS: { need: Need; icon: string }[] = [
   { need: "charging", icon: "🔌" },
 ];
 
-export function RiderPanel({ sessionId, zoneId, center, hosts, location, onAnswered }: RiderPanelProps) {
+export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnswered }: RiderPanelProps) {
+  const [locId, setLocId] = useState(locations[0].id);
+  const location = locations.find((l) => l.id === locId) ?? locations[0];
+  const [fb, setFb] = useState<{ result?: FeedbackResult; asking?: boolean; error?: string } | null>(null);
   const [busy, setBusy] = useState<Need | null>(null);
   const [answer, setAnswer] = useState<FindResponse | null>(null);
   const [error, setError] = useState("");
@@ -36,6 +39,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, location, onAnswe
   };
 
   const showAnswer = (a: FindResponse) => {
+    setFb(null);
     setAnswer(a);
     setShowRoute(true);
     onAnswered?.(a);
@@ -57,6 +61,17 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, location, onAnswe
       setError((e as Error).message);
     } finally {
       setBusy(null);
+    }
+  };
+
+  const report = async (kind: FeedbackKind) => {
+    if (!answer?.host) return;
+    setFb({ asking: false });
+    try {
+      const result = await sendFeedback({ hostId: answer.host.id, kind, lat: location.lat, lng: location.lng, sessionId, zoneId });
+      setFb({ result });
+    } catch (e) {
+      setFb({ error: (e as Error).message });
     }
   };
 
@@ -106,6 +121,17 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, location, onAnswe
 
   return (
     <div className="flex h-full flex-col bg-canvas text-[15px]">
+      {locations.length > 1 && (
+        <div className="flex items-center gap-2 border-b border-border bg-white px-2 py-1 text-sm" role="group" aria-label="Demo rider location">
+          <span className="text-muted">Demo location:</span>
+          {locations.map((l) => (
+            <button key={l.id} aria-pressed={locId === l.id} onClick={() => { setLocId(l.id); setAnswer(null); setFb(null); }}
+              className={`min-h-9 rounded-full px-3 font-semibold ${locId === l.id ? "bg-water text-white" : "border border-border"}`}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="relative min-h-0 flex-1">
         <MapView
           center={center}
@@ -115,7 +141,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, location, onAnswe
           routeLine={showRoute ? answer?.route?.line ?? null : null}
         />
       </div>
-      <div className="flex flex-col gap-2 p-3">
+      <div className="flex max-h-[66%] flex-col gap-2 overflow-auto p-3">
         {error && <p className="m-0 rounded-lg bg-gap/10 p-2 text-gap">{error}</p>}
         {answer && (
           <section className="card p-3" aria-live="polite">
@@ -134,15 +160,45 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, location, onAnswe
                   {answer.route ? ` · ~${Math.max(1, Math.round(answer.route.durationS / 60))} min by scooter` : ""}
                 </span>
                 {answer.approximate && <span className="text-heat"> · approximate</span>}
-                <span className="block text-muted">
-                  Open till {answer.host.closesAt} · {en.hostConfirmed} ({answer.host.confirmedSource === "accepted_ask" ? "accepted request" : "confirmed today"})
-                </span>
               </p>
             )}
             {!answer.found && (
               <p className="m-0 mt-2 text-sm font-medium text-gap">
                 {hi.nothingNearby} · {en.nothingNearby}
               </p>
+            )}
+            {answer.host && (
+              <div className="mt-2 border-t border-border pt-2">
+                {!fb?.result && !fb?.error && (
+                  <div className="flex gap-2">
+                    <button className="min-h-11 flex-1 rounded-lg border border-ok px-2 font-semibold text-ok" onClick={() => void report("got_it")}>
+                      <span className="hi">मिल गया</span> ✓ Got it
+                    </button>
+                    <button className="min-h-11 flex-1 rounded-lg border border-gap px-2 font-semibold text-gap" aria-expanded={!!fb?.asking} onClick={() => setFb({ asking: !fb?.asking })}>
+                      <span className="hi">दिक्कत</span> ✗ Problem
+                    </button>
+                  </div>
+                )}
+                {fb?.asking && (
+                  <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="What was the problem?">
+                    {([["no_water", "पानी नहीं", "No water"], ["closed", "बंद है", "Closed"], ["dirty", "गंदा", "Dirty"], ["unsafe", "असुरक्षित", "Unsafe"]] as const).map(([k, hi2, en2]) => (
+                      <button key={k} className="min-h-12 rounded-lg border border-gap bg-white px-2 font-semibold" onClick={() => void report(k)}>
+                        <span className="hi">{hi2}</span> {en2}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {fb?.result && (
+                  <p className="m-0 text-sm font-semibold" role="status">
+                    {fb.result.kind === "got_it"
+                      ? "Thanks! 🙏 Good to hear."
+                      : fb.result.pausedNow
+                        ? `Thanks — ${fb.result.problemCount} problem reports: this point is now paused and the coordinator has been told.`
+                        : `Thanks — reported (${fb.result.problemCount} of ${fb.result.threshold} before a point is paused).`}
+                  </p>
+                )}
+                {fb?.error && <p className="m-0 text-sm font-semibold text-gap">{fb.error}</p>}
+              </div>
             )}
             <div className="mt-2 flex gap-2">
               {answer.audio ? (

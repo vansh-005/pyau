@@ -13,7 +13,7 @@ from pyau_domain.coverage import compute_coverage
 from pyau_domain.geo import hm
 from pyau_domain.heat import heat_outlook
 
-from services.api import asks, ddb, events, runs, state
+from services.api import asks, coordinator, ddb, events, hosts as hostsmod, runs, state
 
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
@@ -164,7 +164,34 @@ def summarize(e):
     return summary
 
 
+def _live_zones():
+    """Live zones registered under PUBLIC#LIVEZONES (none exist until a real zone is onboarded)."""
+    return ddb.query("PUBLIC#LIVEZONES")
+
+
+def scheduled_freshness(e):
+    """EventBridge Scheduler 07:30 IST: morning 'still serving water today?' for every live zone."""
+    out = []
+    for z in _live_zones():
+        out.append({"zoneId": z["zoneId"], **hostsmod.run_freshness("live", z["zoneId"])})
+    log.info("scheduled_freshness zones=%d", len(out))
+    return {"zones": len(out), "results": out}
+
+
+def scheduled_nightly(e):
+    """EventBridge Scheduler 18:30 IST: start tomorrow's coverage run for every live zone (idempotent per date)."""
+    import datetime
+    started = []
+    tomorrow = (datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5, minutes=30))).date() + datetime.timedelta(days=1)).isoformat()
+    for z in _live_zones():
+        r = coordinator.start_run("live", z["zoneId"], {"date": tomorrow, "idempotencyKey": f"nightly-{tomorrow}"})
+        started.append(r["id"])
+    log.info("scheduled_nightly zones=%d", len(started))
+    return {"zones": len(started), "runs": started}
+
+
 STEPS = {
+    "scheduled_freshness": scheduled_freshness, "scheduled_nightly": scheduled_nightly,
     "store_approval_token": store_approval_token, "expire_approval": expire_approval, "mark_rejected": mark_rejected,
     "pick_next_host": pick_next_host, "ask_host": ask_host, "mark_timed_out": mark_timed_out,
     "publish_point": publish_point, "mark_unresolved": mark_unresolved, "summarize": summarize,

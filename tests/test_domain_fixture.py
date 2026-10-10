@@ -82,3 +82,15 @@ def test_host_states_before_and_after():
     assert before == {"H1": "live", "H2": "live", "H3": "live", "H4": "not_confirmed", "H5": "standby", "H6": "paused"}
     after = host_state(HOSTS[4], accepted_h5(), hm("14:00"))
     assert after["state"] == "live" and after["window"] == ["12:00", "17:00"] and after["openNow"] is True
+
+
+def test_host_registration_validation():
+    from pyau_domain.hosts import validate_registration
+    zone = FX["zone"]["center"]
+    ok = {"label": "  Sharma <b>Chai</b> ", "hostType": "shop", "offers": ["water", "shade"], "kind": "listed", "hours": ["09:00", "20:00"],
+          "lat": 28.631, "lng": 77.278, "consentToAsks": True}
+    errs, clean = validate_registration(ok, zone)
+    assert errs == {} and clean["label"].startswith("Sharma") and "<" not in clean["label"] and ">" not in clean["label"]
+    bad = {**ok, "offers": [], "kind": "x", "hours": ["20:00", "09:00"], "lat": 30.0, "consentToAsks": False, "hostType": "castle"}
+    errs, _ = validate_registration(bad, zone)
+    assert set(errs) == {"offers", "kind", "hours", "location", "consentToAsks", "hostType"}

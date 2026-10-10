@@ -149,3 +149,34 @@ export interface VoiceResponse extends Partial<FindResponse> {
 }
 export const askVoice = (b: { audioBase64: string; lat: number; lng: number; sessionId: string; zoneId: string }) =>
   api<VoiceResponse>("POST", "/help/ask-voice", { ...b, lang: "hi" });
+
+export interface RegisterBody {
+  zoneId: string; sessionId: string; label: string; hostType: string; offers: string[]; kind: "listed" | "standby";
+  hours: [string, string]; lat: number; lng: number; consentToAsks: boolean;
+}
+export interface RegisteredHost { id: string; label: string; address: string | null; kind: string; hours: [string, string] }
+export class FieldError extends Error {
+  constructor(message: string, public fields: Record<string, string>) { super(message); }
+}
+export async function registerHost(b: RegisterBody, token: string): Promise<RegisteredHost> {
+  const r = await fetch(config.apiBase + "/hosts", { method: "POST", headers: { "content-type": "application/json", "x-demo-token": token }, body: JSON.stringify(b) });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 422) throw new FieldError(d.message, d.fieldErrors ?? {});
+  if (!r.ok) throw new ApiError(r.status, d.code ?? "ERROR", d.message ?? "Request failed");
+  return d as RegisteredHost;
+}
+export const reverseGeocode = (lat: number, lng: number, sessionId: string, token: string) =>
+  api<{ address: string | null; approximate: boolean }>("GET", `/hosts/reverse-geocode?lat=${lat}&lng=${lng}&sessionId=${sessionId}`, undefined, token);
+export const runFreshness = (zoneId: string, sessionId: string, token: string) =>
+  api<{ date: string; created: string[] }>("POST", "/schedules/freshness/run", { zoneId, sessionId }, token);
+
+// ---- trust loop ----
+export type FeedbackKind = "got_it" | "closed" | "no_water" | "dirty" | "unsafe";
+export interface FeedbackResult { recorded: boolean; kind: FeedbackKind; hostId: string; problemCount: number; threshold: number; windowHours: number; paused: boolean; pausedNow: boolean }
+export const sendFeedback = (b: { hostId: string; kind: FeedbackKind; lat: number; lng: number; sessionId: string; zoneId: string }) =>
+  api<FeedbackResult>("POST", `/points/${b.hostId}/feedback`, { kind: b.kind, lat: b.lat, lng: b.lng, sessionId: b.sessionId, zoneId: b.zoneId });
+export interface ProblemItem { hostId: string; label: string; reason: string | null; pausedAt: number | null; seeded: boolean; reports: { kind: string; at: number }[] }
+export const getProblems = (zoneId: string, sessionId: string, token: string) =>
+  api<{ problems: ProblemItem[]; serverTime: number }>("GET", `/zones/${zoneId}/problems?sessionId=${sessionId}`, undefined, token);
+export const reactivateHost = (hostId: string, zoneId: string, sessionId: string, token: string) =>
+  api<{ ok: boolean }>("POST", `/hosts/${hostId}/reactivate`, { zoneId, sessionId }, token);

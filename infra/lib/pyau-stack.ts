@@ -16,6 +16,7 @@ import { HttpJwtAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as cr from "aws-cdk-lib/custom-resources";
 import * as ecrAssets from "aws-cdk-lib/aws-ecr-assets";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
+import * as scheduler from "aws-cdk-lib/aws-scheduler";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
 
 export class PyauStack extends cdk.Stack {
@@ -143,6 +144,24 @@ export class PyauStack extends cdk.Stack {
       environment: { TABLE_NAME: table.tableName, BUCKET_NAME: bucket.bucketName, LOG_LEVEL: "INFO" },
     });
     table.grantReadWriteData(workflowFn);
+    const smArn = this.formatArn({ service: "states", resource: "stateMachine", resourceName: "pyau-CoverageRun", arnFormat: cdk.ArnFormat.COLON_RESOURCE_NAME });
+    workflowFn.addEnvironment("STATE_MACHINE_ARN", smArn);
+    workflowFn.addEnvironment("BEDROCK_MODEL_ID", bedrockModelId);
+    workflowFn.addToRolePolicy(new iam.PolicyStatement({ actions: ["states:StartExecution"], resources: [smArn] }));
+    workflowFn.addToRolePolicy(new iam.PolicyStatement({ actions: ["geo-places:ReverseGeocode"], resources: ["*"] }));
+
+    // EventBridge Scheduler (live zones only; demo sessions never use schedules): 07:30 freshness, 18:30 nightly plan, IST.
+    const schedRole = new iam.Role(this, "SchedulerRole", { assumedBy: new iam.ServicePrincipal("scheduler.amazonaws.com") });
+    workflowFn.grantInvoke(schedRole);
+    for (const [id, name, cron, stepName] of [
+      ["MorningFreshness", "pyau-morning-freshness", "cron(30 7 * * ? *)", "scheduled_freshness"],
+      ["NightlyCoverage", "pyau-nightly-coverage", "cron(30 18 * * ? *)", "scheduled_nightly"],
+    ]) {
+      new scheduler.CfnSchedule(this, id, {
+        name, scheduleExpression: cron, scheduleExpressionTimezone: "Asia/Kolkata", flexibleTimeWindow: { mode: "OFF" },
+        target: { arn: workflowFn.functionArn, roleArn: schedRole.roleArn, input: JSON.stringify({ step: stepName }) },
+      });
+    }
 
     const J = sfn.JsonPath;
     const lambdaRetry = { errors: ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException"], interval: cdk.Duration.seconds(2), maxAttempts: 2, backoffRate: 2 };
@@ -260,6 +279,7 @@ export class PyauStack extends cdk.Stack {
     api.addRoutes({ path: "/auth/whoami", methods: [apigwv2.HttpMethod.GET], integration, authorizer });
     // Explicit methods (not ANY) so API Gateway answers CORS preflight itself.
     const methods = [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST, apigwv2.HttpMethod.PATCH, apigwv2.HttpMethod.DELETE];
+    api.addRoutes({ path: "/hosts", methods: [apigwv2.HttpMethod.POST], integration });
     for (const prefix of ["demo", "zones", "help", "runs", "proposals", "asks", "hosts", "points", "replays", "schedules"]) {
       api.addRoutes({ path: `/${prefix}/{proxy+}`, methods, integration });
     }

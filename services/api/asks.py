@@ -29,18 +29,22 @@ def get_token(session_id, ask_id):
 
 def create(session_id, ask, token) -> bool:
     """True if newly created; False if it already existed (a retry), in which case only the token is refreshed."""
-    item = {"PK": pk(session_id, ask["id"]), "SK": "META", "data": ddb.to_ddb(ask), "taskToken": token,
+    item = {"PK": pk(session_id, ask["id"]), "SK": "META", "data": ddb.to_ddb(ask),
             "GSI1PK": inbox_key(session_id, ask["hostId"]), "GSI1SK": f"OPEN#{ask['createdAt']:.3f}",
             "ttl": int(time.time()) + sessions.TTL_S}
+    if token:
+        item["taskToken"] = token
     try:
         ddb.table().put_item(Item=item, ConditionExpression="attribute_not_exists(PK)")
-        ddb.put(f"S#{session_id}#RUN#{ask['runId']}", f"ASKREF#{ask['id']}", {"askId": ask["id"]}, ttl=item["ttl"])
+        if ask.get("runId"):
+            ddb.put(f"S#{session_id}#RUN#{ask['runId']}", f"ASKREF#{ask['id']}", {"askId": ask["id"]}, ttl=item["ttl"])
         return True
     except ClientError as e:
         if e.response["Error"]["Code"] != "ConditionalCheckFailedException":
             raise
-        ddb.table().update_item(Key={"PK": item["PK"], "SK": "META"}, UpdateExpression="SET taskToken = :t",
-                                ExpressionAttributeValues={":t": token})
+        if token:
+            ddb.table().update_item(Key={"PK": item["PK"], "SK": "META"}, UpdateExpression="SET taskToken = :t",
+                                    ExpressionAttributeValues={":t": token})
         return False
 
 

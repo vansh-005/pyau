@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getMap } from "../api";
 import { RiderPanel } from "../components/RiderPanel";
-import { RIDER_B, useDemoSession } from "../session";
+import { RIDER_LOCATIONS, useDemoSession } from "../session";
 
 /** /ride — rider screen. Uses a demo session with the scripted cluster-B location (live mode arrives with geolocation). */
 export default function Ride() {
@@ -21,7 +21,7 @@ export default function Ride() {
         zoneId={session.zoneId}
         center={map.data.zone.center}
         hosts={map.data.hosts}
-        location={RIDER_B}
+        locations={RIDER_LOCATIONS}
       />
     </div>
   );

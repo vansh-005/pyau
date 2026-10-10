@@ -42,3 +42,8 @@ export function useDemoSession() {
 
 /** The fixture's scripted rider position, inside cluster B (demo only). */
 export const RIDER_B = { lat: 28.6281, lng: 77.2829 };
+/** Demo rider locations: cluster B (default, the hero scenario) and cluster A (for the trust-loop take). */
+export const RIDER_LOCATIONS = [
+  { id: "B", label: "Cluster B", ...RIDER_B },
+  { id: "A", label: "Cluster A", lat: 28.63283, lng: 77.27699 },
+];

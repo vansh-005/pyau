@@ -8,11 +8,12 @@ const HOSTS = [
   { id: "H5", label: "RWA office" },
 ];
 
-function AskCard({ ask, serverTime, sessionId, token, onChanged }: { ask: Ask; serverTime: number; sessionId: string; token: string; onChanged: () => void }) {
+export function AskCard({ ask, serverTime, sessionId, token, onChanged }: { ask: Ask; serverTime: number; sessionId: string; token: string; onChanged: () => void }) {
   const left = useCountdown(ask.status === "OPEN" ? ask.expiresAt : null, serverTime);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const open = ask.status === "OPEN" && (left ?? 0) > 0;
+  const fresh = ask.kind === "freshness";
   const answer = async (d: "accepted" | "declined") => {
     setBusy(true);
     setMsg("");
@@ -25,6 +26,27 @@ function AskCard({ ask, serverTime, sessionId, token, onChanged }: { ask: Ask; s
       onChanged();
     }
   };
+  if (fresh)
+    return (
+      <section className="card p-3">
+        <p className="m-0 text-sm font-semibold text-muted">Morning check · {ask.hostLabel}</p>
+        <p className="hi m-0 mt-1 text-xl font-semibold">{ask.message.hi}</p>
+        <p className="m-0 text-base text-muted">{ask.message.en}</p>
+        {ask.status === "OPEN" && (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button disabled={busy} onClick={() => void answer("accepted")} className="min-h-14 rounded-xl bg-ok px-2 font-semibold text-white disabled:opacity-60">
+              <span className="hi">हाँ</span> / Yes
+            </button>
+            <button disabled={busy} onClick={() => void answer("declined")} className="min-h-14 rounded-xl border border-border bg-white px-2 font-semibold disabled:opacity-60">
+              <span className="hi">आज नहीं</span> / Not today
+            </button>
+          </div>
+        )}
+        {ask.status === "ACCEPTED" && <p className="m-0 mt-2 font-semibold text-ok">Host confirmed for today ✓ — live for riders {ask.window[0]}–{ask.window[1]}</p>}
+        {ask.status === "DECLINED" && <p className="m-0 mt-2 text-muted">Okay — not listed as open today.</p>}
+        {msg && <p className="m-0 mt-2 font-semibold text-gap">{msg}</p>}
+      </section>
+    );
   return (
     <section className="card p-3">
       <p className="m-0 text-sm font-semibold text-muted">Request from the Pyau coordinator</p>

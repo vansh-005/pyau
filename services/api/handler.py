@@ -8,7 +8,7 @@ from pyau_domain.status import host_state
 
 from urllib.parse import unquote
 
-from . import asks, auth, coordinator, coverage as coveragemod, ddb, events, help as helpmod, sessions
+from . import asks, auth, coordinator, hosts as hostsmod, trust, coverage as coveragemod, ddb, events, help as helpmod, sessions
 
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
@@ -89,8 +89,8 @@ def handler(event, context):
             return resp(out.pop("_status", 200), out)
         body = json.loads(event.get("body") or "{}") if method in ("POST", "PATCH") else {}
         sid = params.get("sessionId") or body.get("sessionId") or ""
-        needs_demo = (parts[:1] in (["runs"], ["proposals"], ["asks"]) or parts[:1] == ["hosts"]
-                      or (parts[:1] == ["zones"] and len(parts) >= 3 and parts[2] in ("coverage-runs", "runs")))
+        needs_demo = (parts[:1] in (["runs"], ["proposals"], ["asks"]) or parts[:1] in (["hosts"], ["schedules"])
+                      or (parts[:1] == ["zones"] and len(parts) >= 3 and parts[2] in ("coverage-runs", "runs", "problems")))
         if needs_demo and not demo_session_id(headers, sid):
             return err(403, "FORBIDDEN", "Valid demo token for this session required")
         try:
@@ -106,12 +106,33 @@ def handler(event, context):
             if method == "POST" and len(parts) == 3 and parts[0] == "proposals" and parts[2] in ("approve", "reject"):
                 fn = coordinator.approve if parts[2] == "approve" else coordinator.reject
                 return resp(200, fn(sid, unquote(parts[1]), body))
+            if method == "POST" and len(parts) == 3 and parts[0] == "points" and parts[2] == "feedback":
+                return resp(200, trust.add_feedback(sid, body.get("zoneId") or "zone-east-delhi-sample", parts[1], body))
+            if method == "GET" and len(parts) == 3 and parts[0] == "zones" and parts[2] == "problems":
+                return resp(200, trust.problem_queue(sid, parts[1]))
+            if method == "POST" and len(parts) == 3 and parts[0] == "hosts" and parts[2] == "reactivate":
+                return resp(200, trust.reactivate(sid, body.get("zoneId") or "zone-east-delhi-sample", parts[1]))
+            if method == "GET" and parts == ["hosts", "reverse-geocode"]:
+                return resp(200, hostsmod.reverse_geocode(float(params["lat"]), float(params["lng"])))
+            if method == "POST" and parts == ["hosts"]:
+                return resp(201, hostsmod.register(sid, body.get("zoneId") or "zone-east-delhi-sample", body))
+            if method == "POST" and len(parts) == 3 and parts[0] == "hosts" and parts[2] == "confirm-today":
+                return resp(200, hostsmod.confirm_today(sid, body.get("zoneId") or "zone-east-delhi-sample", parts[1], body.get("window")))
+            if method == "POST" and parts == ["schedules", "freshness", "run"]:
+                return resp(200, hostsmod.run_freshness(sid, body.get("zoneId") or "zone-east-delhi-sample"))
             if method == "GET" and len(parts) == 3 and parts[0] == "hosts" and parts[2] == "asks":
                 return resp(200, coordinator.host_inbox(sid, parts[1]))
             if method == "POST" and len(parts) == 3 and parts[0] == "asks" and parts[2] == "respond":
                 return resp(200, coordinator.respond(sid, unquote(parts[1]), body))
         except coordinator.Api as a:
             return err(a.status, a.code, a.message, a.retryable)
+        except trust.TrustError as t:
+            return err(t.status, t.code, t.message)
+        except hostsmod.HostError as h:
+            out = {"code": h.code, "message": h.message, "retryable": False}
+            if h.fields:
+                out["fieldErrors"] = h.fields
+            return resp(h.status, out)
         if method == "GET" and len(parts) == 3 and parts[0] == "zones" and parts[2] == "coverage":
             sid = params.get("sessionId", "")
             if not demo_session_id(headers, sid):  # coordinator role: demo token (live: Cognito, later)
