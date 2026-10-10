@@ -135,3 +135,15 @@ AWS Budget alert, 7-day log retention, demo-session TTL 48 h, Polly audio cache,
 ## Why not more
 
 No Kubernetes, no OpenSearch, no vector store, no multi-agent swarm, no WebSockets (polling at 2 s is enough and records well), no SQS (Step Functions already provides durable async execution, retries and waits). Add a service only when an acceptance criterion is blocked without it.
+
+---
+
+## As built (10 Oct 2026)
+
+- **Model:** Amazon Nova 2 Lite via the global inference profile `global.amazon.nova-2-lite-v1:0` (Anthropic models were not enabled for the account); one config value (`bedrockModelId` CDK context → `BEDROCK_MODEL_ID`). Strands Agents 1.59.0.
+- **Compute:** one zip Lambda for the API (also Polly, Routes, Places, Transcribe), one zip Lambda for all Step Functions task steps (`services/workflow/handlers.py`, dispatch on `step`), one container Lambda for the agent.
+- **State machine** `pyau-CoverageRun`: `PlanWithAgent → HasProposal → AwaitApproval → OutreachPerGap(Map) { PickNextHost → HasHost → AskHost → HostDecision → PublishPoint | MarkTimedOut → PickNextHost | MarkUnresolved } → Summarize → Done`; rejection/expiry end in `PlanRejected` / `ApprovalExpired`. Retries only on Lambda service errors; agent failures end the run `FAILED`. Logging level ALL with **execution data off** so task tokens never reach CloudWatch.
+- **Timeouts:** the ask's `expiresAt` = creation + 45 s (demo) and drives the UI countdown; the state-machine task timeout is that + 3 s and the API refuses answers after `expiresAt`, so a late answer always gets `409 ALREADY_MOVED_ON`. Demo approval timeout is 15 min.
+- **Schedules:** EventBridge Scheduler `pyau-morning-freshness` (07:30 IST) and `pyau-nightly-coverage` (18:30 IST) invoke the workflow Lambda and act on live zones registered under `PUBLIC#LIVEZONES` — none exist, so they have never acted. Demos use the manual trigger.
+- **Guardrails:** 1 active run per session; global daily caps (40 agent runs, 400 sessions, ops override item); API Gateway route throttling; session TTL 48 h; saved-run replay when the cap is reached.
+- **Known platform limit:** the account's Lambda concurrency is 10.

@@ -67,3 +67,21 @@ Prefer connecting the GitHub repo (SPA rewrite `</^[^.]+$|\.(?!(css|gif|ico|jpg|
 ## Teardown (after judging)
 
 Export evidence first. Disable schedules, `npx cdk destroy`, delete the ECR images and Amplify app if not retained, check leftover log groups and S3 objects. Don't touch unrelated stacks (e.g. Recollect).
+
+---
+
+## As built (10 Oct 2026) — commands that exist
+
+| Command | Responsibility |
+|---|---|
+| `python scripts/verify_fixture.py` · `python -m pytest` | fixture arithmetic · domain/validation tests (37) |
+| `npm ci` | install locked web + infra deps |
+| `npm run infra:deploy` | stage the zip bundle (`scripts/stage_backend.py`, Linux wheels), deploy `PyauStack`, write `infra/outputs.json` |
+| `npm run web:deploy` (`python scripts/deploy_web.py`) | build the web app with the stack's public config and upload to Amplify (manual deploy; no CI/CD claim) |
+| `python scripts/smoke_cloud.py` | health, auth, session, map, coverage, rider answer |
+| `python scripts/smoke_loop.py` | full real loop on the deployed stack |
+| `python scripts/smoke_host.py` · `smoke_trust.py` · `smoke_guardrails.py` · `test_voice.py` | host + freshness, trust loop, replay/caps/throttling, voice |
+| `python scripts/gate_authority.py` · `node scripts/visual_gate.mjs <url>` · `python scripts/gate_loops.py 3` | release gates |
+| `python scripts/export_evidence.py <runId>` · `python scripts/publish_replay.py <sessionId> <runId> <id>` | sanitized evidence · public replay |
+
+Config in the Lambdas is set by CDK (`TABLE_NAME`, `BUCKET_NAME`, `STATE_MACHINE_ARN`, `BEDROCK_REGION`, `BEDROCK_MODEL_ID`, `DEMO_TOKEN_SECRET_ARN` (a Secrets Manager secret, not SSM), `POLLY_*`, `MAX_*`). The Location API key is created by the stack and read by a custom resource into `infra/outputs.json` (public, referrer-restricted, maps only); Places and Routes are called server-side with IAM.

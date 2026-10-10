@@ -110,3 +110,15 @@ GSI1 (host inbox): PK `S#{session}#HOSTASKS#{h}`, SK `{status}#{createdAt}` on A
 GSI2 (zone runs): PK `S#{session}#ZONE#{z}#RUNS`, SK `{startedAt}#{r}` on Run records.
 
 Zone partitions hold hosts and availability together so one query returns everything needed for coverage. This is a small-zone design (≤ 500 hosts per zone); say so in limitations.
+
+---
+
+## As built (10 Oct 2026) — differences from the plan above
+
+- **Roles.** Every coordinator/host route accepts the signed demo token in the `x-demo-token` header plus `sessionId` (query or body); a token grants all roles inside that one session only. Cognito JWT → role/zone mapping for live zones is not implemented (the pool, groups and `GET /auth/whoami` exist). Riders (`/help/*`, `/points/{id}/feedback`, `GET /zones/{id}/map`) are anonymous.
+- **Routes added:** `GET /zones/{id}/runs`, `GET /zones/{id}/problems`, `POST /hosts/{id}/reactivate`, `GET /hosts/reverse-geocode`, `POST /hosts/{id}/confirm-today`, `POST /help/ask-voice`, `POST /demo/sessions/{id}/clock`, `GET /replays/{id|latest}`.
+- **Routes changed:** the host inbox is `GET /hosts/{hostId}/asks?sessionId=`; `POST /schedules/freshness/run` takes `{zoneId, sessionId}`; `POST /asks/{id}/respond` takes `{sessionId, actingHostId, decision, window?, idempotencyKey?}` (ask ids contain `:`, URL-encode them).
+- **Not built:** `PATCH /hosts/{id}`, `POST /hosts/{id}/photo-url`, `POST /demo/sessions/{id}/simulate-requests` (a new demo session is seeded with the fixture's 44 requests at creation; rider taps are stored separately and do not change the coverage denominator).
+- **Error codes seen:** `STALE_PROPOSAL`, `STALE_INPUT`, `NOT_APPROVABLE`, `APPROVAL_EXPIRED`, `ALREADY_MOVED_ON` (late host answer), `ACTIVE_RUN_EXISTS`, `DEMO_CAP_REACHED` (carries `replayId`), `FORBIDDEN`, `VALIDATION` (with `fieldErrors`), `BAD_WINDOW`, `PAUSED`, `TOO_LONG`, `TRANSCRIBE_FAILED`.
+- **Proposal/Gap extras:** `askWindow`, `candidates`, `dropped`, per-host `messages[hostId] = {hi, en, window, trimmed}`, fixed `buttons`, `contentHash`, `inputVersions` (hash of hosts/forecast/policy for `STALE_INPUT`). The ask window may extend at most 1 hour beyond the heat window (validation rule).
+- **Table items:** payload lives in the `data` attribute; task tokens are top-level `taskToken` attributes and never returned. Extra items: `S#…#ZONE#…#RIDERREQ#date` (rider demand, geohash-7 only), `S#…#RUN#…` `ASKREF#` pointers, `PUBLIC#CAP#date` counters and `PUBLIC#CAP#CONFIG` overrides, `PUBLIC#REPLAY` snapshots, `PUBLIC#LIVEZONES` (empty).

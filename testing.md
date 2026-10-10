@@ -44,3 +44,20 @@ New session → coverage 50% → Run coverage plan → proposal (B: H4, H5; D un
 ## Evidence log template
 
 check ID · time · commit · session/run ID · expected · actual · pass/fail · evidence path · limitation. Never prefill passes.
+
+---
+
+## As built — where each case is verified (deployed, real services)
+
+| Case | Script |
+|---|---|
+| Domain table above | `tests/test_domain_fixture.py`, `test_proposal.py`, `test_trust.py`, `test_intent.py`, `test_answer.py` |
+| Integration 1, 3, 4 (receipts, idempotency, late answer) | `scripts/smoke_loop.py` |
+| Integration 2 (submit_proposal rejections) | `tests/test_proposal.py`, `scripts/check_agent_boundaries.py` |
+| Integration 5 (STALE_INPUT) | `scripts/smoke_trust.py` |
+| Integration 6, 7, 8, 9 | `scripts/gate_authority.py` |
+| Integration 10 (replay) | `scripts/smoke_guardrails.py` |
+| Full loop ×3 + Step Functions + CloudWatch | `scripts/gate_loops.py` → `docs/evidence/gate-loops.json` |
+| Visual gate | `scripts/visual_gate.mjs` + 1920×1080 screenshots in `docs/evidence/` |
+
+Evidence log (time · commit · run/session · result): see the progress log at the bottom of `tasks.md`; every entry names the script, the run ids and the outcome.
