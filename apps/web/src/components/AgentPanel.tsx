@@ -33,7 +33,7 @@ export function AgentPanel({ events, detail, onRun, canRun, startError, replayId
         )}
         {!readOnly && (
           <button
-            className="ml-auto inline-flex min-h-12 items-center gap-2 rounded-lg bg-water px-4 text-base font-semibold text-white disabled:opacity-50"
+            className="ml-auto inline-flex min-h-12 items-center gap-2 rounded-lg bg-water px-4 text-base font-semibold text-on-water disabled:opacity-50"
             onClick={onRun}
             disabled={!canRun}
           >

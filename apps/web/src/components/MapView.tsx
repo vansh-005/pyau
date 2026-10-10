@@ -2,30 +2,33 @@ import { useEffect, useRef } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { Map as MLMap, Marker } from "maplibre-gl";
 import { mapStyleUrl } from "../config";
+import { useTheme } from "../theme";
 import type { MapHost, HostState, ClusterInfo } from "../api";
 
 maplibregl.setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`);
 
 export type VisualState = HostState | "closed";
 
-/** Point states: icon shape + outline style + a word in the UI, never colour alone. */
+/** Point states: icon shape + outline style + a word in the UI, never colour alone. Colours are theme tokens. */
 export const STATE_STYLE: Record<VisualState, { color: string; fill: boolean; dash: boolean; key: string }> = {
-  live: { color: "#0a6c94", fill: true, dash: false, key: "state.live" },
-  not_confirmed: { color: "#566573", fill: false, dash: false, key: "state.not_confirmed" },
-  standby: { color: "#64748b", fill: false, dash: true, key: "state.standby" },
-  paused: { color: "#b3261e", fill: false, dash: false, key: "state.paused" },
-  closed: { color: "#566573", fill: false, dash: true, key: "state.closed" },
+  live: { color: "var(--water)", fill: true, dash: false, key: "state.live" },
+  not_confirmed: { color: "var(--muted)", fill: false, dash: false, key: "state.not_confirmed" },
+  standby: { color: "var(--standby)", fill: false, dash: true, key: "state.standby" },
+  paused: { color: "var(--gap)", fill: false, dash: false, key: "state.paused" },
+  closed: { color: "var(--muted)", fill: false, dash: true, key: "state.closed" },
 };
 
 export const visualState = (h: MapHost): VisualState => (h.state === "live" && h.openNow === false ? "closed" : h.state);
 
+const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
 /** Same pot as the logo, in the point's state: solid = confirmed today, outline = not confirmed, dashed = standby/closed, struck = paused. */
 function potSvg(state: VisualState, label: string) {
   const s = STATE_STYLE[state];
-  const fill = s.fill ? s.color : "#ffffff";
+  const fill = s.fill ? s.color : "var(--panel)";
   const dash = s.dash ? 'stroke-dasharray="3 2.5"' : "";
   const strike = state === "paused" ? `<line x1="4" y1="4" x2="20" y2="21" stroke="${s.color}" stroke-width="2.2" stroke-linecap="round"/>` : "";
-  const wave = s.fill ? `<path d="M8.3 12.4c1.2-.9 2.4-.9 3.7 0s2.5.9 3.7 0" stroke="#fff" stroke-width="1.75" fill="none" stroke-linecap="round"/>` : "";
+  const wave = s.fill ? `<path d="M8.3 12.4c1.2-.9 2.4-.9 3.7 0s2.5.9 3.7 0" stroke="var(--on-water)" stroke-width="1.75" fill="none" stroke-linecap="round"/>` : "";
   return `<svg width="34" height="34" viewBox="0 0 24 24" role="img" aria-label="${label}" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9 3.5h6" stroke="${s.color}" stroke-width="2"/>
     <path d="M10 3.5v2.4C7.2 7 5.5 9.6 5.5 12.8c0 4 2.9 7.2 6.5 7.2s6.5-3.2 6.5-7.2c0-3.2-1.7-5.8-4.5-6.9V3.5" fill="${fill}" stroke="${s.color}" stroke-width="1.9" ${dash}/>
@@ -49,20 +52,48 @@ export interface MapViewProps {
 }
 
 export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, rider, routeLine, clusters, fitAll, pin, onPinMove }: MapViewProps) {
+  const { theme } = useTheme();
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<MLMap | null>(null);
   const markers = useRef<Marker[]>([]);
+  const routeRef = useRef<[number, number][] | null>(null);
+  const firstTheme = useRef(true);
+
+  const applyRoute = (fit: boolean) => {
+    const m = map.current;
+    if (!m || !m.isStyleLoaded()) return;
+    const line = routeRef.current;
+    const data = { type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: line ?? [] } };
+    const src = m.getSource("route") as maplibregl.GeoJSONSource | undefined;
+    const accent = cssVar("--water") || "#0a6c94";
+    const casing = cssVar("--panel") || "#fff";
+    if (src) {
+      src.setData(data);
+      m.setPaintProperty("route-line", "line-color", accent);
+      m.setPaintProperty("route-casing", "line-color", casing);
+    } else if (line) {
+      m.addSource("route", { type: "geojson", data });
+      m.addLayer({ id: "route-casing", type: "line", source: "route", paint: { "line-color": casing, "line-width": 8 } });
+      m.addLayer({ id: "route-line", type: "line", source: "route", paint: { "line-color": accent, "line-width": 4 } });
+    }
+    if (fit && line && line.length > 1) {
+      const b = new maplibregl.LngLatBounds(line[0], line[0]);
+      line.forEach((c) => b.extend(c));
+      m.fitBounds(b, { padding: 60, maxZoom: 17, duration: 600 });
+    }
+  };
 
   useEffect(() => {
     if (!el.current) return;
     const m = new maplibregl.Map({
       container: el.current,
-      style: mapStyleUrl(),
+      style: mapStyleUrl(theme),
       center: [center.lng, center.lat],
       zoom,
       attributionControl: { compact: true },
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    m.on("style.load", () => applyRoute(false)); // a new style (theme change) drops our route layer: put it back
     map.current = m;
     return () => {
       m.remove();
@@ -70,6 +101,15 @@ export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, r
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Theme change: swap the Amazon Location style (light / dark).
+  useEffect(() => {
+    if (firstTheme.current) {
+      firstTheme.current = false;
+      return;
+    }
+    map.current?.setStyle(mapStyleUrl(theme));
+  }, [theme]);
 
   useEffect(() => {
     const m = map.current;
@@ -79,7 +119,7 @@ export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, r
       const node = document.createElement("button");
       node.className = "pot-marker";
       node.style.cssText = "background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center";
-      node.innerHTML = `${potSvg(visualState(h), h.label)}<span style="font:600 13px Inter,sans-serif;background:#fff;border:1px solid #e2e8ee;border-radius:4px;padding:0 4px;color:#0e1a22;margin-top:-2px">${h.id}</span>`;
+      node.innerHTML = `${potSvg(visualState(h), h.label)}<span style="font:600 13px Inter,sans-serif;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:0 4px;color:var(--ink);margin-top:-2px">${h.id}</span>`;
       node.onclick = () => onSelectHost?.(h);
       return new maplibregl.Marker({ element: node, anchor: "bottom" }).setLngLat([h.lng, h.lat]).addTo(m);
     });
@@ -93,12 +133,12 @@ export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, r
     if (!m || !clusters) return;
     clusterMarkers.current = clusters.map((c) => {
       const size = 36 + Math.round(c.requests * 2.2);
-      const color = c.uncovered ? "#b3261e" : "#0a6c94";
+      const color = c.uncovered ? "var(--gap)" : "var(--water)";
       const node = document.createElement("div");
       node.setAttribute("role", "img");
       node.setAttribute("aria-label", `${c.label}: ${c.requests} requests, ${c.uncovered ? "not covered" : "covered"}`);
-      node.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color}1f;border:2px ${c.uncovered ? "dashed" : "solid"} ${color};display:flex;align-items:center;justify-content:center;font:600 14px Inter,sans-serif;color:${color};pointer-events:none`;
-      node.innerHTML = `<span style="background:#fff;border-radius:4px;padding:0 4px;white-space:nowrap">${c.id} · ${c.requests}</span>`;
+      node.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:color-mix(in srgb, ${color} 14%, transparent);border:2px ${c.uncovered ? "dashed" : "solid"} ${color};display:flex;align-items:center;justify-content:center;font:600 14px Inter,sans-serif;color:${color};pointer-events:none`;
+      node.innerHTML = `<span style="background:var(--panel);border-radius:4px;padding:0 4px;white-space:nowrap">${c.id} · ${c.requests}</span>`;
       return new maplibregl.Marker({ element: node }).setLngLat([c.lng, c.lat]).addTo(m);
     });
   }, [clusters]);
@@ -116,7 +156,7 @@ export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, r
       pinMarker.current.setLngLat([pin.lng, pin.lat]);
       return;
     }
-    const mk = new maplibregl.Marker({ color: "#0a6c94", draggable: true }).setLngLat([pin.lng, pin.lat]).addTo(m);
+    const mk = new maplibregl.Marker({ color: cssVar("--water") || "#0a6c94", draggable: true }).setLngLat([pin.lng, pin.lat]).addTo(m);
     mk.getElement().setAttribute("aria-label", "Your place: drag to move");
     mk.on("dragend", () => {
       const p = mk.getLngLat();
@@ -145,30 +185,16 @@ export function MapView({ center, hosts, zoom = 14.5, onSelectHost, className, r
     const dot = document.createElement("div");
     dot.setAttribute("role", "img");
     dot.setAttribute("aria-label", "You are here");
-    dot.style.cssText = "width:20px;height:20px;border-radius:50%;background:#0e1a22;border:3px solid #fff;box-shadow:0 0 0 3px rgba(14,26,34,.25)";
+    dot.style.cssText = "width:20px;height:20px;border-radius:50%;background:var(--ink);border:3px solid var(--panel);box-shadow:0 0 0 3px color-mix(in srgb, var(--ink) 25%, transparent)";
     riderMarker.current = new maplibregl.Marker({ element: dot }).setLngLat([rider.lng, rider.lat]).addTo(m);
   }, [rider?.lat, rider?.lng]);
 
   useEffect(() => {
+    routeRef.current = routeLine ?? null;
     const m = map.current;
     if (!m) return;
-    const apply = () => {
-      const src = m.getSource("route") as maplibregl.GeoJSONSource | undefined;
-      const data = { type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: routeLine ?? [] } };
-      if (src) src.setData(data);
-      else if (routeLine) {
-        m.addSource("route", { type: "geojson", data });
-        m.addLayer({ id: "route-casing", type: "line", source: "route", paint: { "line-color": "#fff", "line-width": 8 } });
-        m.addLayer({ id: "route-line", type: "line", source: "route", paint: { "line-color": "#0a6c94", "line-width": 4 } });
-      }
-      if (routeLine && routeLine.length > 1) {
-        const b = new maplibregl.LngLatBounds(routeLine[0], routeLine[0]);
-        routeLine.forEach((c) => b.extend(c));
-        m.fitBounds(b, { padding: 60, maxZoom: 17, duration: 600 });
-      }
-    };
-    if (m.isStyleLoaded()) apply();
-    else m.once("load", apply);
+    if (m.isStyleLoaded()) applyRoute(true);
+    else m.once("load", () => applyRoute(true));
   }, [routeLine]);
 
   return <div ref={el} className={className ?? "h-full w-full"} />;

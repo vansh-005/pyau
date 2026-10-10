@@ -210,5 +210,7 @@
   "replay.title": "प्याऊ कवरेज रन",
   "replay.model": "एजेंट मॉडल {m}",
   "replay.coverage": "गर्मी के समय राइडर अनुरोधों के लिए पानी की उपलब्धता",
-  "replay.open": "अभी खुले: {areas}"
+  "replay.open": "अभी खुले: {areas}",
+  "theme.toDark": "डार्क थीम चालू करें",
+  "theme.toLight": "लाइट थीम चालू करें"
 }

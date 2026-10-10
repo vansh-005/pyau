@@ -4,7 +4,7 @@ import { api, type Ask, type CovNum, type Proposal, type Receipt } from "../api"
 import { AgentPanel } from "../components/AgentPanel";
 import { Loading } from "../components/Loading";
 import { PlanReview } from "../components/PlanReview";
-import { LangToggle, Wordmark } from "../components/ui";
+import { LangToggle, ThemeToggle, Wordmark } from "../components/ui";
 import { useLang } from "../i18n/lang";
 
 interface Replay {
@@ -25,17 +25,17 @@ export default function ReplayPage() {
   const captured = new Date(r.capturedAt * 1000).toLocaleString(lang === "hi" ? "hi-IN" : "en-GB", { dateStyle: "medium", timeStyle: "short" });
   return (
     <div className="mx-auto max-w-4xl space-y-4 p-4">
-      <div className="flex flex-wrap items-center gap-2 rounded-lg bg-ink px-4 py-3 font-medium text-white" role="status">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg bg-ink px-4 py-3 font-medium text-canvas" role="status">
         <span>{t("replay.banner", { when: captured })}</span>
-        <Link to="/demo" className="ml-auto text-white underline">{t("replay.live")}</Link>
+        <Link to="/demo" className="ml-auto text-canvas underline">{t("replay.live")}</Link>
       </div>
       <header className="flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <Wordmark size={22} />
           <h1 className="m-0 mt-2 text-2xl font-semibold tracking-tight">{t("replay.title")}</h1>
-          <p className="m-0 text-[15px] text-muted">{r.scenario} · {t("replay.model", { m: r.modelId ?? "" })} · <span className="tnum">{r.runId}</span></p>
+          <p className="m-0 text-[15px] text-muted [overflow-wrap:anywhere]">{r.scenario} · {t("replay.model", { m: r.modelId ?? "" })} · <span className="tnum">{r.runId}</span></p>
         </div>
-        <LangToggle />
+        <span className="flex shrink-0 items-center gap-2"><LangToggle /><ThemeToggle /></span>
       </header>
       <section className="card p-4">
         <p className="m-0 text-base text-muted">{t("replay.coverage")}</p>

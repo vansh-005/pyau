@@ -6,7 +6,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { api, type Receipt } from "../api";
-import { ArchitectureDiagram, ExecutionGraph, StepFlow } from "../components/diagrams";
+import { AwsArchitecture } from "../components/arch";
+import { ExecutionGraph, StepFlow } from "../components/diagrams";
 import { ExtLink, Section, SiteFooter, SiteNav } from "../components/site";
 import { I } from "../components/ui";
 import exec from "../data/execution.json";
@@ -25,12 +26,18 @@ const C = {
       { t: "Every effect is idempotent", x: "Run ids, ask ids and availability records are deterministic, and status changes are conditional writes, so a double click does one thing." },
     ],
     archTitle: "Architecture",
-    archIntro: "Only services that are deployed in the stack are drawn. Blue outlines are the agent path.",
+    archIntro: "Only services that are deployed in the stack are drawn. Switch between the two main paths to see how a request moves.",
     arch: {
-      aria: "Architecture: the browser calls Amplify, API Gateway and Lambda, which use DynamoDB, S3, Location, Polly and Transcribe, and start a Step Functions workflow that calls an agent Lambda backed by Bedrock.",
-      browser: "Browser", browserSub: "rider, host, coordinator", amplify: "hosts the React app", maps: "map tiles (restricted key)", ddb: "single table + 2 indexes", s3: "Polly audio cache",
-      loc: "address + scooter routes", polly: "Hindi / English voice", trans: "spoken questions", sched: "07:30 / 18:30 IST", wf: "ask, time out, publish", sfn: "CoverageRun workflow",
-      agent: "Strands, container image", cw: "logs, no task tokens", eLoad: "loads app", eTiles: "map tiles", eStart: "start / answer", eTasks: "task steps", eTools: "tool calls", eLogs: "logs",
+      aria: "Architecture, left to right: the browser calls Amplify and API Gateway; the API Lambda uses Transcribe, Polly, Location, DynamoDB and S3 and starts a Step Functions workflow; the workflow runs a Workflow Lambda and an agent Lambda that calls Bedrock; CloudWatch collects logs.",
+      client: "Client", edge: "Edge and API", compute: "Compute and orchestration", ai: "AI and maps", data: "Data", obs: "Observability",
+      browser: "Browser", browserSub: "rider, host, coordinator", amplify: "hosts the app", apigw: "HTTP API, throttled", cognito: "sign-in, not exercised",
+      apiL: "Python 3.12", evb: "schedules, not yet run", sfn: "CoverageRun workflow", wf: "ask, publish, summarise", agent: "Strands, container image", ecr: "The agent image is stored in Amazon ECR",
+      transcribe: "spoken questions", polly: "spoken answers", location: "maps, places, routes", bedrock: "Nova 2 Lite", ddb: "one table, 2 indexes", s3: "audio cache, photos", cw: "logs, no task tokens",
+      eLoad: "loads app", eAuth: "not exercised", eStart: "start run", eVoice: "voice, routes", eStore: "reads and writes", eTasks: "task steps", eSched: "07:30, 18:30", ePlan: "plan", eTools: "tool calls", eLogs: "logs",
+      modeLabel: "Choose a path", modeRider: "A rider asks", modeRun: "The evening coverage run",
+      flowRider: "A rider asks by voice or tap. The API Lambda turns speech to text with Transcribe, filters the open points in code, gets a scooter route from Location and speaks the answer with Polly, caching the audio in S3.",
+      flowRun: "A coordinator starts a run. Step Functions calls the agent Lambda, which asks Bedrock to plan with six read-only tools, waits for approval, then asks hosts one by one through the workflow Lambda and writes the result to DynamoDB.",
+      legend: "Dashed boxes are deployed but not exercised in the demo.", credit: "AWS Architecture Icons © Amazon Web Services.",
     },
     flowsTitle: "Three flows",
     f1: "Rider asks", f1s: [
@@ -50,6 +57,7 @@ const C = {
     graphIntro: "The Step Functions graph below is drawn from the execution history of one verified run. Blue states were visited. Dashed states were not: MarkUnresolved only runs when no host is left. The first host timed out, so the loop went through MarkTimedOut back to PickNextHost, and the second host accepted.",
     graph: { aria: "Step Functions execution graph with the visited states highlighted", map: "OutreachPerGap, one pass per area", hit: "visited in this run", miss: "not visited", back: "next host" },
     graphCap: "Run",
+    graphNote: "This is our drawing from the real execution history, not a console screenshot: the Step Functions console needs an AWS sign-in.",
     agentTitle: "The agent",
     agentIntro: "One Strands agent on Amazon Bedrock, running in a Lambda container image. Its tools are small and read-only, and its scope comes from the run, not from the model's arguments.",
     toolsTitle: "Six tools",
@@ -113,12 +121,18 @@ const C = {
       { t: "हर असर दोहराने पर भी एक जैसा", x: "रन ID, अनुरोध ID और उपलब्धता रिकॉर्ड तय होते हैं, और स्थिति बदलना शर्त वाली लिखाई है, इसलिए दो बार क्लिक करने पर काम एक ही बार होता है।" },
     ],
     archTitle: "आर्किटेक्चर",
-    archIntro: "सिर्फ़ वही सेवाएँ दिखाई गई हैं जो स्टैक में डिप्लॉय हैं। नीले किनारे एजेंट का रास्ता हैं।",
+    archIntro: "सिर्फ़ वही सेवाएँ दिखाई गई हैं जो स्टैक में डिप्लॉय हैं। दोनों मुख्य रास्तों के बीच बदलकर देखें कि अनुरोध कैसे चलता है।",
     arch: {
-      aria: "आर्किटेक्चर: ब्राउज़र Amplify, API Gateway और Lambda को बुलाता है, जो DynamoDB, S3, Location, Polly और Transcribe इस्तेमाल करते हैं, और एक Step Functions वर्कफ़्लो शुरू करते हैं जो Bedrock पर चलने वाले एजेंट Lambda को बुलाता है।",
-      browser: "ब्राउज़र", browserSub: "राइडर, होस्ट, कोऑर्डिनेटर", amplify: "React ऐप होस्ट करता है", maps: "नक्शे की टाइलें (सीमित कुंजी)", ddb: "एक टेबल + 2 इंडेक्स", s3: "Polly आवाज़ का कैश",
-      loc: "पता + स्कूटर रास्ते", polly: "हिंदी / अंग्रेज़ी आवाज़", trans: "बोले हुए सवाल", sched: "07:30 / 18:30 IST", wf: "पूछना, समय खत्म, प्रकाशित", sfn: "CoverageRun वर्कफ़्लो",
-      agent: "Strands, कंटेनर इमेज", cw: "लॉग, टास्क टोकन नहीं", eLoad: "ऐप लोड", eTiles: "नक्शे की टाइलें", eStart: "शुरू / जवाब", eTasks: "टास्क स्टेप", eTools: "टूल कॉल", eLogs: "लॉग",
+      aria: "आर्किटेक्चर, बाएँ से दाएँ: ब्राउज़र Amplify और API Gateway को बुलाता है; API Lambda Transcribe, Polly, Location, DynamoDB और S3 इस्तेमाल करता है और Step Functions वर्कफ़्लो शुरू करता है; वर्कफ़्लो एक Workflow Lambda और एक एजेंट Lambda चलाता है जो Bedrock को बुलाता है; CloudWatch लॉग इकट्ठा करता है।",
+      client: "क्लाइंट", edge: "एज और API", compute: "कंप्यूट और ऑर्केस्ट्रेशन", ai: "AI और नक्शे", data: "डेटा", obs: "निगरानी",
+      browser: "ब्राउज़र", browserSub: "राइडर, होस्ट, कोऑर्डिनेटर", amplify: "ऐप होस्ट करता है", apigw: "HTTP API, थ्रॉटल", cognito: "साइन-इन, इस्तेमाल नहीं",
+      apiL: "Python 3.12", evb: "शेड्यूल, अभी चले नहीं", sfn: "CoverageRun वर्कफ़्लो", wf: "पूछना, प्रकाशित, सार", agent: "Strands, कंटेनर इमेज", ecr: "एजेंट इमेज Amazon ECR में रखी है",
+      transcribe: "बोले हुए सवाल", polly: "बोले हुए जवाब", location: "नक्शे, जगहें, रास्ते", bedrock: "Nova 2 Lite", ddb: "एक टेबल, 2 इंडेक्स", s3: "आवाज़ कैश, फ़ोटो", cw: "लॉग, टास्क टोकन नहीं",
+      eLoad: "ऐप लोड", eAuth: "इस्तेमाल नहीं", eStart: "रन शुरू", eVoice: "आवाज़, रास्ते", eStore: "पढ़ना और लिखना", eTasks: "टास्क स्टेप", eSched: "07:30, 18:30", ePlan: "योजना", eTools: "टूल कॉल", eLogs: "लॉग",
+      modeLabel: "रास्ता चुनें", modeRider: "राइडर पूछता है", modeRun: "शाम का कवरेज रन",
+      flowRider: "राइडर आवाज़ या टैप से पूछता है। API Lambda Transcribe से बोली को लिखा हुआ बनाता है, कोड में खुले पॉइंट छाँटता है, Location से स्कूटर रास्ता लेता है और Polly से जवाब बोलता है, आवाज़ S3 में कैश होती है।",
+      flowRun: "कोऑर्डिनेटर रन शुरू करता है। Step Functions एजेंट Lambda को बुलाता है, जो छह सिर्फ़-पढ़ने वाले टूल के साथ Bedrock से योजना बनवाता है, मंज़ूरी का इंतज़ार करता है, फिर Workflow Lambda से होस्ट को एक-एक करके पूछता है और नतीजा DynamoDB में लिखता है।",
+      legend: "टूटी रेखा वाले डिब्बे डिप्लॉय हैं पर डेमो में इस्तेमाल नहीं होते।", credit: "AWS Architecture Icons © Amazon Web Services.",
     },
     flowsTitle: "तीन फ़्लो",
     f1: "राइडर पूछता है", f1s: [
@@ -135,9 +149,10 @@ const C = {
       { title: "कोऑर्डिनेटर तय करता है", text: "समस्या सूची से फिर चालू करें" },
     ],
     graphTitle: "एक असली एक्ज़ीक्यूशन",
-    graphIntro: "नीचे का Step Functions ग्राफ़ एक जाँचे हुए रन के एक्ज़ीक्यूशन इतिहास से बना है। नीले स्टेट पार किए गए। धराशायी लकीर वाले स्टेट नहीं: MarkUnresolved तभी चलता है जब कोई होस्ट न बचे। पहला होस्ट समय पर नहीं बोला, इसलिए लूप MarkTimedOut से होकर PickNextHost पर लौटा, और दूसरे होस्ट ने हाँ कहा।",
+    graphIntro: "नीचे का Step Functions ग्राफ़ एक जाँचे हुए रन के एक्ज़ीक्यूशन इतिहास से बना है। नीले स्टेट पार किए गए। टूटी रेखा वाले स्टेट नहीं: MarkUnresolved तभी चलता है जब कोई होस्ट न बचे। पहला होस्ट समय पर नहीं बोला, इसलिए लूप MarkTimedOut से होकर PickNextHost पर लौटा, और दूसरे होस्ट ने हाँ कहा।",
     graph: { aria: "Step Functions एक्ज़ीक्यूशन ग्राफ़ जिसमें पार किए गए स्टेट चिह्नित हैं", map: "OutreachPerGap, हर क्षेत्र के लिए एक बार", hit: "इस रन में पार किया", miss: "पार नहीं किया", back: "अगला होस्ट" },
     graphCap: "रन",
+    graphNote: "यह असली एक्ज़ीक्यूशन इतिहास से बनाया हमारा चित्र है, कंसोल का स्क्रीनशॉट नहीं: Step Functions कंसोल के लिए AWS साइन-इन चाहिए।",
     agentTitle: "एजेंट",
     agentIntro: "Amazon Bedrock पर एक Strands एजेंट, जो Lambda कंटेनर इमेज में चलता है। उसके टूल छोटे और सिर्फ़ पढ़ने वाले हैं, और उसका दायरा रन से तय होता है, मॉडल के तर्कों से नहीं।",
     toolsTitle: "छह टूल",
@@ -214,7 +229,7 @@ export default function Engineering() {
       <SiteNav />
       <main className="mx-auto max-w-6xl px-4 pb-8">
         <div className="py-12">
-          <h1 className="m-0 text-[40px] font-semibold leading-tight tracking-tight md:text-[48px]">{c.h1}</h1>
+          <h1 className="display m-0 text-[40px] leading-tight md:text-[56px]">{c.h1}</h1>
           <p className="m-0 mt-3 max-w-[60ch] text-xl text-muted">{c.intro}</p>
           <ul className="m-0 mt-8 grid list-none gap-6 p-0 md:grid-cols-3">
             {c.principles.map((p, i) => (
@@ -228,7 +243,7 @@ export default function Engineering() {
         </div>
 
         <Section id="architecture" title={c.archTitle} intro={c.archIntro}>
-          <div className="rounded-lg border border-border bg-white p-4"><ArchitectureDiagram labels={c.arch} /></div>
+          <AwsArchitecture labels={c.arch} />
         </Section>
 
         <Section id="flows" title={c.flowsTitle}>
@@ -240,8 +255,9 @@ export default function Engineering() {
         </Section>
 
         <Section id="execution" title={c.graphTitle} intro={c.graphIntro}>
-          <div className="rounded-lg border border-border bg-white p-4"><ExecutionGraph visited={exec.statesEntered} labels={c.graph} /></div>
+          <div className="overflow-x-auto rounded-lg border border-border bg-panel p-4"><div className="min-w-[860px]"><ExecutionGraph visited={exec.statesEntered} labels={c.graph} /></div></div>
           <p className="m-0 mt-2 text-[15px] text-muted">{c.graphCap} <span className="tnum">{exec.runId}</span> · <span className="tnum">{exec.coverageBefore.percent}% → {exec.coverageAfter.percent}%</span></p>
+          <p className="m-0 mt-1 max-w-[72ch] text-[14px] text-muted">{c.graphNote}</p>
         </Section>
 
         <Section id="agent" title={c.agentTitle} intro={c.agentIntro}>
@@ -261,7 +277,7 @@ export default function Engineering() {
           <p className="m-0 max-w-[72ch] text-base">{c.nova}</p>
           <h3 className="m-0 mb-1 mt-8 text-lg font-semibold">{c.receiptsTitle}</h3>
           <p className="m-0 mb-2 text-[15px] text-muted">{c.receiptsIntro}</p>
-          <div className="rounded-lg border border-border bg-white p-4">
+          <div className="rounded-lg border border-border bg-panel p-4">
             {receipts.length === 0 ? <p className="m-0 text-muted">{c.receiptsEmpty}</p> : (
               <ol className="m-0 list-none space-y-1 p-0 text-[15px]">
                 {receipts.map((r) => (
@@ -273,7 +289,7 @@ export default function Engineering() {
         </Section>
 
         <Section id="aws" title={c.awsTitle}>
-          <div className="overflow-x-auto rounded-lg border border-border bg-white">
+          <div className="overflow-x-auto rounded-lg border border-border bg-panel">
             <table className="w-full min-w-[640px] border-collapse">
               <thead><tr>{c.cols.map((h) => <th key={h} className={th}>{h}</th>)}</tr></thead>
               <tbody>{c.rows.map((r) => (<tr key={r[0]}><td className={`${td} w-[22%] font-semibold`}>{r[0]}</td><td className={`${td} w-[34%]`}>{r[1]}</td><td className={td}>{r[2]}</td></tr>))}</tbody>
@@ -282,7 +298,7 @@ export default function Engineering() {
         </Section>
 
         <Section id="safety" title={c.safetyTitle}>
-          <div className="overflow-x-auto rounded-lg border border-border bg-white">
+          <div className="overflow-x-auto rounded-lg border border-border bg-panel">
             <table className="w-full min-w-[720px] border-collapse">
               <thead><tr>{c.scols.map((h) => <th key={h} className={th}>{h}</th>)}</tr></thead>
               <tbody>{c.safety.map((r) => (<tr key={r[0]}><td className={`${td} w-[22%] font-semibold`}>{r[0]}</td><td className={`${td} w-[36%]`}>{r[1]}</td><td className={`${td} text-muted`}>{r[2]}</td></tr>))}</tbody>

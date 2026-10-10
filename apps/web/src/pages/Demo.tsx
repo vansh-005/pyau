@@ -7,7 +7,7 @@ import { HostPanel } from "../components/HostPanel";
 import { Loading } from "../components/Loading";
 import { PhoneFrame } from "../components/PhoneFrame";
 import { RiderPanel } from "../components/RiderPanel";
-import { I, LangToggle, Segmented, Wordmark } from "../components/ui";
+import { I, LangToggle, ThemeToggle, Segmented, Wordmark } from "../components/ui";
 import { useRun } from "../hooks";
 import { useLang } from "../i18n/lang";
 import { RIDER_LOCATIONS, useDemoSession } from "../session";
@@ -74,17 +74,17 @@ export default function Demo() {
     }
   };
   const btn = "inline-flex min-h-10 items-center gap-2 rounded-lg border px-3 text-base font-medium disabled:opacity-50";
-  const btnPlain = `${btn} border-border bg-white`;
-  const btnPrimary = `${btn} border-water bg-water text-white`;
+  const btnPlain = `${btn} border-border bg-panel`;
+  const btnPrimary = `${btn} border-water bg-water text-on-water`;
   return (
     <div className="flex h-full flex-col min-[1500px]:min-h-[1000px]">
-      <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-white px-4 py-2">
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-panel px-4 py-2">
         <Wordmark />
         <span className="text-base text-muted">{map.data.zone.name}</span>
         <span className="rounded-full bg-heat-soft px-3 py-1 text-base font-medium text-heat">{t("demo.badge", { date: scenarioDate })}</span>
-        <span className="rounded-full bg-ink px-3 py-1 text-base font-medium text-white tnum">{t("demo.timers", { s: session.demoTimersSeconds })}</span>
+        <span className="rounded-full bg-ink px-3 py-1 text-base font-medium text-canvas tnum">{t("demo.timers", { s: session.demoTimersSeconds })}</span>
         <span className="ml-auto" />
-        <LangToggle />
+        <span className="flex items-center gap-2"><LangToggle /><ThemeToggle /></span>
         <span className="text-base">
           {t("demo.clock")} <strong className="tnum">{clockDay} {clock.time}</strong>
           <span className="text-muted"> ({t(`clock.${clock.label ?? "scenario day"}`)})</span>
@@ -106,7 +106,7 @@ export default function Demo() {
         </div>
       )}
       {jumpErr && <p className="m-0 px-4 text-gap">{jumpErr}</p>}
-      <div className="flex justify-center border-b border-border bg-white px-4 py-2 min-[1500px]:hidden">
+      <div className="flex justify-center border-b border-border bg-panel px-4 py-2 min-[1500px]:hidden">
         <Segmented<Tab> label={t("demo.panels")} value={tab} onChange={setTab}
           options={[{ value: "rider", label: t("demo.tabRider") }, { value: "coord", label: t("demo.tabCoord") }, { value: "host", label: t("demo.tabHost") }]} />
       </div>

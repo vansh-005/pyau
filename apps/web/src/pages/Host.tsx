@@ -5,7 +5,7 @@ import { FieldError, getMap, hostAsks, registerHost, reverseGeocode, runFreshnes
 import { AskCard } from "../components/HostPanel";
 import { Loading } from "../components/Loading";
 import { MapView } from "../components/MapView";
-import { I, LangToggle, NEED_ICON, Segmented, Wordmark } from "../components/ui";
+import { I, LangToggle, ThemeToggle, NEED_ICON, Segmented, Wordmark } from "../components/ui";
 import { useLang, type Lang } from "../i18n/lang";
 import { useDemoSession } from "../session";
 
@@ -21,7 +21,7 @@ function loadMine(): RegisteredHost[] {
   }
 }
 
-const field = "mt-1 min-h-12 w-full rounded-lg border border-border bg-white px-3 text-base";
+const field = "mt-1 min-h-12 w-full rounded-lg border border-border bg-panel px-3 text-base";
 
 /** /host — register a point in under a minute, then answer the morning "still serving water today?" check. */
 export default function Host() {
@@ -135,7 +135,7 @@ export default function Host() {
             <h1 className="m-0 mt-2 text-2xl font-semibold tracking-tight">{t("hostp.title")}</h1>
             <p className="m-0 text-[15px] text-muted">{t("hostp.sample", { id: sid.slice(0, 6) })}</p>
           </div>
-          <LangToggle />
+          <span className="flex items-center gap-2"><LangToggle /><ThemeToggle /></span>
         </header>
         {notice && <p className="m-0 flex items-start gap-2 rounded-lg border border-water bg-water-soft p-3 font-medium text-water" role="status"><I icon={Check} className="mt-0.5 shrink-0" />{notice}</p>}
         {(inbox.data ?? []).length > 0 && (
@@ -161,7 +161,7 @@ export default function Host() {
                 );
               })}
             </ul>
-            <button className="mt-4 min-h-12 w-full rounded-lg border border-border bg-white font-semibold" onClick={() => void morning()}>{t("hostp.morning")}</button>
+            <button className="mt-4 min-h-12 w-full rounded-lg border border-border bg-panel font-semibold" onClick={() => void morning()}>{t("hostp.morning")}</button>
           </section>
         )}
         <form className="card space-y-4 p-4" onSubmit={(e) => void submit(e)} noValidate>
@@ -180,10 +180,10 @@ export default function Host() {
           </label>
           <fieldset className="m-0 border-0 p-0">
             <legend className="text-base font-medium">{t("hostp.offers")}</legend>
-            <div className="mt-1 divide-y divide-border rounded-lg border border-border bg-white">
+            <div className="mt-1 divide-y divide-border rounded-lg border border-border bg-panel">
               {OFFERS.map((o) => (
                 <label key={o} className="flex min-h-12 cursor-pointer items-center gap-3 px-3 text-base">
-                  <input type="checkbox" className="h-5 w-5 accent-[#0a6c94]" checked={offers.includes(o)} onChange={() => toggleOffer(o)} />
+                  <input type="checkbox" className="h-5 w-5 accent-water" checked={offers.includes(o)} onChange={() => toggleOffer(o)} />
                   <I icon={NEED_ICON[o]} className="text-water" />
                   {t(`need.${o}`)}
                 </label>
@@ -223,12 +223,12 @@ export default function Host() {
             <Err k="language" />
           </div>
           <label className="flex min-h-12 items-start gap-3 text-base">
-            <input type="checkbox" className="mt-1 h-5 w-5 accent-[#0a6c94]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+            <input type="checkbox" className="mt-1 h-5 w-5 accent-water" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             <span>{t("hostp.consent")}</span>
           </label>
           <Err k="consentToAsks" />
           {error && <p className="m-0 font-semibold text-gap" role="alert">{error}</p>}
-          <button type="submit" disabled={busy} className="min-h-14 w-full rounded-lg bg-water px-4 text-lg font-semibold text-white disabled:opacity-60">
+          <button type="submit" disabled={busy} className="min-h-14 w-full rounded-lg bg-water px-4 text-lg font-semibold text-on-water disabled:opacity-60">
             {busy ? t("hostp.saving") : t("hostp.submit")}
           </button>
         </form>

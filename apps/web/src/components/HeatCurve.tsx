@@ -21,25 +21,25 @@ export function HeatCurve({ data }: { data: CoverageResponse }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} role="img" className="w-full"
       aria-label={t("heat.aria", { peak: Math.max(...vals), at: hours[peakI], from: win?.[0] ?? "", to: win?.[1] ?? "" })}>
-      {yTicks.map((v) => <line key={v} x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke="#e2e8ee" />)}
+      {yTicks.map((v) => <line key={v} x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke="var(--border)" />)}
       {win && (
         <>
-          <rect x={X(hm(win[0]))} y={T - 42} width={X(hm(win[1])) - X(hm(win[0]))} height={H - T - B + 42} fill="#fff4e0" />
-          <text x={(X(hm(win[0])) + X(hm(win[1]))) / 2} y={T - 24} textAnchor="middle" fontSize="14" fontWeight="600" fill="#a85a00">{t("heat.window", { from: win[0], to: win[1] })}</text>
+          <rect x={X(hm(win[0]))} y={T - 42} width={X(hm(win[1])) - X(hm(win[0]))} height={H - T - B + 42} fill="var(--heat-soft)" />
+          <text x={(X(hm(win[0])) + X(hm(win[1]))) / 2} y={T - 24} textAnchor="middle" fontSize="14" fontWeight="600" fill="var(--heat)">{t("heat.window", { from: win[0], to: win[1] })}</text>
         </>
       )}
-      <line x1={L} x2={W - R} y1={Y(thr)} y2={Y(thr)} stroke="#a85a00" strokeWidth="1.5" strokeDasharray="6 4" />
-      <text x={L + 6} y={Y(thr) - 6} fontSize="14" fill="#a85a00" fontWeight="500">{t("heat.threshold", { c: thr })}</text>
-      <polyline points={pts} fill="none" stroke="#0e1a22" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+      <line x1={L} x2={W - R} y1={Y(thr)} y2={Y(thr)} stroke="var(--heat)" strokeWidth="1.5" strokeDasharray="6 4" />
+      <text x={L + 6} y={Y(thr) - 6} fontSize="14" fill="var(--heat)" fontWeight="500">{t("heat.threshold", { c: thr })}</text>
+      <polyline points={pts} fill="none" stroke="var(--ink)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
       {hours.map((h, i) => (
-        <circle key={h} cx={X(hm(h) + 0.5)} cy={Y(vals[i])} r={i === peakI ? 5.5 : 3.5} fill={vals[i] >= thr ? "#a85a00" : "#fff"} stroke={vals[i] >= thr ? "#a85a00" : "#0e1a22"} strokeWidth={2} />
+        <circle key={h} cx={X(hm(h) + 0.5)} cy={Y(vals[i])} r={i === peakI ? 5.5 : 3.5} fill={vals[i] >= thr ? "var(--heat)" : "var(--panel)"} stroke={vals[i] >= thr ? "var(--heat)" : "var(--ink)"} strokeWidth={2} />
       ))}
-      <text x={X(hm(hours[peakI]) + 0.5)} y={Y(vals[peakI]) - 12} textAnchor="middle" fontSize="15" fontWeight="700" fill="#0e1a22">{vals[peakI]} °C</text>
+      <text x={X(hm(hours[peakI]) + 0.5)} y={Y(vals[peakI]) - 12} textAnchor="middle" fontSize="15" fontWeight="700" fill="var(--ink)">{vals[peakI]} °C</text>
       {hours.filter((_, i) => i % 2 === 0).map((h) => (
-        <text key={h} x={X(hm(h) + 0.5)} y={H - 8} textAnchor="middle" fontSize="14" fill="#566573">{h}</text>
+        <text key={h} x={X(hm(h) + 0.5)} y={H - 8} textAnchor="middle" fontSize="14" fill="var(--muted)">{h}</text>
       ))}
       {yTicks.map((v) => (
-        <text key={v} x={L - 8} y={Y(v) + 5} textAnchor="end" fontSize="14" fill="#566573">{v}°</text>
+        <text key={v} x={L - 8} y={Y(v) + 5} textAnchor="end" fontSize="14" fill="var(--muted)">{v}°</text>
       ))}
     </svg>
   );

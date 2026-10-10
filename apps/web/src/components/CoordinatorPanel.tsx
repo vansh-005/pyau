@@ -62,7 +62,7 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
               <p className="m-0 mt-2 font-semibold text-heat">{d.heat.status === "INSUFFICIENT_DATA" ? t("stat.insufficient") : t("stat.noheat")}</p>
             ) : (
               <>
-                <p className="m-0 mt-1 text-[44px] font-semibold leading-none tracking-tight tnum" style={{ color: (d.coverage.percent ?? 0) >= 80 ? "#0a6c94" : "#b3261e" }}>
+                <p className="m-0 mt-1 text-[44px] font-semibold leading-none tracking-tight tnum" style={{ color: (d.coverage.percent ?? 0) >= 80 ? "var(--water)" : "var(--gap)" }}>
                   {d.coverage.percent === null ? "—" : `${d.coverage.percent}%`}
                 </p>
                 <p className="m-0 mt-2 text-base leading-snug">

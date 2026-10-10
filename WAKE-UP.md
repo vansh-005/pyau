@@ -1,6 +1,6 @@
 # WAKE-UP — read this first
 
-> **UI FROZEN v2 018859a.** Redesigned UI (Lucide icons, water-blue system, English/हिंदी with per-host languages, plain-language area names), plus the landing page `/` and `/engineering`. Release gate re-run on this version: **3/3 consecutive full /demo loops** on the deployed URL (runs `9f02acc6b1a7dd114645`, `c1101d6ab34c3f9d4501`, `4cd8ad80608b92070522`), authority gates 13/13, visual gate OK, 42 tests, i18n check OK. The deployed site matches this commit; the hero numbers (22/44 → 40/44, 50% → 90.9%) and the flow are unchanged. Before/after screenshots: `docs/evidence/ui-v1/` and `docs/evidence/ui-v2/`.
+> **UI FROZEN v2 018859a.** Redesigned UI (Lucide icons, water-blue system, English/हिंदी with per-host languages, plain-language area names), plus the landing page `/` and `/engineering`. Release gate re-run on this version: **3/3 consecutive full /demo loops** on the deployed URL (runs `9f02acc6b1a7dd114645`, `c1101d6ab34c3f9d4501`, `e6797b6498180215fe97`), authority gates 13/13, visual gate OK, 42 tests, i18n check OK. The deployed site matches this commit; the hero numbers (22/44 → 40/44, 50% → 90.9%) and the flow are unchanged. Before/after screenshots: `docs/evidence/ui-v1/` and `docs/evidence/ui-v2/`.
 
 **Summary**
 1. **Done:** T00–T14 all built, deployed, verified and committed; extras 1–5 done (warmer Hindi prompt, fresh evidence, `RECORDING.md`, README + writeup, UI polish).
@@ -15,9 +15,16 @@
 - For footage you record yourself, click **Copy run ID** in the demo-room header right after S06 and use *that* ID in the console (the S09 clip must match the S05/S06 clip).
 - Step Functions keeps execution history for 90 days; the DynamoDB session data behind a run expires after 48 h (the saved replay `/replay/latest` does not expire).
 
+## New in UI v3 — things to know
+- **Look:** warm canvas, water blue + clay + amber, Fraunces headlines with Inter, light and dark themes (sun/moon button on every page; follows the system until pressed). Footage should be light unless a shot says otherwise (`RECORDING.md` setup step 7).
+- **Landing hero:** no event badge any more (the hackathon credit is in the footer only). The rider phone in the hero and the three role cards are **real screenshots** of the deployed app (`apps/web/public/shots/`); to refresh them after a UI change run `node scripts/capture_shots.mjs <url> <session-json>` (needs a seeded session from `scripts/seed_t04_session.py --accepted`) and re-crop as in tasks.md.
+- **Architecture diagram:** official AWS Architecture Icons, a rider-asks / evening-run toggle with an animated path. Cognito and EventBridge are dashed on purpose (deployed, not exercised). Credit line is on the page and in the footer.
+- **An intermittent gate stall to know about:** one of ~10 full loops stalled waiting for the H4 "timed out" text (backend was fine). Not reproduced, cause unknown; if a take stalls, reload `/demo` and start a new session. `scripts/ui_loop.mjs` now saves `ui-loop-failure.png` and the page text if it happens again.
+- **Fonts and icons are bundled locally** (no CDN calls from the pages). Evidence for this round: `docs/evidence/ui-v3/`.
+
 ## New in UI v2 — things to know
 - **Fill the video link:** `apps/web/src/links.ts` → `VIDEO_URL` (empty now; the landing's "Watch the 3-minute video" button points to `#video` until you set it). The GitHub link there is `https://github.com/vansh-005/pyau` (your `origin`); make the repo public before submission.
-- **Hindi review matters more now:** the whole UI, both new pages and the host phone have Hindi copy (`apps/web/src/i18n/hi.json` is flagged `_needsNativeReview`; the Hindi text on `/` and `/engineering` is in `Landing.tsx` / `Engineering.tsx`). I wrote it; a fluent reader should check tone.
+- **Hindi review matters more now:** the whole UI, both new pages and the host phone have Hindi copy (`apps/web/src/i18n/hi.json` is flagged `_needsNativeReview`; the Hindi text on `/` and `/engineering` is in `landing-content.ts` / `Engineering.tsx`). I wrote it; a fluent reader should check tone.
 - **One deliberate wording change:** you asked for "Runs automatically every evening at 18:30 (EventBridge Scheduler) — run now for the demo." I show "Live zones run automatically every evening at 18:30 (EventBridge Scheduler). This demo zone: run it now." because demo sessions never use the schedule and no live zone exists, so the original line would claim something the demo does not do. Tell me if you want your exact text.
 - **Area names** come from Amazon Location Places (A near Laxmi Nagar Metro, B Ganesh Nagar Shakarpur, C near NH-24 Shakarpur, D near Nirman Vihar Metro). Your example "Area B · near Laxmi Nagar Metro" is 586 m from B's centre, and A is the area actually next to the metro (237 m), so I labelled by what is true.
 - **The Engineering page's Step Functions graph is drawn** from the real execution history of the verified run, not a console screenshot (the console needs a sign-in). Use S09 for the real console shot.

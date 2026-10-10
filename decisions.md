@@ -66,3 +66,12 @@ All hosts, requests and temperatures in the hero scenario are invented; coordina
 - Area names are display-only labels from the fixture (`clusterLabels`), derived from Amazon Location Places; ids A-D are unchanged.
 - The "runs automatically every evening" line says live zones, not this demo zone (see tasks.md).
 - Content pages state only verified facts; each statistic links to its source; no testimonials, user counts, partner logos or impact claims.
+
+## UI v3 decisions (10 Oct 2026)
+- Theme: CSS variables, system default, user toggle persisted in localStorage; dark map uses the Amazon Location Standard Dark style. Every text pair is >= 4.5:1 in both themes (`scripts/check_contrast.py`).
+- Palette and type: warm canvas, water blue, clay terracotta and heat amber; Fraunces (display, bundled) with Inter. Clay was darkened to `#A44A27` because the lighter clay failed 4.5:1 on its soft tint.
+- Landing visuals are our own: inline-SVG street scene and clay pot, and a stylised map of the sample zone at real coordinates. The phone and the three role cards use real screenshots of the deployed app (sample data), not mock-ups. No photos of people, testimonials, user counts or partner logos.
+- The hackathon credit is only in the footer, with the AWS icons credit line.
+- AWS icons: the 14 official Architecture Icons (64 px SVGs) are used unmodified (only scaled). AWS's usage page gives minimal rules; we keep native aspect, no recolouring, and add the credit line. Only deployed services are drawn; Cognito and EventBridge are shown dashed because they are deployed but not exercised in the demo.
+- The Step Functions graph stays a drawing from the real execution history: the console view needs an AWS sign-in, so a real console screenshot is a recording task (S09), and the page says so.
+- Footage is recorded in light theme unless a shot says otherwise (RECORDING.md).

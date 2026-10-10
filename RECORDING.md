@@ -1,4 +1,4 @@
-# RECORDING.md — click-by-click capture guide (UI v2)
+# RECORDING.md — click-by-click capture guide (UI v3)
 
 Deployed app: **https://main.d1lgs9hxx2cuwt.amplifyapp.com** · every flow below was run end to end by script in a real browser (Edge, 1920×1080); timings are real.
 Filenames and audio rules come from `video-handoff.md`. The UI is frozen (see `WAKE-UP.md`). **Do not speed up or cut footage yourself** — the video workspace marks shortened waits on screen.
@@ -13,6 +13,7 @@ The app is **English by default** with an **English / हिंदी** toggle (
 4. Dismiss the light-blue coach strip in `/demo` (button "Dismiss", far right) if you do not want it in shot.
 5. **Microphone permission (S03):** open `/demo`, hold **Hold to ask** once, click **Allow**, release. Speakers on, volume up. Test once with your real voice.
 6. Hide account details in the AWS console (account ID top-right and inside ARNs): crop or zoom.
+7. **Theme:** the app follows your system light/dark setting until you press the sun/moon button (top right of every page; the demo room keeps it in the header). Record every take in **light** unless a shot says otherwise: set the system to light, or press the button once and check the page is light. Dark is available for a short bonus clip.
 
 ## S05 + S06 — one continuous take (about 90 s) → `05-plan-approve.mp4` and `06-outreach.mp4`
 
@@ -75,8 +76,8 @@ Region **ap-south-1 (Mumbai)**. Use the run ID you copied; the freshly verified 
 
 ## Optional shots (public pages)
 
-- **S10 — landing hero (backup for the close) → `10-landing-hero.mp4`:** open `/` at 1920×1080 in English. Hold on the hero: headline "Water, shade and a place to rest for delivery riders in the heat.", the sub line, the three buttons, and the **Sample scenario, not measured impact** dot strip (22 of 44 → 40 of 44). Scroll slowly through "The problem" (three source-linked figures), "How it works", and stop on "Built on AWS". Click **Try the live demo** at the end. Toggle **हिंदी** once if you want a Hindi hero.
-- **S08 backup — engineering diagram → `08-engineering.mp4`:** open `/engineering`. Scroll to **Architecture** (hold 5 s), then **Three flows**, then **A real execution** (the Step Functions graph drawn from the verified run, with the timeout loop and the accept branch lit). This is a **drawn** graph from the real execution history, not a console screenshot; use S09 for the actual console.
+- **S10 — landing hero (backup for the close) → `10-landing-hero.mp4`:** open `/` at 1920×1080 in English, light theme (the first visit follows your system setting, so check the sun/moon button at the top right). The hero is split: the headline, sub line and three buttons on the left; on the right the real rider screen (the H5 answer card with Play audio and Route) in a phone frame floating over a stylised map of the East Delhi sample zone, with the water points softly pulsing. There is no event badge in the hero. Scroll slowly: the illustrated street scene ("Why Pyau"), the three source-linked figures, the clay pot ("What is a pyau?"), "How it works" (three real screenshots: rider, host, coordinator), then pause on **What the sample scenario shows** while the 22 → 40 dots fill in (they animate once when the section scrolls into view; scroll back up and down to replay). Stop on "Built on AWS" and click **Try the live demo**. Click the **moon** once mid-scroll if you want to show dark mode; the page re-themes without reloading. Toggle **हिंदी** for a Hindi take. The small hackathon credit is in the footer only.
+- **S08 backup — engineering diagram → `08-engineering.mp4`:** open `/engineering`. Scroll to **Architecture**: the diagram uses the official AWS Architecture Icons in six regions (Client, Edge and API, Compute and orchestration, AI and maps, Data, Observability). Hold 4 s on **A rider asks** (animated path through API Gateway, the API Lambda, Transcribe, Polly, Location, DynamoDB and S3), then click **The evening coverage run** (animated path through Step Functions, the workflow Lambda, the agent Lambda, Bedrock, DynamoDB and CloudWatch) and hold 4 s. EventBridge and Cognito are drawn dashed on purpose: deployed but not exercised. Then **Three flows** and **A real execution** (the Step Functions graph drawn from the verified run, timeout loop and accept branch lit) and the real tool receipts. The graph is **drawn** from the real execution history, not a console screenshot; use S09 for the actual console. Works in dark mode too.
 
 ## If something goes wrong
 

@@ -31,7 +31,7 @@ export function ProblemQueue({ sessionId, zoneId, token }: { sessionId: string; 
               <span className="font-semibold tnum">{p.hostId}</span>
               <strong>{p.label}</strong>
               <span className="inline-flex items-center gap-1 font-semibold text-gap"><I icon={Pause} size={16} />{t("problem.paused")}</span>
-              <button className="ml-auto min-h-12 rounded-lg border border-border bg-white px-4 font-semibold" onClick={() => void act(p.hostId)}>{t("problem.reactivate")}</button>
+              <button className="ml-auto min-h-12 rounded-lg border border-border bg-panel px-4 font-semibold" onClick={() => void act(p.hostId)}>{t("problem.reactivate")}</button>
             </p>
             <p className="m-0 text-[14px] text-muted">
               {t("problem.reason", { n: p.reports.length || 2, h: 3 })}{p.seeded ? ` ${t("problem.sample")}` : ""}

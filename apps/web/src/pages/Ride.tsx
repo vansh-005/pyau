@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getMap } from "../api";
 import { Loading } from "../components/Loading";
 import { RiderPanel } from "../components/RiderPanel";
-import { LangToggle } from "../components/ui";
+import { LangToggle, ThemeToggle } from "../components/ui";
 import { useLang } from "../i18n/lang";
 import { RIDER_LOCATIONS, useDemoSession } from "../session";
 
@@ -20,7 +20,7 @@ export default function Ride() {
   if (!session || !map.data) return <Loading>{t("loading.rider")}</Loading>;
   return (
     <div className="mx-auto flex h-full max-w-md flex-col">
-      <div className="flex justify-end border-b border-border bg-white p-2"><LangToggle /></div>
+      <div className="flex justify-end border-b border-border bg-panel p-2"><span className="flex items-center gap-2"><LangToggle /><ThemeToggle /></span></div>
       <div className="min-h-0 flex-1">
         <RiderPanel sessionId={session.sessionId} zoneId={session.zoneId} center={map.data.zone.center} hosts={map.data.hosts} locations={RIDER_LOCATIONS} />
       </div>

@@ -118,7 +118,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
   return (
     <div className="flex h-full flex-col bg-canvas text-[15px]">
       {locations.length > 1 && (
-        <div className="flex items-center gap-2 border-b border-border bg-white px-3 py-2">
+        <div className="flex items-center gap-2 border-b border-border bg-panel px-3 py-2">
           <span className="text-[15px] text-muted">{t("rider.location")}</span>
           <Segmented size="sm" label={t("rider.location")} value={locId} onChange={(v) => { setLocId(v); setAnswer(null); setFb(null); }}
             options={locations.map((l) => ({ value: l.id, label: t(`area.${l.id}`) }))} />
@@ -127,7 +127,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
       <div className="relative min-h-[150px] flex-1">
         <MapView center={center} zoom={15.5} hosts={hosts} rider={location} routeLine={showRoute ? answer?.route?.line ?? null : null} />
       </div>
-      <div className="flex max-h-[66%] flex-col gap-2 overflow-auto bg-white p-3">
+      <div className="flex max-h-[66%] flex-col gap-2 overflow-auto bg-panel p-3">
         {error && <p className="m-0 rounded-lg bg-gap-soft p-2 text-gap" role="alert">{error}</p>}
         {answer && (
           <section aria-live="polite" className="space-y-2">
@@ -150,14 +150,14 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
             {!answer.found && <p className="m-0 font-medium text-gap">{t("rider.nothing")}</p>}
             <div className="flex gap-2">
               {answer.audio ? (
-                <button className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white font-semibold" onClick={play}>
+                <button className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-panel font-semibold" onClick={play}>
                   <I icon={Volume2} className="text-water" />{t("rider.play")}{playing === "blocked" ? ` (${t("rider.tap")})` : ""}
                 </button>
               ) : (
                 <span className="flex-1 self-center text-muted">{t("rider.noAudio")}</span>
               )}
               {answer.route && (
-                <button className={`inline-flex min-h-12 items-center gap-2 rounded-lg px-4 font-semibold ${showRoute ? "bg-water text-white" : "border border-border bg-white"}`}
+                <button className={`inline-flex min-h-12 items-center gap-2 rounded-lg px-4 font-semibold ${showRoute ? "bg-water text-on-water" : "border border-border bg-panel"}`}
                   onClick={() => setShowRoute((v) => !v)} aria-pressed={showRoute}>
                   <I icon={RouteIcon} />{t("rider.route")}
                 </button>
@@ -167,10 +167,10 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
               <div className="border-t border-border pt-2">
                 {!fb?.result && !fb?.error && (
                   <div className="flex gap-2">
-                    <button className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white font-semibold" onClick={() => void report("got_it")}>
+                    <button className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-panel font-semibold" onClick={() => void report("got_it")}>
                       <I icon={Check} className="text-water" />{t("rider.gotIt")}
                     </button>
-                    <button className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white font-semibold" aria-expanded={!!fb?.asking} onClick={() => setFb({ asking: !fb?.asking })}>
+                    <button className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-panel font-semibold" aria-expanded={!!fb?.asking} onClick={() => setFb({ asking: !fb?.asking })}>
                       <I icon={Flag} className="text-gap" />{t("rider.problem")}
                     </button>
                   </div>
@@ -178,7 +178,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
                 {fb?.asking && (
                   <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label={t("rider.whatProblem")}>
                     {PROBLEMS.map((k) => (
-                      <button key={k} className="min-h-12 rounded-lg border border-border bg-white px-2 font-medium" onClick={() => void report(k)}>{t(`fb.${k}`)}</button>
+                      <button key={k} className="min-h-12 rounded-lg border border-border bg-panel px-2 font-medium" onClick={() => void report(k)}>{t(`fb.${k}`)}</button>
                     ))}
                   </div>
                 )}
@@ -220,7 +220,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
               key={need}
               disabled={busy !== null}
               onClick={() => void ask(need)}
-              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-lg border border-border bg-white px-2 text-base font-semibold disabled:opacity-60"
+              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-lg border border-border bg-panel px-2 text-base font-semibold disabled:opacity-60"
             >
               <I icon={NEED_ICON[need]} size={20} className="text-water" />
               {busy === need ? t("rider.looking") : t(`need.${need}`)}

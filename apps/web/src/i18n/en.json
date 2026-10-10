@@ -209,5 +209,7 @@
   "replay.title": "Pyau coverage run",
   "replay.model": "agent model {m}",
   "replay.coverage": "Water access for rider requests in the heat window",
-  "replay.open": "Still open: {areas}"
+  "replay.open": "Still open: {areas}",
+  "theme.toDark": "Switch to dark theme",
+  "theme.toLight": "Switch to light theme"
 }

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getMap } from "../api";
 import { CoordinatorPanel } from "../components/CoordinatorPanel";
 import { Loading } from "../components/Loading";
-import { LangToggle, Wordmark } from "../components/ui";
+import { LangToggle, ThemeToggle, Wordmark } from "../components/ui";
 import { useRun } from "../hooks";
 import { useLang } from "../i18n/lang";
 import { useDemoSession } from "../session";
@@ -23,7 +23,7 @@ export default function Coordinate() {
   if (!session || !map.data) return <Loading>{t("loading.coordinator")}</Loading>;
   return (
     <div className="mx-auto flex h-full max-w-6xl flex-col">
-      <header className="flex items-center justify-between border-b border-border bg-white px-4 py-2"><Wordmark /><LangToggle /></header>
+      <header className="flex items-center justify-between border-b border-border bg-panel px-4 py-2"><Wordmark /><span className="flex items-center gap-2"><LangToggle /><ThemeToggle /></span></header>
       <div className="min-h-0 flex-1">
         <CoordinatorPanel sessionId={sid} zoneId={session.zoneId} token={session.token} map={map.data} run={run} />
       </div>

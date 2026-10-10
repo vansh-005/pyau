@@ -60,7 +60,7 @@ export function PlanReview({ proposal, sessionId, token, onDone, readOnly }: { p
                   <span className="font-semibold">{c ? shortName(c.label) : ""}</span>
                   {c && <span className="text-muted">· {t("plan.distance", { m: c.distanceM })}</span>}
                   {!decided && (
-                    <button className="ml-auto min-h-10 shrink-0 rounded-lg border border-border bg-white px-3 text-[15px] font-medium" onClick={() => toggle(h)}>
+                    <button className="ml-auto min-h-10 shrink-0 rounded-lg border border-border bg-panel px-3 text-[15px] font-medium" onClick={() => toggle(h)}>
                       {removed.has(h) ? t("plan.keep") : t("plan.remove")}
                     </button>
                   )}
@@ -91,19 +91,19 @@ export function PlanReview({ proposal, sessionId, token, onDone, readOnly }: { p
       {!decided && (
         <div className="mt-4 flex flex-wrap items-center gap-4">
           <label className="flex min-h-12 items-center gap-2 text-[15px]">
-            <input type="checkbox" className="h-5 w-5 accent-[#0a6c94]" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+            <input type="checkbox" className="h-5 w-5 accent-water" checked={ack} onChange={(e) => setAck(e.target.checked)} />
             {t("plan.ack")}
           </label>
           <div className="ml-auto flex gap-2">
             <button
-              className="min-h-12 rounded-lg border border-border bg-white px-4 font-semibold disabled:opacity-50"
+              className="min-h-12 rounded-lg border border-border bg-panel px-4 font-semibold disabled:opacity-50"
               disabled={busy}
               onClick={() => void act(() => rejectProposal(proposal, sessionId, token, "Rejected by coordinator"))}
             >
               {t("plan.reject")}
             </button>
             <button
-              className="min-h-12 rounded-lg bg-water px-4 font-semibold text-white disabled:opacity-50"
+              className="min-h-12 rounded-lg bg-water px-4 font-semibold text-on-water disabled:opacity-50"
               disabled={!ack || busy}
               onClick={() => void act(() => approveProposal(proposal, sessionId, token, [...removed], key))}
             >

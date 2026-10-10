@@ -1,27 +1,118 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/fraunces";
 @import "@fontsource/noto-sans-devanagari/400.css";
 @import "@fontsource/noto-sans-devanagari/500.css";
 @import "@fontsource/noto-sans-devanagari/700.css";
+@import "@fontsource/noto-serif-devanagari/600.css";
 @import "maplibre-gl/dist/maplibre-gl.css";
 
-@theme {
-  /* Near-white canvas, one accent (water). Amber and red are status only. */
-  --color-canvas: #f8fafb;
-  --color-panel: #ffffff;
-  --color-ink: #0e1a22;
-  --color-muted: #566573;
-  --color-border: #e2e8ee;
-  --color-water: #0a6c94;
-  --color-water-soft: #e6f2f7;
-  --color-heat: #a85a00;
-  --color-heat-soft: #fff4e0;
-  --color-gap: #b3261e;
-  --color-gap-soft: #fdeeec;
-  --color-ok: #0a6c94;
-  --color-standby: #64748b;
+/* ---------------------------------------------------------------------------------------------
+   Theme tokens. Light is the default; dark follows the system unless the visitor chose a theme
+   (data-theme on <html>, set by the toggle and persisted in localStorage). Every pair used for text
+   was checked at >= 4.5:1 in both themes (scripts/check_contrast.py).
+   --------------------------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --canvas: #fbf8f3;
+  --panel: #ffffff;
+  --ink: #1b2630;
+  --muted: #5c6873;
+  --border: #e7e0d5;
+  --water: #0a6c94;
+  --water-soft: #e4f1f6;
+  --on-water: #ffffff;
+  --clay: #a44a27;
+  --clay-soft: #faede4;
+  --heat: #a35700;
+  --heat-soft: #fdf0d8;
+  --gap: #b3261e;
+  --gap-soft: #fcecea;
+  --standby: #64748b;
+  --scene-sky-top: #fbe3b5;
+  --scene-sky-bottom: #fdf3df;
+  --scene-sun: #f6b24a;
+  --scene-wall: #f1d9bd;
+  --scene-wall-2: #e8c9a6;
+  --scene-road: #d9c3a3;
+  --scene-shade: rgb(60 40 20 / 0.16);
+  --scene-leaf: #6f9a74;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #0e151a;
+    --panel: #151f26;
+    --ink: #eaf0f4;
+    --muted: #9fb0bd;
+    --border: #26343e;
+    --water: #5cbbe0;
+    --water-soft: #123241;
+    --on-water: #05222e;
+    --clay: #e89168;
+    --clay-soft: #3a2418;
+    --heat: #f0a94b;
+    --heat-soft: #3a2a10;
+    --gap: #ff8f86;
+    --gap-soft: #3d1c1a;
+    --standby: #94a3b8;
+    --scene-sky-top: #2a2236;
+    --scene-sky-bottom: #4a3326;
+    --scene-sun: #f0a94b;
+    --scene-wall: #3a2e28;
+    --scene-wall-2: #2f2520;
+    --scene-road: #2b2622;
+    --scene-shade: rgb(0 0 0 / 0.35);
+    --scene-leaf: #3e6a4b;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0e151a;
+  --panel: #151f26;
+  --ink: #eaf0f4;
+  --muted: #9fb0bd;
+  --border: #26343e;
+  --water: #5cbbe0;
+  --water-soft: #123241;
+  --on-water: #05222e;
+  --clay: #e89168;
+  --clay-soft: #3a2418;
+  --heat: #f0a94b;
+  --heat-soft: #3a2a10;
+  --gap: #ff8f86;
+  --gap-soft: #3d1c1a;
+  --standby: #94a3b8;
+  --scene-sky-top: #2a2236;
+  --scene-sky-bottom: #4a3326;
+  --scene-sun: #f0a94b;
+  --scene-wall: #3a2e28;
+  --scene-wall-2: #2f2520;
+  --scene-road: #2b2622;
+  --scene-shade: rgb(0 0 0 / 0.35);
+  --scene-leaf: #3e6a4b;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-water: var(--water);
+  --color-water-soft: var(--water-soft);
+  --color-on-water: var(--on-water);
+  --color-clay: var(--clay);
+  --color-clay-soft: var(--clay-soft);
+  --color-heat: var(--heat);
+  --color-heat-soft: var(--heat-soft);
+  --color-gap: var(--gap);
+  --color-gap-soft: var(--gap-soft);
+  --color-ok: var(--water);
+  --color-standby: var(--standby);
   --font-sans: "Inter Variable", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-mono: "Inter Variable", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-display: "Fraunces Variable", "Noto Serif Devanagari", Georgia, serif;
 }
 
 html,
@@ -31,12 +122,13 @@ body,
 }
 body {
   margin: 0;
-  background: var(--color-canvas);
-  color: var(--color-ink);
+  background: var(--canvas);
+  color: var(--ink);
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 /* Devanagari needs more line height than Latin */
 html[lang="hi"] body {
@@ -47,21 +139,103 @@ html[lang="hi"] body {
 .tnum {
   font-variant-numeric: tabular-nums;
 }
+/* Display serif for public-page headlines (Fraunces, with a Devanagari serif fallback) */
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variation-settings: "opsz" 96, "SOFT" 50;
+  letter-spacing: -0.015em;
+}
+html[lang="hi"] .display {
+  letter-spacing: 0;
+  line-height: 1.25;
+}
 .card {
-  background: var(--color-panel);
-  border: 1px solid var(--color-border);
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 :focus-visible {
-  outline: 2px solid var(--color-water);
+  outline: 2px solid var(--water);
   outline-offset: 2px;
 }
 .pot-marker {
   cursor: pointer;
 }
+input,
+select,
+textarea {
+  color: var(--ink);
+}
+::placeholder {
+  color: var(--muted);
+  opacity: 0.9;
+}
+/* Map attribution and controls follow the theme */
+:root[data-theme="dark"] .maplibregl-ctrl-group,
+:root[data-theme="dark"] .maplibregl-ctrl-attrib {
+  background: var(--panel);
+}
+:root[data-theme="dark"] .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+:root[data-theme="dark"] .maplibregl-ctrl-attrib a {
+  color: var(--muted);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .maplibregl-ctrl-group,
+  :root:not([data-theme="light"]) .maplibregl-ctrl-attrib {
+    background: var(--panel);
+  }
+  :root:not([data-theme="light"]) .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+    filter: invert(1);
+  }
+  :root:not([data-theme="light"]) .maplibregl-ctrl-attrib a {
+    color: var(--muted);
+  }
+}
+
+/* Motion: one slow ambient shimmer behind the hero, scroll-in reveals, a path animation on the diagram.
+   All of it is off under prefers-reduced-motion. */
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.6); opacity: 0.55; }
+  80%, 100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes flow {
+  to { stroke-dashoffset: -24; }
+}
+.heat-shimmer {
+  background: linear-gradient(115deg, var(--heat-soft), var(--canvas) 38%, var(--water-soft) 62%, var(--clay-soft));
+  background-size: 260% 260%;
+  animation: shimmer 24s ease-in-out infinite;
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+.flow-path {
+  stroke-dasharray: 6 6;
+  animation: flow 0.9s linear infinite;
+}
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation: none !important;
     transition: none !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
   }
 }

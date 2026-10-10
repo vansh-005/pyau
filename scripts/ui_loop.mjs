@@ -6,6 +6,7 @@ const out = process.argv[3] ?? "docs/evidence";
 const b = await chromium.launch({ channel: "msedge" });
 const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 }, permissions: ["clipboard-read", "clipboard-write"] });
 const p = await ctx.newPage();
+if (process.env.PYAU_THEME) await p.addInitScript((t) => localStorage.setItem("pyau.theme", t), process.env.PYAU_THEME);
 const logs = [];
 p.on("pageerror", (e) => logs.push("pageerror: " + e.message.slice(0, 200)));
 p.on("console", (m) => m.type() === "error" && !/404|favicon/.test(m.text()) && logs.push("console: " + m.text().slice(0, 200)));
@@ -13,6 +14,7 @@ const shot = (n) => p.screenshot({ path: `${out}/${n}.png` });
 const t0 = Date.now();
 const step = (s) => console.log(`[${Math.round((Date.now() - t0) / 1000)}s] ${s}`);
 
+try {
 await p.goto(`${base}/demo`, { waitUntil: "load" });
 await p.getByText("Demo timers: 45 s").waitFor({ timeout: 30000 });
 await p.getByText("50%").first().waitFor({ timeout: 30000 });
@@ -56,5 +58,15 @@ await shot("t08-demo-rider");
 await p.getByRole("button", { name: "Copy run ID" }).click();
 const copied = await p.evaluate(() => navigator.clipboard.readText());
 step("copied run id: " + copied);
+} catch (e) {
+  // keep what the page looked like when a step timed out, so a failure can be diagnosed rather than guessed
+  step("FAILED: " + String(e.message).split("\n")[0]);
+  await p.screenshot({ path: `${out}/ui-loop-failure.png` }).catch(() => {});
+  console.log("hidden:", await p.evaluate(() => document.hidden).catch(() => "?"));
+  console.log((await p.locator("body").innerText().catch(() => "")).slice(0, 1800));
+  console.log(logs.join("\n") || "no page errors");
+  await b.close();
+  process.exit(1);
+}
 console.log(logs.join("\n") || "no page errors");
 await b.close();

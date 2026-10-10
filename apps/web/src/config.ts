@@ -6,5 +6,6 @@ export const config = {
   mapKey: (import.meta.env.VITE_LOCATION_API_KEY as string) || "",
 };
 
-export const mapStyleUrl = () =>
-  `https://maps.geo.${config.region}.amazonaws.com/v2/styles/${config.mapStyle}/descriptor?key=${config.mapKey}`;
+/** Amazon Location "Standard" style, light or dark to match the app theme. */
+export const mapStyleUrl = (theme: "light" | "dark" = "light") =>
+  `https://maps.geo.${config.region}.amazonaws.com/v2/styles/${config.mapStyle}/descriptor?color-scheme=${theme === "dark" ? "Dark" : "Light"}&key=${config.mapKey}`;

@@ -33,12 +33,12 @@ export function AskCard({ ask, serverTime, sessionId, token, onChanged }: { ask:
     }
   };
   const yes = (
-    <button disabled={busy} onClick={() => void answer("accepted")} className="inline-flex min-h-14 items-center justify-center rounded-lg bg-water px-2 font-semibold text-white disabled:opacity-60">
+    <button disabled={busy} onClick={() => void answer("accepted")} className="inline-flex min-h-14 items-center justify-center rounded-lg bg-water px-2 font-semibold text-on-water disabled:opacity-60">
       {fresh ? t("host.freshYes") : t("host.yes")}
     </button>
   );
   const no = (
-    <button disabled={busy} onClick={() => void answer("declined")} className="min-h-14 rounded-lg border border-border bg-white px-2 font-semibold disabled:opacity-60">
+    <button disabled={busy} onClick={() => void answer("declined")} className="min-h-14 rounded-lg border border-border bg-panel px-2 font-semibold disabled:opacity-60">
       {fresh ? t("host.freshNo") : t("host.no")}
     </button>
   );
@@ -77,17 +77,17 @@ export function HostPanel({ sessionId, token, hosts }: { sessionId: string; toke
   const { t } = useLang(); // the demo-room language, used for the switcher only
   return (
     <div className="flex h-full flex-col bg-canvas text-[15px]">
-      <div className="flex gap-2 border-b border-border bg-white p-2" role="tablist" aria-label={t("host.switch")}>
+      <div className="flex gap-2 border-b border-border bg-panel p-2" role="tablist" aria-label={t("host.switch")}>
         {DEMO_HOSTS.map((h) => (
           <button
             key={h.id}
             role="tab"
             aria-selected={hostId === h.id}
             onClick={() => setHostId(h.id)}
-            className={`min-h-12 flex-1 rounded-lg px-2 font-semibold ${hostId === h.id ? "bg-water text-white" : "border border-border bg-white"}`}
+            className={`min-h-12 flex-1 rounded-lg px-2 font-semibold ${hostId === h.id ? "bg-water text-on-water" : "border border-border bg-panel"}`}
           >
             <span className="tnum">{h.id}</span> {h.label}
-            <span className={`ml-1 text-[13px] font-medium ${hostId === h.id ? "text-white/85" : "text-muted"}`}>{hosts.find((x) => x.id === h.id)?.language === "hi" ? "हिंदी" : "English"}</span>
+            <span className={`ml-1 text-[13px] font-medium ${hostId === h.id ? "text-on-water/85" : "text-muted"}`}>{hosts.find((x) => x.id === h.id)?.language === "hi" ? "हिंदी" : "English"}</span>
           </button>
         ))}
       </div>
@@ -103,7 +103,7 @@ function HostInbox({ asks, serverTime, sessionId, token, onChanged }: { asks: As
   const { t } = useLang();
   return (
     <div className="flex-1 space-y-2 overflow-auto p-3">
-      {asks.length === 0 && <p className="m-0 rounded-lg border border-border bg-white p-4 text-muted">{t("host.empty")}</p>}
+      {asks.length === 0 && <p className="m-0 rounded-lg border border-border bg-panel p-4 text-muted">{t("host.empty")}</p>}
       {asks.map((a) => <AskCard key={a.id} ask={a} serverTime={serverTime} sessionId={sessionId} token={token} onChanged={onChanged} />)}
     </div>
   );

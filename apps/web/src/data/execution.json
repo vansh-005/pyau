@@ -1,5 +1,5 @@
 {
- "runId": "4cd8ad80608b92070522",
+ "runId": "e6797b6498180215fe97",
  "statesEntered": [
   "AskHost",
   "AwaitApproval",
@@ -16,8 +16,8 @@
  ],
  "coverageBefore": {
   "covered": 22,
-  "percent": 50,
-  "total": 44
+  "total": 44,
+  "percent": 50
  },
  "coverageAfter": {
   "covered": 40,

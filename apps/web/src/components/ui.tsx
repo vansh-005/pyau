@@ -1,9 +1,10 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
-  Check, Droplet, Info, PlugZap, Toilet, Umbrella,
+  Check, Droplet, Info, Moon, PlugZap, Sun, Toilet, Umbrella,
   type LucideIcon,
 } from "lucide-react";
 import { useLang, type Lang } from "../i18n/lang";
+import { useTheme } from "../theme";
 
 /** One icon size and stroke everywhere (Lucide, 1.75 stroke). */
 export function I({ icon: C, size = 18, className, label }: { icon: LucideIcon; size?: number; className?: string; label?: string }) {
@@ -60,7 +61,7 @@ export function Segmented<T extends string>({ value, onChange, options, label, s
           role="radio"
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`${size === "sm" ? "min-h-12 px-3" : "min-h-12 px-4"} rounded-md text-base font-medium transition-colors ${value === o.value ? "bg-white text-ink shadow-[0_0_0_1px_var(--color-border)]" : "text-muted hover:text-ink"}`}
+          className={`${size === "sm" ? "min-h-12 px-3" : "min-h-12 px-4"} rounded-md text-base font-medium transition-colors ${value === o.value ? "bg-panel text-ink shadow-[0_0_0_1px_var(--color-border)]" : "text-muted hover:text-ink"}`}
         >
           {o.label}
         </button>
@@ -75,6 +76,19 @@ export function LangToggle() {
   return (
     <Segmented<Lang> size="sm" label={t("lang.label")} value={lang} onChange={setLang}
       options={[{ value: "en", label: "English" }, { value: "hi", label: "हिंदी" }]} />
+  );
+}
+
+/** Sun / moon toggle: follows the system until you choose; the choice is remembered. */
+export function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  const { t } = useLang();
+  const dark = theme === "dark";
+  return (
+    <button type="button" onClick={toggle} aria-label={dark ? t("theme.toLight") : t("theme.toDark")} title={dark ? t("theme.toLight") : t("theme.toDark")}
+      className="inline-flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-panel text-ink hover:bg-canvas">
+      <I icon={dark ? Sun : Moon} size={20} />
+    </button>
   );
 }
 
@@ -102,7 +116,7 @@ export function InfoTip({ children, label }: { children: ReactNode; label: strin
         <I icon={Info} size={16} />
       </button>
       {open && (
-        <span id={id} role="tooltip" className="absolute right-0 top-9 z-20 w-64 rounded-lg border border-border bg-white p-3 text-left text-[15px] leading-snug text-ink shadow-lg">
+        <span id={id} role="tooltip" className="absolute right-0 top-9 z-20 w-64 rounded-lg border border-border bg-panel p-3 text-left text-[15px] leading-snug text-ink shadow-lg">
           {children}
         </span>
       )}

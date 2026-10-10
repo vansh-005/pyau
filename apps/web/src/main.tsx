@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 import { LangProvider } from "./i18n/lang";
+import { ThemeProvider } from "./theme";
 import Landing from "./pages/Landing";
 import Engineering from "./pages/Engineering";
 import Demo from "./pages/Demo";
@@ -17,6 +18,7 @@ const qc = new QueryClient();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={qc}>
+      <ThemeProvider>
       <LangProvider>
       <BrowserRouter>
         <Routes>
@@ -30,6 +32,7 @@ createRoot(document.getElementById("root")!).render(
         </Routes>
       </BrowserRouter>
       </LangProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

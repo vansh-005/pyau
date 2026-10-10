@@ -5,7 +5,7 @@ export function PhoneFrame({ title, children }: { title: ReactNode; children: Re
   return (
     <div className="flex flex-col items-center gap-2">
       <h2 className="m-0 text-base font-semibold text-muted">{title}</h2>
-      <div className="overflow-hidden rounded-[32px] border-[8px] border-ink bg-ink shadow-xl" style={{ width: 390, height: 780, maxWidth: "100%" }}>
+      <div className="overflow-hidden rounded-[32px] border-[8px] border-[#10181e] bg-[#10181e] shadow-xl" style={{ width: 390, height: 780, maxWidth: "100%", boxShadow: "0 0 0 1px var(--border), 0 18px 40px -18px rgb(0 0 0 / 0.45)" }}>
         <div className="h-full w-full overflow-hidden rounded-[24px] bg-canvas">{children}</div>
       </div>
     </div>
