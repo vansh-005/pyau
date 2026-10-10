@@ -1,10 +1,10 @@
 {
  "verifiedRun": {
-  "runId": "6d8648e4d5da8b98432c",
-  "executionArnSuffix": "execution:pyau-CoverageRun:6d8648e4d5da8b98432c",
+  "runId": "4cd8ad80608b92070522",
+  "executionArnSuffix": "execution:pyau-CoverageRun:4cd8ad80608b92070522",
   "executionStatus": "SUCCEEDED",
-  "startedAt": "2026-10-10T06:44:07.131000+05:30",
-  "stoppedAt": "2026-10-10T06:45:08.710000+05:30",
+  "startedAt": "2026-10-10T13:12:36.624000+05:30",
+  "stoppedAt": "2026-10-10T13:13:38.111000+05:30",
   "events": [
    {
     "seq": 1,
@@ -29,72 +29,77 @@
    {
     "seq": 5,
     "type": "tool_receipt",
-    "summary": "Demand: 4 clusters, 44 requests"
+    "summary": "Demand: 4 areas, 44 requests"
    },
    {
     "seq": 6,
     "type": "tool_receipt",
-    "summary": "Coverage 22/44 (50.0%) · uncovered: B, D"
+    "summary": "Coverage 22/44 (50.0%) · not covered: Area B · Ganesh Nagar, Shakarpur, Area D · near Nirman Vihar Metro"
    },
    {
     "seq": 7,
     "type": "tool_receipt",
-    "summary": "Candidates for B: Kirana store, RWA office"
+    "summary": "Candidates for Area B · Ganesh Nagar, Shakarpur: Kirana store (Hindi), RWA office (English)"
    },
    {
     "seq": 8,
     "type": "tool_receipt",
-    "summary": "Candidates for D: none"
+    "summary": "Candidates for Area D · near Nirman Vihar Metro: none"
    },
    {
     "seq": 9,
     "type": "tool_receipt",
-    "summary": "Proposal submitted · projected 40/44 if first choices accept"
+    "summary": "Proposal rejected by validation (1 issue)"
    },
    {
     "seq": 10,
+    "type": "tool_receipt",
+    "summary": "Proposal submitted · projected 40/44 if first choices accept"
+   },
+   {
+    "seq": 11,
     "type": "proposal_ready",
     "summary": "Proposal ready for coordinator review"
    },
    {
-    "seq": 11,
+    "seq": 12,
     "type": "awaiting_approval",
     "summary": "Waiting for coordinator approval"
    },
    {
-    "seq": 12,
+    "seq": 13,
     "type": "plan_approved",
     "summary": "Coordinator approved the plan · 1 gap(s) to work"
    },
    {
-    "seq": 13,
+    "seq": 14,
     "type": "ask_sent",
     "summary": "Asking Kirana store · 45 s to answer"
    },
    {
-    "seq": 14,
+    "seq": 15,
     "type": "ask_timed_out",
     "summary": "No reply from Kirana store — timed out, moving to the next host"
    },
    {
-    "seq": 15,
+    "seq": 16,
     "type": "ask_sent",
     "summary": "Asking RWA office · 45 s to answer"
    },
    {
-    "seq": 16,
+    "seq": 17,
     "type": "ask_answered",
     "summary": "RWA office said Yes · 12:00–17:00"
    },
    {
-    "seq": 17,
+    "seq": 18,
     "type": "point_published",
     "summary": "RWA office is live for riders 12:00–17:00 (host confirmed) · coverage 40/44 (90.9%)"
    },
    {
-    "seq": 18,
+    "seq": 19,
     "type": "run_completed",
-    "summary": "Run completed · coverage 50% → 90.9% (40/44) · unresolved: D"
+    "summary": "Run completed · coverage 50% → 90.9% (40/44) · still open: Area D · near Nirman Vihar Metro"
    }
   ]
  },
@@ -102,9 +107,9 @@
   "consecutiveDeployedLoopsPassed": 3,
   "required": 3,
   "runIds": [
-   "b1a12c471697b05655b1",
-   "c827841f6db8a30b35c3",
-   "6d8648e4d5da8b98432c"
+   "9f02acc6b1a7dd114645",
+   "c1101d6ab34c3f9d4501",
+   "4cd8ad80608b92070522"
   ]
  },
  "screenshots": [

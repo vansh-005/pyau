@@ -28,5 +28,5 @@ def report(session_id: str, zone_id: str):
         return out  # INSUFFICIENT_DATA / NO_HEAT: never reported as "safe"
     rep = compute_coverage(st.demand, st.hosts, [a for a in st.avail if a.date == st.date], outlook.window, st.policy)
     out["coverage"] = rep.model_dump()
-    out["clusters"] = cluster_summaries(st.demand, outlook.window, st.policy, rep)
+    out["clusters"] = cluster_summaries(st.demand, outlook.window, st.policy, rep, st.meta.get("clusterLabels"))
     return out

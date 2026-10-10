@@ -1,10 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Pause } from "lucide-react";
 import { getProblems, reactivateHost } from "../api";
-
-const KIND: Record<string, string> = { no_water: "No water", closed: "Closed", dirty: "Dirty", unsafe: "Unsafe" };
+import { useLang } from "../i18n/lang";
+import { I } from "./ui";
 
 /** Paused points and the rider reports behind them. Reactivation is a human decision. */
 export function ProblemQueue({ sessionId, zoneId, token }: { sessionId: string; zoneId: string; token: string }) {
+  const { t } = useLang();
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: ["problems", sessionId],
@@ -20,20 +22,20 @@ export function ProblemQueue({ sessionId, zoneId, token }: { sessionId: string; 
     void qc.invalidateQueries({ queryKey: ["map", sessionId] });
   };
   return (
-    <section className="card border-gap/40 p-3" aria-label="Problem queue">
-      <h2 className="m-0 text-lg font-semibold">Problem queue <span className="font-mono text-base text-gap">{items.length}</span></h2>
-      <ul className="m-0 list-none space-y-2 p-0 pt-1">
+    <section className="card p-4" aria-label={t("problem.title")}>
+      <h2 className="m-0 text-lg font-semibold">{t("problem.title")} <span className="text-base font-normal text-gap tnum">{items.length}</span></h2>
+      <ul className="m-0 list-none space-y-2 p-0 pt-2">
         {items.map((p) => (
-          <li key={p.hostId} className="rounded-lg bg-gap/5 p-2 text-[15px]">
-            <p className="m-0 flex items-baseline gap-2">
-              <span className="font-mono font-semibold">{p.hostId}</span>
+          <li key={p.hostId} className="rounded-lg bg-gap-soft p-3 text-[15px]">
+            <p className="m-0 flex items-center gap-2">
+              <span className="font-semibold tnum">{p.hostId}</span>
               <strong>{p.label}</strong>
-              <span className="font-semibold text-gap">⏸ Paused</span>
-              <button className="ml-auto min-h-10 rounded-lg border border-border bg-white px-3 font-semibold" onClick={() => void act(p.hostId)}>Reactivate</button>
+              <span className="inline-flex items-center gap-1 font-semibold text-gap"><I icon={Pause} size={16} />{t("problem.paused")}</span>
+              <button className="ml-auto min-h-12 rounded-lg border border-border bg-white px-4 font-semibold" onClick={() => void act(p.hostId)}>{t("problem.reactivate")}</button>
             </p>
-            <p className="m-0 text-base text-muted">
-              {p.reason}{p.seeded ? " (sample scenario)" : ""}
-              {p.reports.length > 0 && <> · reports: {p.reports.map((r) => KIND[r.kind] ?? r.kind).join(", ")}</>}
+            <p className="m-0 text-[14px] text-muted">
+              {t("problem.reason", { n: p.reports.length || 2, h: 3 })}{p.seeded ? ` ${t("problem.sample")}` : ""}
+              {p.reports.length > 0 && <> · {p.reports.map((r) => t(`fb.${r.kind}`)).join(", ")}</>}
             </p>
           </li>
         ))}

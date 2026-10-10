@@ -36,7 +36,7 @@ def zone_map(session_id, zone_id, params):
     for h in hosts:
         st = host_state(h, avail, minute)
         out.append({"id": h.id, "label": h.label, "kind": h.kind, "lat": h.lat, "lng": h.lng, "offers": h.offers,
-                    "hours": list(h.hours), **st})
+                    "hours": list(h.hours), "language": h.language, **st})
     return resp(200, {"zone": {"id": meta["id"], "name": meta["name"], "center": meta["center"], "timezone": meta["timezone"]},
                       "sessionId": session_id, "planDate": meta["date"], "clock": clock, "hosts": out,
                       "badge": "Sample scenario · 21 May 2026"})

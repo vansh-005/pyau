@@ -4,6 +4,12 @@ from .geo import haversine, hm
 from .models import DemandRecord, Host, Policy
 
 
+def area_label(cid: str, labels: Optional[dict] = None) -> str:
+    """Plain-language name for an area: 'Area B · Ganesh Nagar, Shakarpur' (falls back to 'Area B')."""
+    place = (labels or {}).get(cid)
+    return f"Area {cid} · {place}" if place else f"Area {cid}"
+
+
 def centroid(points: list) -> dict:
     return {"lat": sum(p.lat for p in points) / len(points), "lng": sum(p.lng for p in points) / len(points)}
 
@@ -34,7 +40,7 @@ def candidate_hosts(
     return out[: policy.maxCandidatesPerCluster]
 
 
-def cluster_summaries(demand: list[DemandRecord], window: tuple[str, str], policy: Policy, report) -> list[dict]:
+def cluster_summaries(demand: list[DemandRecord], window: tuple[str, str], policy: Policy, report, labels: Optional[dict] = None) -> list[dict]:
     """Per-cluster centroid + coverage for map circles (uses an existing CoverageReport, never recomputes it)."""
     out = []
     for cid, cc in report.byCluster.items():
@@ -44,7 +50,7 @@ def cluster_summaries(demand: list[DemandRecord], window: tuple[str, str], polic
         ]
         c = centroid(pts)
         out.append({
-            "id": cid, "requests": cc.requests, "covered": cc.covered, "uncovered": cc.covered < cc.requests,
+            "id": cid, "label": area_label(cid, labels), "requests": cc.requests, "covered": cc.covered, "uncovered": cc.covered < cc.requests,
             "nearestHostId": cc.nearestHostId, "distanceM": cc.distanceM, "lat": c["lat"], "lng": c["lng"],
         })
     return out

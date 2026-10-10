@@ -1,24 +1,17 @@
-import { Loading } from "../components/Loading";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check } from "lucide-react";
 import { FieldError, getMap, hostAsks, registerHost, reverseGeocode, runFreshness, type Ask, type RegisteredHost } from "../api";
 import { AskCard } from "../components/HostPanel";
+import { Loading } from "../components/Loading";
 import { MapView } from "../components/MapView";
+import { I, LangToggle, NEED_ICON, Segmented, Wordmark } from "../components/ui";
+import { useLang, type Lang } from "../i18n/lang";
 import { useDemoSession } from "../session";
 
-const TYPES = [
-  ["shop", "Shop", "दुकान"], ["chemist", "Chemist", "दवाई"], ["temple", "Temple", "मंदिर"], ["rwa", "RWA / office", "RWA"],
-  ["home", "Home", "घर"], ["dhaba", "Dhaba", "ढाबा"], ["other", "Other", "अन्य"],
-] as const;
-const OFFERS = [["water", "Water", "पानी"], ["shade", "Shade", "छाँव"], ["toilet", "Toilet", "शौचालय"], ["charging", "Charging", "चार्ज"]] as const;
+const TYPES = ["shop", "chemist", "temple", "rwa", "home", "dhaba", "other"] as const;
+const OFFERS = ["water", "shade", "toilet", "charging"] as const;
 const KEY = "pyau.myHosts";
-
-const Chip = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
-  <button type="button" aria-pressed={on} onClick={onClick}
-    className={`min-h-12 rounded-full border px-4 text-base font-medium ${on ? "border-water bg-water text-white" : "border-border bg-white"}`}>
-    {on ? "✓ " : ""}{children}
-  </button>
-);
 
 function loadMine(): RegisteredHost[] {
   try {
@@ -28,8 +21,11 @@ function loadMine(): RegisteredHost[] {
   }
 }
 
+const field = "mt-1 min-h-12 w-full rounded-lg border border-border bg-white px-3 text-base";
+
 /** /host — register a point in under a minute, then answer the morning "still serving water today?" check. */
 export default function Host() {
+  const { t, lang } = useLang();
   const { session } = useDemoSession();
   const qc = useQueryClient();
   const sid = session?.sessionId ?? "";
@@ -38,6 +34,7 @@ export default function Host() {
   const [hostType, setHostType] = useState<string>("shop");
   const [offers, setOffers] = useState<string[]>(["water"]);
   const [kind, setKind] = useState<"listed" | "standby">("listed");
+  const [hostLang, setHostLang] = useState<Lang>(lang);
   const [open, setOpen] = useState("09:00");
   const [close, setClose] = useState("20:00");
   const [consent, setConsent] = useState(false);
@@ -88,7 +85,7 @@ export default function Host() {
     setError("");
     setFields({});
     try {
-      const h = await registerHost({ zoneId: session.zoneId, sessionId: sid, label, hostType, offers, kind, hours: [open, close], lat: pin.lat, lng: pin.lng, consentToAsks: consent }, session.token);
+      const h = await registerHost({ zoneId: session.zoneId, sessionId: sid, label, hostType, offers, kind, language: hostLang, hours: [open, close], lat: pin.lat, lng: pin.lng, consentToAsks: consent }, session.token);
       const next = [...mine, h];
       setMine(next);
       try {
@@ -98,12 +95,12 @@ export default function Host() {
       }
       setLabel("");
       setConsent(false);
-      setNotice(`Registered as ${h.id}. ${kind === "listed" ? "You appear greyed out until you confirm you're serving today." : "You're on standby: the coordinator asks you only when needed."}`);
+      setNotice(t(kind === "listed" ? "hostp.registeredListed" : "hostp.registeredStandby", { id: h.id }));
       void qc.invalidateQueries({ queryKey: ["map", sid] });
     } catch (err) {
       if (err instanceof FieldError) {
         setFields(err.fields);
-        setError(err.message);
+        setError(t("hostp.fixFields"));
       } else setError((err as Error).message);
     } finally {
       setBusy(false);
@@ -114,32 +111,35 @@ export default function Host() {
     setError("");
     try {
       const r = await runFreshness(session!.zoneId, sid, session!.token);
-      setNotice(r.created.length ? `Morning check sent to ${r.created.join(", ")}` : "No new morning checks needed.");
+      setNotice(r.created.length ? t("hostp.morningSent", { ids: r.created.join(", ") }) : t("hostp.morningNone"));
       void inbox.refetch();
     } catch (err) {
       setError((err as Error).message);
     }
   };
 
-  if (!session || !map.data) return <Loading>Loading the host screen…</Loading>;
+  if (!session || !map.data) return <Loading>{t("loading.host")}</Loading>;
   const myState = (id: string) => map.data!.hosts.find((h) => h.id === id);
   const toggleOffer = (o: string) => setOffers((v) => (v.includes(o) ? v.filter((x) => x !== o) : [...v, o]));
-  const Err = ({ k }: { k: string }) => (fields[k] ? <p className="m-0 mt-1 text-sm font-semibold text-gap" role="alert">{fields[k]}</p> : null);
+  const Err = ({ k }: { k: string }) => (fields[k] ? <p className="m-0 mt-1 text-[15px] font-medium text-gap" role="alert">{fields[k]}</p> : null);
 
   return (
     <div className="mx-auto grid min-h-full max-w-5xl gap-4 p-4 md:grid-cols-[1fr_420px]">
-      <div className="hidden min-h-[560px] overflow-hidden rounded-2xl border border-border md:block">
+      <div className="hidden min-h-[560px] overflow-hidden rounded-lg border border-border md:block">
         <MapView center={map.data.zone.center} zoom={15.5} hosts={map.data.hosts} pin={pin} onPinMove={setPin} />
       </div>
-      <div className="space-y-3">
-        <header>
-          <h1 className="m-0 font-serif text-3xl font-semibold text-clay">Pyau · Host</h1>
-          <p className="hi m-0 text-lg">अपना पानी पॉइंट जोड़ें</p>
-          <p className="m-0 text-sm text-muted">Sample scenario · demo session {sid.slice(0, 6)}</p>
+      <div className="space-y-4">
+        <header className="flex items-start justify-between gap-2">
+          <div>
+            <Wordmark size={22} />
+            <h1 className="m-0 mt-2 text-2xl font-semibold tracking-tight">{t("hostp.title")}</h1>
+            <p className="m-0 text-[15px] text-muted">{t("hostp.sample", { id: sid.slice(0, 6) })}</p>
+          </div>
+          <LangToggle />
         </header>
-        {notice && <p className="m-0 rounded-lg border border-ok bg-white p-2 font-medium text-ok" role="status">{notice}</p>}
+        {notice && <p className="m-0 flex items-start gap-2 rounded-lg border border-water bg-water-soft p-3 font-medium text-water" role="status"><I icon={Check} className="mt-0.5 shrink-0" />{notice}</p>}
         {(inbox.data ?? []).length > 0 && (
-          <section className="space-y-2" aria-label="Inbox">
+          <section className="space-y-2" aria-label={t("hostp.inbox")}>
             {(inbox.data as Ask[]).map((a) => (
               <AskCard key={a.id} ask={a} serverTime={serverTime} sessionId={sid} token={session.token}
                 onChanged={() => { void inbox.refetch(); void qc.invalidateQueries({ queryKey: ["map", sid] }); }} />
@@ -147,83 +147,89 @@ export default function Host() {
           </section>
         )}
         {mine.length > 0 && (
-          <section className="card p-3">
-            <h2 className="m-0 text-lg font-semibold">My points</h2>
-            <ul className="m-0 list-none space-y-1 p-0 pt-1">
+          <section className="card p-4">
+            <h2 className="m-0 text-lg font-semibold">{t("hostp.mine")}</h2>
+            <ul className="m-0 list-none space-y-2 p-0 pt-2">
               {mine.map((h) => {
                 const s = myState(h.id);
                 return (
                   <li key={h.id} className="text-[15px]">
-                    <span className="font-mono font-semibold">{h.id}</span> {h.label} ·{" "}
-                    <strong>{s?.state === "live" ? `Live ${s.window?.[0]}–${s.window?.[1]}` : s?.state === "standby" ? "Standby" : "Not confirmed today"}</strong>
-                    {h.address && <span className="block text-sm text-muted">{h.address}</span>}
+                    <span className="font-semibold tnum">{h.id}</span> {h.label} ·{" "}
+                    <strong>{s?.state === "live" ? t("hostp.live", { from: s.window?.[0] ?? "", to: s.window?.[1] ?? "" }) : s?.state === "standby" ? t("state.standby") : t("state.not_confirmed")}</strong>
+                    {h.address && <span className="block text-[14px] text-muted">{h.address}</span>}
                   </li>
                 );
               })}
             </ul>
-            <button className="mt-2 min-h-12 w-full rounded-lg border border-border font-semibold" onClick={() => void morning()}>
-              Demo: send the morning check now
-            </button>
+            <button className="mt-4 min-h-12 w-full rounded-lg border border-border bg-white font-semibold" onClick={() => void morning()}>{t("hostp.morning")}</button>
           </section>
         )}
-        <form className="card space-y-3 p-3" onSubmit={(e) => void submit(e)} noValidate>
-          <h2 className="m-0 text-lg font-semibold">Register a point</h2>
+        <form className="card space-y-4 p-4" onSubmit={(e) => void submit(e)} noValidate>
+          <h2 className="m-0 text-lg font-semibold">{t("hostp.register")}</h2>
           <label className="block text-base font-medium">
-            Name of your place
-            <input className="mt-1 min-h-12 w-full rounded-lg border border-border px-3 text-base" value={label} maxLength={60}
-              onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Sharma Chai Stall" />
+            {t("hostp.name")}
+            <input className={field} value={label} maxLength={60} onChange={(e) => setLabel(e.target.value)} placeholder={t("hostp.namePh")} />
             <Err k="label" />
           </label>
-          <fieldset className="m-0 border-0 p-0">
-            <legend className="text-base font-medium">What kind of place?</legend>
-            <div className="mt-1 flex flex-wrap gap-2">
-              {TYPES.map(([v, en, hi]) => <Chip key={v} on={hostType === v} onClick={() => setHostType(v)}>{en} <span className="hi">{hi}</span></Chip>)}
-            </div>
+          <label className="block text-base font-medium">
+            {t("hostp.type")}
+            <select className={field} value={hostType} onChange={(e) => setHostType(e.target.value)}>
+              {TYPES.map((v) => <option key={v} value={v}>{t(`type.${v}`)}</option>)}
+            </select>
             <Err k="hostType" />
-          </fieldset>
+          </label>
           <fieldset className="m-0 border-0 p-0">
-            <legend className="text-base font-medium">What can riders get?</legend>
-            <div className="mt-1 flex flex-wrap gap-2">
-              {OFFERS.map(([v, en, hi]) => <Chip key={v} on={offers.includes(v)} onClick={() => toggleOffer(v)}>{en} <span className="hi">{hi}</span></Chip>)}
+            <legend className="text-base font-medium">{t("hostp.offers")}</legend>
+            <div className="mt-1 divide-y divide-border rounded-lg border border-border bg-white">
+              {OFFERS.map((o) => (
+                <label key={o} className="flex min-h-12 cursor-pointer items-center gap-3 px-3 text-base">
+                  <input type="checkbox" className="h-5 w-5 accent-[#0a6c94]" checked={offers.includes(o)} onChange={() => toggleOffer(o)} />
+                  <I icon={NEED_ICON[o]} className="text-water" />
+                  {t(`need.${o}`)}
+                </label>
+              ))}
             </div>
             <Err k="offers" />
           </fieldset>
-          <div className="flex gap-3">
-            <label className="flex-1 text-base font-medium">Open
-              <input type="time" className="mt-1 min-h-12 w-full rounded-lg border border-border px-3" value={open} onChange={(e) => setOpen(e.target.value)} />
+          <div className="flex gap-4">
+            <label className="flex-1 text-base font-medium">{t("hostp.open")}
+              <input type="time" className={field} value={open} onChange={(e) => setOpen(e.target.value)} />
             </label>
-            <label className="flex-1 text-base font-medium">Close
-              <input type="time" className="mt-1 min-h-12 w-full rounded-lg border border-border px-3" value={close} onChange={(e) => setClose(e.target.value)} />
+            <label className="flex-1 text-base font-medium">{t("hostp.close")}
+              <input type="time" className={field} value={close} onChange={(e) => setClose(e.target.value)} />
             </label>
           </div>
           <Err k="hours" />
           <div>
-            <p className="m-0 text-base font-medium">Where? Drag the pin on the map</p>
-            <p className="m-0 mt-1 rounded-lg bg-canvas p-2 text-sm">{address ?? "Address not available — your pin is still saved"}</p>
+            <p className="m-0 text-base font-medium">{t("hostp.where")}</p>
+            <p className="m-0 mt-1 rounded-lg bg-canvas p-2 text-[15px]">{address ?? t("hostp.noAddress")}</p>
             <div className="mt-2 h-56 overflow-hidden rounded-lg border border-border md:hidden">
               <MapView center={map.data.zone.center} zoom={15.5} hosts={map.data.hosts} pin={pin} onPinMove={setPin} />
             </div>
             <Err k="location" />
           </div>
-          <fieldset className="m-0 border-0 p-0">
-            <legend className="text-base font-medium">How should we list you?</legend>
-            <div className="mt-1 grid grid-cols-2 gap-2">
-              <Chip on={kind === "listed"} onClick={() => setKind("listed")}>Listed</Chip>
-              <Chip on={kind === "standby"} onClick={() => setKind("standby")}>Standby</Chip>
-            </div>
-            <p className="m-0 mt-1 text-sm text-muted">
-              {kind === "listed" ? "Riders see you every day you confirm in the morning." : "Hidden until the coordinator asks you on a hot day and you say yes."}
-            </p>
+          <div>
+            <p className="m-0 mb-1 text-base font-medium">{t("hostp.listing")}</p>
+            <Segmented<"listed" | "standby"> label={t("hostp.listing")} value={kind} onChange={setKind}
+              options={[{ value: "listed", label: t("hostp.listed") }, { value: "standby", label: t("hostp.standby") }]} />
+            <p className="m-0 mt-1 text-[15px] text-muted">{t(kind === "listed" ? "hostp.listedHelp" : "hostp.standbyHelp")}</p>
             <Err k="kind" />
-          </fieldset>
-          <label className="flex items-start gap-3 text-base">
-            <input type="checkbox" className="mt-1 h-6 w-6" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-            <span>Coordinator may ask me on hot days <span className="hi">(गर्मी के दिनों में कोऑर्डिनेटर मुझसे पूछ सकते हैं)</span></span>
+          </div>
+          <div>
+            <p className="m-0 mb-1 text-base font-medium">{t("hostp.language")}</p>
+            <Segmented<Lang> label={t("hostp.language")} value={hostLang} onChange={setHostLang}
+              options={[{ value: "en", label: "English" }, { value: "hi", label: "हिंदी" }]} />
+            <p className="m-0 mt-1 text-[15px] text-muted">{t("hostp.languageHelp")}</p>
+            <Err k="language" />
+          </div>
+          <label className="flex min-h-12 items-start gap-3 text-base">
+            <input type="checkbox" className="mt-1 h-5 w-5 accent-[#0a6c94]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+            <span>{t("hostp.consent")}</span>
           </label>
           <Err k="consentToAsks" />
           {error && <p className="m-0 font-semibold text-gap" role="alert">{error}</p>}
-          <button type="submit" disabled={busy} className="min-h-14 w-full rounded-xl bg-water px-4 text-lg font-semibold text-white disabled:opacity-60">
-            {busy ? "Saving…" : "Register / जोड़ें"}
+          <button type="submit" disabled={busy} className="min-h-14 w-full rounded-lg bg-water px-4 text-lg font-semibold text-white disabled:opacity-60">
+            {busy ? t("hostp.saving") : t("hostp.submit")}
           </button>
         </form>
       </div>

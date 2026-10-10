@@ -94,3 +94,15 @@ def test_host_registration_validation():
     bad = {**ok, "offers": [], "kind": "x", "hours": ["20:00", "09:00"], "lat": 30.0, "consentToAsks": False, "hostType": "castle"}
     errs, _ = validate_registration(bad, zone)
     assert set(errs) == {"offers", "kind", "hours", "location", "consentToAsks", "hostType"}
+
+
+def test_fixture_host_languages_and_area_labels():
+    assert {h.id: h.language for h in HOSTS}["H4"] == "hi" and {h.id: h.language for h in HOSTS}["H5"] == "en"
+    assert set(FX["clusterLabels"]) == {"A", "B", "C", "D"}
+    from pyau_domain.hosts import validate_registration
+    errs, clean = validate_registration({"label": "Ravi Stores", "hostType": "shop", "offers": ["water"], "kind": "listed", "hours": ["09:00", "20:00"],
+                                         "lat": 28.631, "lng": 77.278, "consentToAsks": True, "language": "hi"}, FX["zone"]["center"])
+    assert errs == {} and clean["language"] == "hi"
+    errs, _ = validate_registration({"label": "Ravi Stores", "hostType": "shop", "offers": ["water"], "kind": "listed", "hours": ["09:00", "20:00"],
+                                     "lat": 28.631, "lng": 77.278, "consentToAsks": True, "language": "fr"}, FX["zone"]["center"])
+    assert "language" in errs

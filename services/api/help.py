@@ -25,6 +25,7 @@ def find(body: dict) -> dict:
     if not st:
         return {"_status": 404, "code": "NOT_FOUND", "message": "Unknown session", "retryable": False}
 
+    lang = body.get("lang") if body.get("lang") in ("en", "hi") else "en"
     clock = st.clock
     # Open-now needs a clock on the plan date; the evening-before clock has no live windows for "now".
     avail_now = [a for a in st.avail if a.date == clock.get("date")]
@@ -46,7 +47,7 @@ def find(body: dict) -> dict:
     )
     audio = None
     try:
-        audio = voice.synthesize_url(answer["hi"])
+        audio = voice.synthesize_url(answer[lang], lang)
     except Exception:
         audio = None  # text answer still works; UI shows "audio unavailable"
 
@@ -66,12 +67,13 @@ def find(body: dict) -> dict:
         "host": None if not host else {
             "id": host.id, "label": short_label(host.label), "lat": host.lat, "lng": host.lng,
             "closesAt": hit["closesAt"], "confirmedSource": hit["source"],
-            "straightLineM": hit["distanceM"],
+            "straightLineM": hit["distanceM"], "offers": host.offers, "hours": list(host.hours),
         },
         "route": route and {"distanceM": route["distanceM"], "durationS": route["durationS"], "line": route["line"]},
         "distanceM": distance,
         "approximate": approximate,
         "answer": answer,
+        "lang": lang,
         "audio": audio,
         "radiusM": st.policy.coverageRadiusMeters,
     }
@@ -93,7 +95,7 @@ def ask_voice(body: dict) -> dict:
     if len(pcm) > MAX_PCM_BYTES:
         return {"_status": 413, "code": "TOO_LONG", "message": "Hold the button for at most 8 seconds", "retryable": False}
     try:
-        text = transcribe.transcribe_pcm(pcm)
+        text = transcribe.transcribe_pcm(pcm, "en-IN" if body.get("lang") == "en" else "hi-IN")
     except Exception:
         return {"_status": 502, "code": "TRANSCRIBE_FAILED", "message": "Couldn't understand the audio right now — please tap a button", "retryable": True}
     need, via = need_from_text(text), "rules"
@@ -103,7 +105,7 @@ def ask_voice(body: dict) -> dict:
         except Exception:
             need = None
     if not need:
-        return {"transcript": text, "need": None, "found": False, "needUnknown": True,
+        return {"transcript": text, "need": None, "found": False, "needUnknown": True, "lang": body.get("lang") if body.get("lang") in ("en", "hi") else "en",
                 "answer": {"hi": "समझ नहीं आया — कृपया बटन दबाएँ।", "en": "Didn't catch that — please tap a button."}}
     out = find({**body, "need": need})
     if "_status" in out:

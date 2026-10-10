@@ -58,3 +58,11 @@ All hosts, requests and temperatures in the hero scenario are invented; coordina
 - Route throttling is per route across all clients (API Gateway), so limits are set above single-demo needs but below runaway levels.
 - Account Lambda concurrency limit is 10 (new-account default; the quota API refuses requests under the 1000 default). Normal demo use stays well under; a burst of >10 parallel calls returns 503.
 - Cap override item `PUBLIC#CAP#CONFIG` lets an operator lower/raise the agent-run and session caps without a redeploy.
+
+## UI v2 decisions (10 Oct 2026)
+- Visual system: near-white canvas, water blue as the single accent, amber and red for status only, Inter, Lucide icons. Pill chips are limited to the two required header chips (scenario badge, demo timers).
+- Language: one language at a time; English default. Host phone follows the host's own language; the coordinator sees each host message in that host's language (labelled).
+- API message shape change (required by the per-host language rule): `messages[hostId]` carries `lang` and `text` and keeps `hi`/`en` for the matching language only. Endpoints, run flow and numbers are unchanged.
+- Area names are display-only labels from the fixture (`clusterLabels`), derived from Amazon Location Places; ids A-D are unchanged.
+- The "runs automatically every evening" line says live zones, not this demo zone (see tasks.md).
+- Content pages state only verified facts; each statistic links to its source; no testimonials, user counts, partner logos or impact claims.

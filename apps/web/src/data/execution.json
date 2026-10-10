@@ -1,0 +1,27 @@
+{
+ "runId": "4cd8ad80608b92070522",
+ "statesEntered": [
+  "AskHost",
+  "AwaitApproval",
+  "Done",
+  "HasHost",
+  "HasProposal",
+  "HostDecision",
+  "MarkTimedOut",
+  "OutreachPerGap",
+  "PickNextHost",
+  "PlanWithAgent",
+  "PublishPoint",
+  "Summarize"
+ ],
+ "coverageBefore": {
+  "covered": 22,
+  "percent": 50,
+  "total": 44
+ },
+ "coverageAfter": {
+  "covered": 40,
+  "total": 44,
+  "percent": 90.9
+ }
+}

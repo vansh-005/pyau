@@ -10,6 +10,7 @@ export interface MapHost {
   lng: number;
   offers: string[];
   hours: [string, string];
+  language: "en" | "hi";
   state: HostState;
   window: [string, string] | null;
   source: string | null;
@@ -61,23 +62,24 @@ export interface FindResponse {
   need: Need;
   found: boolean;
   clock: { date: string; time: string };
-  host: { id: string; label: string; lat: number; lng: number; closesAt: string; confirmedSource: string; straightLineM: number } | null;
+  host: { id: string; label: string; lat: number; lng: number; closesAt: string; confirmedSource: string; straightLineM: number; offers: string[]; hours: [string, string] } | null;
   route: { distanceM: number; durationS: number; line: [number, number][] } | null;
   distanceM: number | null;
   approximate: boolean;
   answer: { hi: string; en: string };
-  audio: { url: string; voice: string; engine: string; cached: boolean } | null;
+  lang: "en" | "hi";
+  audio: { url: string; voice: string; engine: string; language?: string; cached: boolean } | null;
   radiusM: number;
 }
 
-export const helpFind = (b: { need: Need; lat: number; lng: number; sessionId: string; zoneId: string }) =>
-  api<FindResponse>("POST", "/help/find", { ...b, lang: "hi" });
+export const helpFind = (b: { need: Need; lat: number; lng: number; sessionId: string; zoneId: string; lang: "en" | "hi" }) =>
+  api<FindResponse>("POST", "/help/find", b);
 
 export const setClock = (sessionId: string, token: string, setLocalTime: "18:30" | "14:00") =>
   api<{ clock: MapResponse["clock"] }>("POST", `/demo/sessions/${sessionId}/clock`, { setLocalTime }, token);
 
 export interface ClusterInfo {
-  id: string; requests: number; covered: number; uncovered: boolean;
+  id: string; label: string; requests: number; covered: number; uncovered: boolean;
   nearestHostId: string | null; distanceM: number | null; lat: number; lng: number;
 }
 export interface CoverageResponse {
@@ -97,20 +99,20 @@ export interface Receipt {
   runId: string; seq: number; at: number; type: string; actor: string; summary: string;
   toolCallId?: string | null; data: Record<string, unknown>;
 }
-export interface GapMessage { hi: string; en: string; window: [string, string]; trimmed: boolean }
+export interface GapMessage { lang: "en" | "hi"; text: string; hi: string | null; en: string | null; window: [string, string]; trimmed: boolean }
 export interface Gap {
-  clusterId: string; requests: number; hours: [string, string]; priority: number; askWindow: [string, string];
+  clusterId: string; label: string; requests: number; hours: [string, string]; priority: number; askWindow: [string, string];
   candidateOrder: string[]; candidates: { hostId: string; label: string; kind: string; distanceM: number }[];
   messages: Record<string, GapMessage>; dropped: Record<string, string>;
 }
-export interface Unresolved { clusterId: string; requests: number; recommendation: string; note: string; reason: string }
+export interface Unresolved { clusterId: string; label: string; requests: number; recommendation: string; note: string; reason: string }
 export interface CovNum { covered: number; total: number; percent: number | null; uncoveredClusters?: string[] }
 export interface Proposal {
   id: string; runId: string; revision: number; status: string; gaps: Gap[]; unresolved: Unresolved[]; explanation: string;
   coverageBefore: CovNum; coverageProjected: CovNum; contentHash: string;
 }
 export interface Ask {
-  id: string; runId: string; clusterId: string; hostId: string; hostLabel?: string; kind: string; message: { hi: string; en: string };
+  id: string; runId: string; clusterId: string; hostId: string; hostLabel?: string; kind: string; message: { hi: string | null; en: string | null; text?: string; lang?: "en" | "hi" };
   window: [string, string]; status: "OPEN" | "ACCEPTED" | "DECLINED" | "TIMED_OUT"; createdAt: number; expiresAt: number;
   timeoutSeconds: number; answeredAt: number | null;
 }
@@ -147,12 +149,12 @@ export interface VoiceResponse extends Partial<FindResponse> {
   intentVia?: "rules" | "model";
   answer: { hi: string; en: string };
 }
-export const askVoice = (b: { audioBase64: string; lat: number; lng: number; sessionId: string; zoneId: string }) =>
-  api<VoiceResponse>("POST", "/help/ask-voice", { ...b, lang: "hi" });
+export const askVoice = (b: { audioBase64: string; lat: number; lng: number; sessionId: string; zoneId: string; lang: "en" | "hi" }) =>
+  api<VoiceResponse>("POST", "/help/ask-voice", b);
 
 export interface RegisterBody {
   zoneId: string; sessionId: string; label: string; hostType: string; offers: string[]; kind: "listed" | "standby";
-  hours: [string, string]; lat: number; lng: number; consentToAsks: boolean;
+  hours: [string, string]; lat: number; lng: number; consentToAsks: boolean; language: "en" | "hi";
 }
 export interface RegisteredHost { id: string; label: string; address: string | null; kind: string; hours: [string, string] }
 export class FieldError extends Error {

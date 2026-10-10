@@ -63,7 +63,8 @@
    ],
    "confirmedForScenarioDate": true,
    "paused": false,
-   "consentToAsks": true
+   "consentToAsks": true,
+   "language": "hi"
   },
   {
    "id": "H2",
@@ -82,7 +83,8 @@
    ],
    "confirmedForScenarioDate": true,
    "paused": false,
-   "consentToAsks": true
+   "consentToAsks": true,
+   "language": "en"
   },
   {
    "id": "H3",
@@ -99,7 +101,8 @@
    ],
    "confirmedForScenarioDate": true,
    "paused": false,
-   "consentToAsks": false
+   "consentToAsks": false,
+   "language": "hi"
   },
   {
    "id": "H4",
@@ -116,7 +119,8 @@
    ],
    "confirmedForScenarioDate": false,
    "paused": false,
-   "consentToAsks": true
+   "consentToAsks": true,
+   "language": "hi"
   },
   {
    "id": "H5",
@@ -135,7 +139,8 @@
    ],
    "confirmedForScenarioDate": false,
    "paused": false,
-   "consentToAsks": true
+   "consentToAsks": true,
+   "language": "en"
   },
   {
    "id": "H6",
@@ -154,7 +159,8 @@
    "confirmedForScenarioDate": true,
    "paused": true,
    "pausedReason": "2 rider problem reports within 3 hours",
-   "consentToAsks": true
+   "consentToAsks": true,
+   "language": "hi"
   }
  ],
  "requests": [
@@ -576,5 +582,12 @@
    "Cluster D: 4 requests, no host within 500 m — needs a new host or a municipal water point"
   ],
   "riderQueryNearest": "H5"
- }
+ },
+ "clusterLabels": {
+  "A": "near Laxmi Nagar Metro",
+  "B": "Ganesh Nagar, Shakarpur",
+  "C": "near NH-24, Shakarpur",
+  "D": "near Nirman Vihar Metro"
+ },
+ "clusterLabelsNote": "Names from Amazon Location Places (nearest metro station / neighbourhood to each area's centre); display only."
 }

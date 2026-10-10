@@ -12,15 +12,14 @@ if (which === "host") {
   p.on("pageerror", (e) => errs.push(e.message));
   await p.goto(`${base}/host`, { waitUntil: "load" });
   await p.getByLabel("Name of your place").fill("Sharma Chai Stall");
-  await p.getByRole("button", { name: /Shop/ }).click();
-  await p.getByRole("button", { name: /Shade/ }).click();
+  await p.getByRole("checkbox", { name: "Shade" }).check();
   await p.getByText(/Laxmi Nagar|Delhi/).first().waitFor({ timeout: 30000 });
   step("address from Places: " + (await p.locator("p.bg-canvas").first().innerText()));
   await p.screenshot({ path: `${out}/t10-host-form.png` });
   await p.getByRole("button", { name: /Register/ }).click();
   await p.getByText(/field|consent|Tick the box/i).first().waitFor({ timeout: 10000 });
   step("validation shown (consent missing)");
-  await p.getByLabel(/Coordinator may ask me/).check();
+  await p.getByLabel(/may ask me/).check();
   await p.getByRole("button", { name: /Register/ }).click();
   await p.getByText(/Registered as H7/).waitFor({ timeout: 20000 });
   await p.getByText("Not confirmed today").first().waitFor({ timeout: 15000 });
@@ -30,7 +29,7 @@ if (which === "host") {
   await p.waitForTimeout(800);
   await p.screenshot({ path: `${out}/t10-host-freshness.png` });
   await p.getByRole("button", { name: /Yes/ }).click();
-  await p.getByText(/Host confirmed for today/).waitFor({ timeout: 20000 });
+  await p.getByText(/Confirmed for today/).waitFor({ timeout: 20000 });
   await p.getByText(/Live 09:00/).first().waitFor({ timeout: 20000 });
   step("confirmed: live for riders");
   await p.waitForTimeout(1500);
@@ -42,16 +41,16 @@ if (which === "host") {
   await p.getByText("Demo timers: 45 s").waitFor({ timeout: 30000 });
   await p.getByText("50%").first().waitFor({ timeout: 30000 });
   await p.getByRole("button", { name: "Jump to 14:00 tomorrow" }).click();
-  await p.getByRole("button", { name: "Cluster A" }).click();
+  await p.getByRole("radio", { name: "Area A" }).click();
   for (let i = 0; i < 2; i++) {
     await p.getByRole("button", { name: /Water/ }).click();
     await p.getByText(/Host confirmed/).first().waitFor({ timeout: 30000 });
     await p.getByRole("button", { name: /Problem/ }).click();
     await p.getByRole("button", { name: /No water/ }).click();
-    await p.getByText(/Thanks — /).first().waitFor({ timeout: 20000 });
-    step(`problem report ${i + 1}: ` + (await p.getByText(/Thanks — /).first().innerText()));
+    await p.getByText(/^Thanks/).first().waitFor({ timeout: 20000 });
+    step(`problem report ${i + 1}: ` + (await p.getByText(/^Thanks/).first().innerText()));
   }
-  await p.getByText("Problem queue").waitFor({ timeout: 20000 });
+  await p.getByText("Problem reports").first().waitFor({ timeout: 20000 });
   await p.getByText("27.3%").first().waitFor({ timeout: 20000 });
   step("coordinator: problem queue visible, coverage 27.3%");
   await p.waitForTimeout(1500);

@@ -72,7 +72,7 @@ def test_money_promise_rejected():
 
 def test_message_must_state_window():
     gaps, unres, ex = good()
-    gaps[0]["messages"]["H5"] = {"hi": HI.replace("12:00", "दोपहर").replace("17:00", "शाम"), "en": EN}
+    gaps[0]["messages"]["H4"] = {"hi": HI.replace("12:00", "दोपहर").replace("17:00", "शाम"), "en": EN}  # H4 is a Hindi host
     errs, _ = validate_proposal(ctx(), gaps, unres, ex)
     assert any("time window" in e for e in errs)
 
@@ -131,3 +131,37 @@ def test_ask_window_buffer_is_capped_at_one_hour():
     gaps[0]["askWindow"] = ["13:00", "16:00"]
     gaps[0]["messages"] = {h: {"hi": HI.replace("12:00", "13:00").replace("17:00", "16:00"), "en": EN.replace("12:00", "13:00").replace("17:00", "16:00")} for h in ("H4", "H5")}
     assert validate_proposal(ctx(), gaps, unres, ex)[0] == []
+
+
+def test_each_host_is_written_to_in_their_own_language_only():
+    # H4 = Hindi, H5 = English in the fixture. A single {"text": ...} per host is the contract.
+    gaps, unres, ex = good()
+    gaps[0]["messages"] = {"H4": {"text": HI}, "H5": {"text": EN}}
+    errs, p = validate_proposal(ctx(), gaps, unres, ex)
+    assert errs == []
+    m = p["gaps"][0]["messages"]
+    assert m["H4"]["lang"] == "hi" and m["H4"]["text"] == HI and m["H4"]["en"] is None
+    assert m["H5"]["lang"] == "en" and m["H5"]["text"] == EN and m["H5"]["hi"] is None
+
+
+def test_wrong_language_for_the_host_is_rejected():
+    gaps, unres, ex = good()
+    gaps[0]["messages"] = {"H4": {"text": EN}, "H5": {"text": HI}}  # swapped
+    errs, p = validate_proposal(ctx(), gaps, unres, ex)
+    assert p is None
+    assert any("host H4" in e and "Hindi" in e for e in errs) and any("host H5" in e and "English" in e for e in errs)
+
+
+def test_area_labels_are_plain_language():
+    c = ctx()
+    c.labels = {"B": "Ganesh Nagar, Shakarpur", "D": "near Nirman Vihar Metro"}
+    errs, p = validate_proposal(c, *good())
+    assert errs == [] and p["gaps"][0]["label"] == "Area B · Ganesh Nagar, Shakarpur"
+    assert p["unresolved"][0]["label"] == "Area D · near Nirman Vihar Metro"
+
+
+def test_accept_gap_low_demand_is_refused_for_a_busy_area():
+    gaps, unres, ex = good()
+    unres[0]["recommendation"] = "accept_gap_low_demand"  # area D has 4 requests
+    errs, p = validate_proposal(ctx(), gaps, unres, ex)
+    assert p is None and any("only for areas with 1 or 2 requests" in e for e in errs)

@@ -6,6 +6,7 @@ import os
 import time
 import uuid
 
+from pyau_domain.candidates import area_label
 from pyau_domain.coverage import compute_coverage
 from pyau_domain.heat import heat_outlook
 from pyau_domain.proposal import ProposalContext, validate_proposal
@@ -36,6 +37,7 @@ class Run:
     def __init__(self, session_id, zone_id, run_id):
         self.sid, self.zone_id, self.run_id = session_id, zone_id, run_id
         self.st = state.load(session_id, zone_id)
+        self.labels = self.st.meta.get("clusterLabels", {})
         self.started = time.time()
         self.calls = 0
         self.candidate_calls: set[str] = set()
@@ -47,7 +49,10 @@ class Run:
         self.report = (compute_coverage(self.st.demand, self.st.hosts, self.avail, self.outlook.window, self.st.policy)
                        if self.outlook.status == "OK" else None)
         self.ctx = (ProposalContext(self.st.policy, self.st.hosts, self.st.demand, self.avail, self.st.date,
-                                    self.outlook.window, self.report) if self.report else None)
+                                    self.outlook.window, self.report, labels=self.labels) if self.report else None)
+
+    def area(self, cid):
+        return area_label(cid, self.labels)
 
     def receipt(self, tool, args, out, started, summary):
         events.append(self.sid, self.run_id, "tool_receipt", "agent", summary,
@@ -95,14 +100,14 @@ def build_tools(run: Run):
 
     @tool
     def get_demand() -> dict:
-        """Rider water-request clusters inside the heat window: id, requests, by hour, centroid."""
+        """Rider water-request areas inside the heat window: id, label (place name), requests, by hour, centroid."""
         t0 = time.time()
         run.guard("get_demand")
         win = run.outlook.window
         by = {}
         for r in run.st.demand:
             if r.need == run.st.policy.need and win and win[0] <= r.hour < win[1]:
-                c = by.setdefault(r.clusterId, {"id": r.clusterId, "requests": 0, "byHour": {}, "_lat": 0.0, "_lng": 0.0})
+                c = by.setdefault(r.clusterId, {"id": r.clusterId, "label": run.area(r.clusterId), "requests": 0, "byHour": {}, "_lat": 0.0, "_lng": 0.0})
                 c["requests"] += 1
                 c["byHour"][r.hour] = c["byHour"].get(r.hour, 0) + 1
                 c["_lat"] += r.lat
@@ -112,7 +117,7 @@ def build_tools(run: Run):
             c["centroid"] = {"lat": round(c.pop("_lat") / c["requests"], 5), "lng": round(c.pop("_lng") / c["requests"], 5)}
             clusters.append(c)
         out = {"heatWindow": list(win) if win else None, "totalRequests": sum(c["requests"] for c in clusters), "clusters": clusters}
-        run.receipt("get_demand", {}, out, t0, f"Demand: {len(clusters)} clusters, {out['totalRequests']} requests")
+        run.receipt("get_demand", {}, out, t0, f"Demand: {len(clusters)} areas, {out['totalRequests']} requests")
         return out
 
     @tool
@@ -121,8 +126,8 @@ def build_tools(run: Run):
         t0 = time.time()
         run.guard("get_coverage")
         r = run.report
-        out = r.model_dump() if r else {"status": run.outlook.status}
-        s = (f"Coverage {r.covered}/{r.total} ({r.percent}%) · uncovered: {', '.join(r.uncoveredClusters) or 'none'}" if r else "Coverage unavailable")
+        out = {**r.model_dump(), "areaLabels": {c: run.area(c) for c in r.byCluster}} if r else {"status": run.outlook.status}
+        s = (f"Coverage {r.covered}/{r.total} ({r.percent}%) · not covered: {', '.join(run.area(c) for c in r.uncoveredClusters) or 'none'}" if r else "Coverage unavailable")
         run.receipt("get_coverage", {}, out, t0, s)
         return out
 
@@ -137,20 +142,20 @@ def build_tools(run: Run):
         run.guard("find_candidate_hosts")
         if not run.report or cluster_id not in run.report.uncoveredClusters:
             out = {"error": f"{cluster_id!r} is not an uncovered cluster", "uncovered": run.report.uncoveredClusters if run.report else []}
-            run.receipt("find_candidate_hosts", {"cluster_id": cluster_id}, out, t0, f"Candidates for {cluster_id}: rejected (not uncovered)")
+            run.receipt("find_candidate_hosts", {"cluster_id": cluster_id}, out, t0, f"Candidates for {run.area(cluster_id)}: rejected (not uncovered)")
             return out
         if cluster_id in run.candidate_calls:
             out = {"error": "find_candidate_hosts was already called for this cluster"}
-            run.receipt("find_candidate_hosts", {"cluster_id": cluster_id}, out, t0, f"Candidates for {cluster_id}: repeat call rejected")
+            run.receipt("find_candidate_hosts", {"cluster_id": cluster_id}, out, t0, f"Candidates for {run.area(cluster_id)}: repeat call rejected")
             return out
         run.candidate_calls.add(cluster_id)
         cands = run.ctx.ensure_candidates(cluster_id)
         hosts = {h.id: h for h in run.st.hosts}
         rows = [{**c, "offers": hosts[c["hostId"]].offers, "declaredHours": list(hosts[c["hostId"]].hours),
-                 "askedToday": False, "pastResponseRate": None} for c in cands]
+                 "language": hosts[c["hostId"]].language, "askedToday": False, "pastResponseRate": None} for c in cands]
         out = {"clusterId": cluster_id, "candidates": rows} if rows else {"clusterId": cluster_id, "candidates": [], "result": "NO_CANDIDATES", "reason": "NO_HOST_WITHIN_RADIUS"}
-        names = ", ".join(c["label"].split("·")[-1].strip().split("(")[0].strip() for c in cands) or "none"
-        run.receipt("find_candidate_hosts", {"cluster_id": cluster_id}, out, t0, f"Candidates for {cluster_id}: {names}")
+        names = ", ".join(f"{c['label'].split('·')[-1].strip().split('(')[0].strip()} ({'Hindi' if hosts[c['hostId']].language == 'hi' else 'English'})" for c in cands) or "none"
+        run.receipt("find_candidate_hosts", {"cluster_id": cluster_id}, out, t0, f"Candidates for {run.area(cluster_id)}: {names}")
         return out
 
     @tool
@@ -158,7 +163,7 @@ def build_tools(run: Run):
         """Submit the single coverage proposal. Validated in code; on errors fix them and resubmit once.
 
         Args:
-            gaps: one item per uncovered cluster with candidates: {clusterId, priority (int, 1 = first), askWindow [start, end] as HH:MM, messages {hostId: {hi, en}}, optional dropped {hostId: reason}}.
+            gaps: one item per uncovered cluster with candidates: {clusterId, priority (int, 1 = first), askWindow [start, end] as HH:MM, messages {hostId: {text}} (ONE message per host, in that host's own language from find_candidate_hosts), optional dropped {hostId: reason}}.
             unresolved: one item per cluster you cannot fill: {clusterId, recommendation, note}.
             explanation: plain text for the coordinator, at most 120 words.
         """

@@ -93,7 +93,8 @@ def run_freshness(sid: str, zone_id: str) -> dict:
         now = time.time()
         ask = {"id": aid, "runId": None, "clusterId": None, "hostId": h.id, "hostLabel": h.label.split("·")[-1].strip(),
                "kind": "freshness", "date": st.date, "zoneId": zone_id,
-               "message": {"hi": "आज पानी रख रहे हैं?", "en": "Still serving water today?"},
+               "message": {"hi": "आज पानी रख रहे हैं?", "en": "Still serving water today?",
+                           "text": "आज पानी रख रहे हैं?" if h.language == "hi" else "Still serving water today?", "lang": h.language},
                "window": list(h.hours), "status": "OPEN", "createdAt": now, "expiresAt": now + 12 * 3600,
                "timeoutSeconds": 12 * 3600, "answeredAt": None, "version": 1}
         if asks.create(sid, ask, None):

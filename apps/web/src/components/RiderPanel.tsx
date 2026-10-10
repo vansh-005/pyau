@@ -1,29 +1,26 @@
 import { useRef, useState } from "react";
+import { Check, Flag, Mic, Route as RouteIcon, Volume2 } from "lucide-react";
 import { askVoice, helpFind, sendFeedback, type FeedbackKind, type FeedbackResult, type FindResponse, type MapHost, type Need } from "../api";
+import { useLang } from "../i18n/lang";
 import { MAX_RECORD_MS, pcmToBase64, startRecording, type Recording } from "../voice";
 import { MapView } from "./MapView";
-import hi from "../i18n/hi.json";
-import en from "../i18n/en.json";
+import { I, NEED_ICON, Offers, Segmented } from "./ui";
 
 export interface RiderPanelProps {
   sessionId: string;
   zoneId: string;
   center: { lat: number; lng: number };
   hosts: MapHost[];
-  /** Scripted rider locations (demo). The first is the default (cluster B, the fixture's rider-query point). */
-  locations: { id: string; label: string; lat: number; lng: number }[];
-  /** Changes when the session state changes so the pot icons refresh. */
+  /** Scripted rider locations (demo). The first is the default (area B, the fixture's rider-query point). */
+  locations: { id: string; lat: number; lng: number }[];
   onAnswered?: (a: FindResponse) => void;
 }
 
-const NEEDS: { need: Need; icon: string }[] = [
-  { need: "water", icon: "💧" },
-  { need: "shade", icon: "☂" },
-  { need: "toilet", icon: "🚻" },
-  { need: "charging", icon: "🔌" },
-];
+const NEEDS: Need[] = ["water", "shade", "toilet", "charging"];
+const PROBLEMS: FeedbackKind[] = ["no_water", "closed", "dirty", "unsafe"];
 
 export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnswered }: RiderPanelProps) {
+  const { t, lang } = useLang();
   const [locId, setLocId] = useState(locations[0].id);
   const location = locations.find((l) => l.id === locId) ?? locations[0];
   const [fb, setFb] = useState<{ result?: FeedbackResult; asking?: boolean; error?: string } | null>(null);
@@ -56,7 +53,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
     setError("");
     setTranscript(null);
     try {
-      showAnswer(await helpFind({ need, lat: location.lat, lng: location.lng, sessionId, zoneId }));
+      showAnswer(await helpFind({ need, lat: location.lat, lng: location.lng, sessionId, zoneId, lang }));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -68,14 +65,13 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
     if (!answer?.host) return;
     setFb({ asking: false });
     try {
-      const result = await sendFeedback({ hostId: answer.host.id, kind, lat: location.lat, lng: location.lng, sessionId, zoneId });
-      setFb({ result });
+      setFb({ result: await sendFeedback({ hostId: answer.host.id, kind, lat: location.lat, lng: location.lng, sessionId, zoneId }) });
     } catch (e) {
       setFb({ error: (e as Error).message });
     }
   };
 
-  // ---- hold-to-talk voice question (P0b): tap buttons always remain available ----
+  // ---- hold-to-talk voice question: the tap buttons always remain available ----
   const [mic, setMic] = useState<"idle" | "recording" | "sending">("idle");
   const [transcript, setTranscript] = useState<string | null>(null);
   const rec = useRef<Recording | null>(null);
@@ -89,7 +85,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
       setMic("recording");
       recTimer.current = setTimeout(() => void micStop(), MAX_RECORD_MS);
     } catch {
-      setError("Microphone not available — please use the buttons. / माइक नहीं मिला, बटन दबाएँ।");
+      setError(t("rider.micError"));
     }
   };
   const micStop = async () => {
@@ -101,14 +97,14 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
     try {
       const pcm = await r.stop();
       if (pcm.length < 6400) {
-        setError("Too short — hold the button while you speak. / बोलते समय बटन दबाए रखें।");
+        setError(t("rider.tooShort"));
         return;
       }
-      const v = await askVoice({ audioBase64: pcmToBase64(pcm), lat: location.lat, lng: location.lng, sessionId, zoneId });
+      const v = await askVoice({ audioBase64: pcmToBase64(pcm), lat: location.lat, lng: location.lng, sessionId, zoneId, lang });
       setTranscript(v.transcript || "");
       if (v.needUnknown) {
         setAnswer(null);
-        setError(`${v.answer.hi} ${v.answer.en}`);
+        setError(v.answer[lang]);
       } else {
         showAnswer(v as FindResponse);
       }
@@ -122,134 +118,112 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
   return (
     <div className="flex h-full flex-col bg-canvas text-[15px]">
       {locations.length > 1 && (
-        <div className="flex items-center gap-2 border-b border-border bg-white px-2 py-1 text-[15px]" role="group" aria-label="Demo rider location">
-          <span className="text-muted">Demo location:</span>
-          {locations.map((l) => (
-            <button key={l.id} aria-pressed={locId === l.id} onClick={() => { setLocId(l.id); setAnswer(null); setFb(null); }}
-              className={`min-h-12 rounded-full px-3 font-semibold ${locId === l.id ? "bg-water text-white" : "border border-border"}`}>
-              {l.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 border-b border-border bg-white px-3 py-2">
+          <span className="text-[15px] text-muted">{t("rider.location")}</span>
+          <Segmented size="sm" label={t("rider.location")} value={locId} onChange={(v) => { setLocId(v); setAnswer(null); setFb(null); }}
+            options={locations.map((l) => ({ value: l.id, label: t(`area.${l.id}`) }))} />
         </div>
       )}
-      <div className="relative min-h-0 flex-1">
-        <MapView
-          center={center}
-          zoom={15.5}
-          hosts={hosts}
-          rider={location}
-          routeLine={showRoute ? answer?.route?.line ?? null : null}
-        />
+      <div className="relative min-h-[150px] flex-1">
+        <MapView center={center} zoom={15.5} hosts={hosts} rider={location} routeLine={showRoute ? answer?.route?.line ?? null : null} />
       </div>
-      <div className="flex max-h-[66%] flex-col gap-2 overflow-auto p-3">
-        {error && <p className="m-0 rounded-lg bg-gap/10 p-2 text-gap">{error}</p>}
+      <div className="flex max-h-[66%] flex-col gap-2 overflow-auto bg-white p-3">
+        {error && <p className="m-0 rounded-lg bg-gap-soft p-2 text-gap" role="alert">{error}</p>}
         {answer && (
-          <section className="card p-3" aria-live="polite">
+          <section aria-live="polite" className="space-y-2">
             {answer.host && (
-              <p className="m-0 flex flex-wrap items-baseline gap-x-2">
+              <p className="m-0 flex items-baseline gap-2">
                 <strong className="text-lg">{answer.host.label}</strong>
-                <span className="font-mono text-[15px] text-muted">{answer.host.id}</span>
+                <span className="text-[14px] text-muted tnum">{answer.host.id}</span>
               </p>
             )}
-            <p className="hi m-0 mt-1 text-base leading-snug">{answer.answer.hi}</p>
-            <p className="m-0 mt-1 text-[15px] text-muted">{answer.answer.en}</p>
+            <p lang={lang} className="m-0 text-base leading-snug">{answer.answer[lang]}</p>
+            {answer.host && <Offers offers={answer.host.offers} highlight={answer.need} />}
             {answer.found && answer.host && (
-              <p className="m-0 mt-2 text-[15px]">
-                <span className="font-mono font-semibold">
-                  {answer.distanceM} m
-                  {answer.route ? ` · ~${Math.max(1, Math.round(answer.route.durationS / 60))} min by scooter` : ""}
-                </span>
-                {answer.approximate && <span className="text-heat-ink"> · approximate</span>}
+              <p className="m-0 flex items-center gap-2 font-medium tnum">
+                <I icon={RouteIcon} size={16} className="text-water" />
+                {answer.distanceM} m
+                {answer.route ? ` · ${t("rider.byScooter", { min: Math.max(1, Math.round(answer.route.durationS / 60)) })}` : ""}
+                {answer.approximate && <span className="font-normal text-heat"> · {t("rider.approx")}</span>}
               </p>
             )}
-            {!answer.found && (
-              <p className="m-0 mt-2 text-[15px] font-medium text-gap">
-                {hi.nothingNearby} · {en.nothingNearby}
-              </p>
-            )}
+            {!answer.found && <p className="m-0 font-medium text-gap">{t("rider.nothing")}</p>}
+            <div className="flex gap-2">
+              {answer.audio ? (
+                <button className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white font-semibold" onClick={play}>
+                  <I icon={Volume2} className="text-water" />{t("rider.play")}{playing === "blocked" ? ` (${t("rider.tap")})` : ""}
+                </button>
+              ) : (
+                <span className="flex-1 self-center text-muted">{t("rider.noAudio")}</span>
+              )}
+              {answer.route && (
+                <button className={`inline-flex min-h-12 items-center gap-2 rounded-lg px-4 font-semibold ${showRoute ? "bg-water text-white" : "border border-border bg-white"}`}
+                  onClick={() => setShowRoute((v) => !v)} aria-pressed={showRoute}>
+                  <I icon={RouteIcon} />{t("rider.route")}
+                </button>
+              )}
+            </div>
             {answer.host && (
-              <div className="mt-2 border-t border-border pt-2">
+              <div className="border-t border-border pt-2">
                 {!fb?.result && !fb?.error && (
                   <div className="flex gap-2">
-                    <button className="min-h-11 flex-1 rounded-lg border border-ok px-2 font-semibold text-ok" onClick={() => void report("got_it")}>
-                      <span className="hi">मिल गया</span> ✓ Got it
+                    <button className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white font-semibold" onClick={() => void report("got_it")}>
+                      <I icon={Check} className="text-water" />{t("rider.gotIt")}
                     </button>
-                    <button className="min-h-11 flex-1 rounded-lg border border-gap px-2 font-semibold text-gap" aria-expanded={!!fb?.asking} onClick={() => setFb({ asking: !fb?.asking })}>
-                      <span className="hi">दिक्कत</span> ✗ Problem
+                    <button className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white font-semibold" aria-expanded={!!fb?.asking} onClick={() => setFb({ asking: !fb?.asking })}>
+                      <I icon={Flag} className="text-gap" />{t("rider.problem")}
                     </button>
                   </div>
                 )}
                 {fb?.asking && (
-                  <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="What was the problem?">
-                    {([["no_water", "पानी नहीं", "No water"], ["closed", "बंद है", "Closed"], ["dirty", "गंदा", "Dirty"], ["unsafe", "असुरक्षित", "Unsafe"]] as const).map(([k, hi2, en2]) => (
-                      <button key={k} className="min-h-12 rounded-lg border border-gap bg-white px-2 font-semibold" onClick={() => void report(k)}>
-                        <span className="hi">{hi2}</span> {en2}
-                      </button>
+                  <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label={t("rider.whatProblem")}>
+                    {PROBLEMS.map((k) => (
+                      <button key={k} className="min-h-12 rounded-lg border border-border bg-white px-2 font-medium" onClick={() => void report(k)}>{t(`fb.${k}`)}</button>
                     ))}
                   </div>
                 )}
                 {fb?.result && (
-                  <p className="m-0 text-[15px] font-semibold" role="status">
+                  <p className="m-0 font-medium" role="status">
                     {fb.result.kind === "got_it"
-                      ? "Thanks! 🙏 Good to hear."
+                      ? t("rider.thanks")
                       : fb.result.pausedNow
-                        ? `Thanks — ${fb.result.problemCount} problem reports: this point is now paused and the coordinator has been told.`
-                        : `Thanks — reported (${fb.result.problemCount} of ${fb.result.threshold} before a point is paused).`}
+                        ? t("rider.paused", { n: fb.result.problemCount })
+                        : t("rider.reported", { n: fb.result.problemCount, max: fb.result.threshold })}
                   </p>
                 )}
-                {fb?.error && <p className="m-0 text-[15px] font-semibold text-gap">{fb.error}</p>}
+                {fb?.error && <p className="m-0 font-medium text-gap">{fb.error}</p>}
               </div>
             )}
-            <div className="mt-2 flex gap-2">
-              {answer.audio ? (
-                <button className="min-h-12 flex-1 rounded-lg border border-water px-3 font-semibold text-water" onClick={play}>
-                  🔊 {hi.playAudio} / {en.playAudio}
-                  {playing === "blocked" ? " (tap)" : ""}
-                </button>
-              ) : (
-                <span className="flex-1 self-center text-[15px] text-muted">Audio unavailable — text answer above</span>
-              )}
-              {answer.route && (
-                <button
-                  className="min-h-12 rounded-lg bg-water px-4 font-semibold text-white"
-                  onClick={() => setShowRoute((v) => !v)}
-                  aria-pressed={showRoute}
-                >
-                  {hi.route} / {en.route}
-                </button>
-              )}
-            </div>
           </section>
         )}
         {transcript !== null && (
-          <p className="m-0 rounded-lg bg-white p-2 text-[15px]" aria-live="polite">
-            <span className="text-muted">सुना / Heard:</span> <span className="hi font-semibold">“{transcript || "…"}”</span>
+          <p className="m-0 rounded-lg bg-canvas p-2" aria-live="polite">
+            <span className="text-muted">{t("rider.heard")}</span> <span lang={lang} className="font-semibold">“{transcript || "…"}”</span>
           </p>
         )}
         <button
-          className={`min-h-14 rounded-xl border-2 px-3 text-base font-semibold ${mic === "recording" ? "border-gap bg-gap/10 text-gap" : "border-clay bg-white text-clay"}`}
+          className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-lg border px-4 text-base font-semibold ${mic === "recording" ? "border-gap bg-gap-soft text-gap" : "border-water bg-water-soft text-water"}`}
           onPointerDown={() => void micStart()}
           onPointerUp={() => void micStop()}
           onPointerLeave={() => mic === "recording" && void micStop()}
           onKeyDown={(e) => (e.key === " " || e.key === "Enter") && !e.repeat && void micStart()}
           onKeyUp={(e) => (e.key === " " || e.key === "Enter") && void micStop()}
           disabled={mic === "sending"}
-          aria-label="Hold to ask by voice"
+          aria-label={t("rider.micAria")}
         >
-          🎤 <span className="hi">{mic === "recording" ? "सुन रहे हैं… छोड़ें" : mic === "sending" ? "समझ रहे हैं…" : "बोलकर पूछें"}</span>{" "}
-          / {mic === "recording" ? "Listening — release" : mic === "sending" ? "Understanding…" : "Hold to ask"}
+          <I icon={Mic} size={20} />
+          {mic === "recording" ? t("rider.listening") : mic === "sending" ? t("rider.understanding") : t("rider.hold")}
         </button>
         <div className="grid grid-cols-2 gap-2">
-          {NEEDS.map(({ need, icon }) => (
+          {NEEDS.map((need) => (
             <button
               key={need}
               disabled={busy !== null}
               onClick={() => void ask(need)}
-              className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-water px-2 text-base font-semibold text-white disabled:opacity-60"
+              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-lg border border-border bg-white px-2 text-base font-semibold disabled:opacity-60"
             >
-              <span aria-hidden>{icon}</span>
-              <span className="hi">{hi.needs[need]}</span>
-              <span>{busy === need ? en.asking : en.needs[need]}</span>
+              <I icon={NEED_ICON[need]} size={20} className="text-water" />
+              {busy === need ? t("rider.looking") : t(`need.${need}`)}
             </button>
           ))}
         </div>

@@ -1,19 +1,25 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { hostAsks, respondAsk, type Ask } from "../api";
+import { Check, Timer } from "lucide-react";
+import { hostAsks, respondAsk, type Ask, type MapHost } from "../api";
 import { fmtClock, useCountdown } from "../hooks";
+import { FixedLang, useLang } from "../i18n/lang";
+import { I } from "./ui";
 
-const HOSTS = [
+const DEMO_HOSTS = [
   { id: "H4", label: "Kirana store" },
   { id: "H5", label: "RWA office" },
 ];
 
+/** A request or a morning check, in the host's own language. */
 export function AskCard({ ask, serverTime, sessionId, token, onChanged }: { ask: Ask; serverTime: number; sessionId: string; token: string; onChanged: () => void }) {
+  const { t, lang } = useLang();
   const left = useCountdown(ask.status === "OPEN" ? ask.expiresAt : null, serverTime);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const open = ask.status === "OPEN" && (left ?? 0) > 0;
   const fresh = ask.kind === "freshness";
+  const text = ask.message.text ?? (lang === "hi" ? ask.message.hi : ask.message.en) ?? ask.message.hi ?? ask.message.en ?? ""; // one language: the host's own
   const answer = async (d: "accepted" | "declined") => {
     setBusy(true);
     setMsg("");
@@ -26,60 +32,39 @@ export function AskCard({ ask, serverTime, sessionId, token, onChanged }: { ask:
       onChanged();
     }
   };
-  if (fresh)
-    return (
-      <section className="card p-3">
-        <p className="m-0 text-[15px] font-semibold text-muted">Morning check · {ask.hostLabel}</p>
-        <p className="hi m-0 mt-1 text-xl font-semibold">{ask.message.hi}</p>
-        <p className="m-0 text-base text-muted">{ask.message.en}</p>
-        {ask.status === "OPEN" && (
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <button disabled={busy} onClick={() => void answer("accepted")} className="min-h-14 rounded-xl bg-ok px-2 font-semibold text-white disabled:opacity-60">
-              <span className="hi">हाँ</span> / Yes
-            </button>
-            <button disabled={busy} onClick={() => void answer("declined")} className="min-h-14 rounded-xl border border-border bg-white px-2 font-semibold disabled:opacity-60">
-              <span className="hi">आज नहीं</span> / Not today
-            </button>
-          </div>
-        )}
-        {ask.status === "ACCEPTED" && <p className="m-0 mt-2 font-semibold text-ok">Host confirmed for today ✓ — live for riders {ask.window[0]}–{ask.window[1]}</p>}
-        {ask.status === "DECLINED" && <p className="m-0 mt-2 text-muted">Okay — not listed as open today.</p>}
-        {msg && <p className="m-0 mt-2 font-semibold text-gap">{msg}</p>}
-      </section>
-    );
+  const yes = (
+    <button disabled={busy} onClick={() => void answer("accepted")} className="inline-flex min-h-14 items-center justify-center rounded-lg bg-water px-2 font-semibold text-white disabled:opacity-60">
+      {fresh ? t("host.freshYes") : t("host.yes")}
+    </button>
+  );
+  const no = (
+    <button disabled={busy} onClick={() => void answer("declined")} className="min-h-14 rounded-lg border border-border bg-white px-2 font-semibold disabled:opacity-60">
+      {fresh ? t("host.freshNo") : t("host.no")}
+    </button>
+  );
   return (
-    <section className="card p-3">
-      <p className="m-0 text-[15px] font-semibold text-muted">Request from the Pyau coordinator</p>
-      <p className="hi m-0 mt-1 text-[17px] leading-snug">{ask.message.hi}</p>
-      <p className="m-0 mt-1 text-[15px] text-muted">{ask.message.en}</p>
-      <p className="m-0 mt-2 font-mono text-base font-bold">{ask.window[0]}–{ask.window[1]}</p>
-      {ask.status === "OPEN" && (
-        <p className="m-0 mt-1 inline-block rounded-full bg-heat/15 px-3 py-1 font-mono text-[15px] font-semibold text-heat-ink">
-          {open ? `${fmtClock(left ?? 0)} left` : "time is up"}
+    <section className="card p-4">
+      <p className="m-0 text-[15px] font-medium text-muted">{fresh ? t("host.morning", { host: ask.hostLabel ?? "" }) : t("host.from")}</p>
+      <p lang={lang} className={`m-0 mt-1 leading-snug ${fresh ? "text-xl font-semibold" : "text-[17px]"}`}>{text}</p>
+      {!fresh && <p className="m-0 mt-2 text-base font-semibold tnum">{ask.window[0]}–{ask.window[1]}</p>}
+      {ask.status === "OPEN" && !fresh && (
+        <p className="m-0 mt-2 inline-flex items-center gap-1 text-[15px] font-semibold text-heat tnum">
+          <I icon={Timer} size={16} />{open ? t("host.left", { time: fmtClock(left ?? 0) }) : t("host.timeUp")}
         </p>
       )}
-      {open && (
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <button disabled={busy} onClick={() => void answer("accepted")} className="min-h-14 rounded-xl bg-ok px-2 font-semibold text-white disabled:opacity-60">
-            <span className="hi">हाँ, मैं रखूँगा</span> / Yes
-          </button>
-          <button disabled={busy} onClick={() => void answer("declined")} className="min-h-14 rounded-xl border border-border bg-white px-2 font-semibold disabled:opacity-60">
-            <span className="hi">नहीं</span> / No
-          </button>
-        </div>
+      {(fresh ? ask.status === "OPEN" : open) && <div className="mt-2 grid grid-cols-2 gap-2">{yes}{no}</div>}
+      {ask.status === "ACCEPTED" && (
+        <p className="m-0 mt-2 flex items-center gap-2 font-semibold text-water"><I icon={Check} />{t(fresh ? "host.confirmedFresh" : "host.live", { from: ask.window[0], to: ask.window[1] })}</p>
       )}
-      {ask.status === "ACCEPTED" && <p className="m-0 mt-2 font-semibold text-ok">You're live for riders {ask.window[0]}–{ask.window[1]} 🙏</p>}
-      {ask.status === "DECLINED" && <p className="m-0 mt-2 text-muted">Thank you — we'll ask someone else.</p>}
-      {(ask.status === "TIMED_OUT" || (ask.status === "OPEN" && !open)) && (
-        <p className="m-0 mt-2 font-semibold text-gap">This request already moved on — thank you.</p>
-      )}
+      {ask.status === "DECLINED" && <p className="m-0 mt-2 text-muted">{t(fresh ? "host.notToday" : "host.declined")}</p>}
+      {!fresh && (ask.status === "TIMED_OUT" || (ask.status === "OPEN" && !open)) && <p className="m-0 mt-2 font-semibold text-gap">{t("host.movedOn")}</p>}
       {msg && <p className="m-0 mt-2 font-semibold text-gap">{msg}</p>}
     </section>
   );
 }
 
-/** Host phone: switch between the two demo hosts; inbox polls the real asks API. */
-export function HostPanel({ sessionId, token }: { sessionId: string; token: string }) {
+/** Host phone: switch between the two demo hosts. The phone follows each host's own preferred language (H4 Hindi, H5 English). */
+export function HostPanel({ sessionId, token, hosts }: { sessionId: string; token: string; hosts: MapHost[] }) {
   const [hostId, setHostId] = useState("H4");
   const qc = useQueryClient();
   const inbox = useQuery({
@@ -88,32 +73,38 @@ export function HostPanel({ sessionId, token }: { sessionId: string; token: stri
     refetchInterval: () => (document.hidden ? false : 1500),
   });
   const asks = inbox.data?.asks ?? [];
+  const hostLang = hosts.find((h) => h.id === hostId)?.language ?? "en";
+  const { t } = useLang(); // the demo-room language, used for the switcher only
   return (
     <div className="flex h-full flex-col bg-canvas text-[15px]">
-      <div className="flex gap-2 border-b border-border bg-white p-2" role="tablist" aria-label="Switch host">
-        {HOSTS.map((h) => (
+      <div className="flex gap-2 border-b border-border bg-white p-2" role="tablist" aria-label={t("host.switch")}>
+        {DEMO_HOSTS.map((h) => (
           <button
             key={h.id}
             role="tab"
             aria-selected={hostId === h.id}
             onClick={() => setHostId(h.id)}
-            className={`min-h-12 flex-1 rounded-lg px-2 font-semibold ${hostId === h.id ? "bg-clay text-white" : "border border-border bg-white"}`}
+            className={`min-h-12 flex-1 rounded-lg px-2 font-semibold ${hostId === h.id ? "bg-water text-white" : "border border-border bg-white"}`}
           >
-            <span className="font-mono">{h.id}</span> {h.label}
+            <span className="tnum">{h.id}</span> {h.label}
+            <span className={`ml-1 text-[13px] font-medium ${hostId === h.id ? "text-white/85" : "text-muted"}`}>{hosts.find((x) => x.id === h.id)?.language === "hi" ? "हिंदी" : "English"}</span>
           </button>
         ))}
       </div>
-      <div className="flex-1 space-y-2 overflow-auto p-3">
-        {asks.length === 0 && (
-          <p className="m-0 rounded-lg bg-white p-3 text-muted">
-            <span className="hi">कोई नया अनुरोध नहीं।</span> No requests for {HOSTS.find((h) => h.id === hostId)?.label} right now.
-          </p>
-        )}
-        {asks.map((a) => (
-          <AskCard key={a.id} ask={a} serverTime={inbox.data!.serverTime} sessionId={sessionId} token={token}
-            onChanged={() => void qc.invalidateQueries({ queryKey: ["inbox", sessionId, hostId] })} />
-        ))}
-      </div>
+      <FixedLang lang={hostLang}>
+        <HostInbox asks={asks} serverTime={inbox.data?.serverTime ?? Date.now() / 1000} sessionId={sessionId} token={token}
+          onChanged={() => void qc.invalidateQueries({ queryKey: ["inbox", sessionId, hostId] })} />
+      </FixedLang>
+    </div>
+  );
+}
+
+function HostInbox({ asks, serverTime, sessionId, token, onChanged }: { asks: Ask[]; serverTime: number; sessionId: string; token: string; onChanged: () => void }) {
+  const { t } = useLang();
+  return (
+    <div className="flex-1 space-y-2 overflow-auto p-3">
+      {asks.length === 0 && <p className="m-0 rounded-lg border border-border bg-white p-4 text-muted">{t("host.empty")}</p>}
+      {asks.map((a) => <AskCard key={a.id} ask={a} serverTime={serverTime} sessionId={sessionId} token={token} onChanged={onChanged} />)}
     </div>
   );
 }

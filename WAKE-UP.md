@@ -49,7 +49,7 @@ All three runs: ask window 12:00–17:00; cluster D recommendation `recruit_host
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
-python -m pytest                              # 37 domain/validation tests
+python -m pytest                              # 42 domain/validation tests
 python scripts/smoke_loop.py                  # full real loop on the deployed stack (~80 s)
 python scripts/gate_authority.py              # 13 authority + failure-injection gates
 node scripts/visual_gate.mjs https://main.d1lgs9hxx2cuwt.amplifyapp.com

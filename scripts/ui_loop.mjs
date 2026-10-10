@@ -21,7 +21,7 @@ await p.waitForTimeout(4000);
 await shot("t08-demo-before");
 
 await p.getByRole("button", { name: "Run coverage plan" }).click();
-await p.getByText("Plan for review").waitFor({ timeout: 240000 });
+await p.getByText("Review the plan").waitFor({ timeout: 240000 });
 step("proposal visible");
 await p.waitForTimeout(1500);
 await shot("t08-demo-proposal");
@@ -31,14 +31,14 @@ await p.getByRole("button", { name: "Approve outreach" }).click();
 await p.getByText(/Asking .* left/).first().waitFor({ timeout: 60000 });
 step("H4 countdown visible");
 await p.getByRole("tab", { name: /H4/ }).click();
-await p.getByText(/left$/).first().waitFor({ timeout: 20000 });
+await p.getByText(/(left|बाकी)$/).first().waitFor({ timeout: 20000 });
 await p.waitForTimeout(1500);
 await shot("t08-demo-countdown");
 
 await p.getByText("no reply — timed out").first().waitFor({ timeout: 90000 });
 step("H4 timed out (real countdown)");
 await p.getByRole("tab", { name: /H5/ }).click();
-await p.getByRole("button", { name: /हाँ, मैं रखूँगा/ }).click();
+await p.getByRole("button", { name: /I'll do it/ }).click();
 step("H5 tapped Yes");
 await p.getByText("Run summary").waitFor({ timeout: 90000 });
 await p.getByText("90.9%").first().waitFor({ timeout: 30000 });

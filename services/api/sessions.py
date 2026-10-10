@@ -27,7 +27,7 @@ def create_session():
     date = fx["scenarioDate"]
     items = [
         (pk, "META", {**fx["zone"], "sessionId": sid, "timezone": fx["timezone"], "policy": fx["policy"], "date": date,
-                      "heatHourly": fx["heatProfile"]["hourly"], "version": 1}),
+                      "heatHourly": fx["heatProfile"]["hourly"], "clusterLabels": fx.get("clusterLabels", {}), "version": 1}),
     ]
     for h in fx["hosts"]:
         host = {k: v for k, v in h.items() if k != "confirmedForScenarioDate"}

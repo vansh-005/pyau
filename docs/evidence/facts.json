@@ -1,6 +1,6 @@
 {
- "verifiedFromRunId": "6d8648e4d5da8b98432c",
- "executionName": "6d8648e4d5da8b98432c",
+ "verifiedFromRunId": "4cd8ad80608b92070522",
+ "executionName": "4cd8ad80608b92070522",
  "sessionMode": "demo",
  "scenarioDate": "2026-05-21",
  "zone": "East Delhi sample zone",
@@ -17,14 +17,14 @@
   ]
  },
  "coverageBefore": {
-  "percent": 50,
   "covered": 22,
+  "percent": 50,
   "total": 44
  },
  "coverageProjectedIfFirstChoiceAccepts": {
+  "covered": 40,
   "total": 44,
-  "percent": 90.9,
-  "covered": 40
+  "percent": 90.9
  },
  "coverageAfter": {
   "covered": 40,
@@ -35,7 +35,7 @@
   {
    "clusterId": "D",
    "requests": 4,
-   "recommendation": "recruit_host_nearby"
+   "recommendation": "ask_municipal_water_point"
   }
  ],
  "outreach": {
@@ -96,5 +96,5 @@
  ],
  "appUrl": "https://main.d1lgs9hxx2cuwt.amplifyapp.com",
  "dataNote": "Sample scenario: hosts, requests and temperatures are invented; nothing here is an observed outcome.",
- "exportedAt": "2026-10-10T01:15:43Z"
+ "exportedAt": "2026-10-10T07:44:10Z"
 }

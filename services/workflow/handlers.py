@@ -9,6 +9,7 @@ import time
 
 from botocore.exceptions import ClientError
 from pyau_domain.answer import short_label
+from pyau_domain.candidates import area_label
 from pyau_domain.coverage import compute_coverage
 from pyau_domain.geo import hm
 from pyau_domain.heat import heat_outlook
@@ -82,7 +83,9 @@ def pick_next_host(e):
         timeout = int(e["askTimeoutSeconds"])
         msg = gap["messages"][hid]
         return {"hasHost": True, "hostId": hid, "askId": ask_id, "hostLabel": short_label(h.label),
-                "message": {"hi": msg["hi"], "en": msg["en"]}, "window": msg["window"],
+                "message": {"hi": msg.get("hi"), "en": msg.get("en"), "text": msg.get("text") or msg.get("hi") or msg.get("en"),
+                    "lang": msg.get("lang") or ("hi" if msg.get("hi") else "en")}, "window": msg["window"],
+                "areaLabel": gap.get("label"),
                 "timeoutSeconds": timeout, "sfnTimeoutSeconds": timeout + ASK_SFN_SLACK_S}
     return {"hasHost": False}
 
@@ -133,7 +136,7 @@ def publish_point(e):
 def mark_unresolved(e):
     gap = e["gap"]
     events.append(e["sessionId"], e["runId"], "gap_unresolved", "system",
-                  f"Cluster {gap['clusterId']} stays unresolved: no host left to ask — needs a human decision",
+                  f"{gap.get('label') or 'Area ' + gap['clusterId']} stays unresolved: no host left to ask — needs a human decision",
                   {"clusterId": gap["clusterId"]})
     return {"status": "UNRESOLVED", "clusterId": gap["clusterId"]}
 
@@ -151,7 +154,8 @@ def summarize(e):
         "coverageAfter": {"covered": rep.covered, "total": rep.total, "percent": rep.percent},
         "uncoveredClusters": rep.uncoveredClusters,
         "asks": [{"hostId": a["hostId"], "clusterId": a["clusterId"], "status": a["status"]} for a in all_asks],
-        "unresolved": [{"clusterId": c, "requests": rep.byCluster[c].requests, "reason": "NO_HOST_ACCEPTED"} for c in rep.uncoveredClusters],
+        "unresolved": [{"clusterId": c, "label": area_label(c, st.meta.get("clusterLabels")), "requests": rep.byCluster[c].requests,
+                        "reason": "NO_HOST_ACCEPTED"} for c in rep.uncoveredClusters],
         "approvedUnresolved": [u for u in (e.get("approved") or {}).get("unresolved", [])],
     }
     ddb.update_data(runs.run_pk(sid, rid), "META", {"summary": summary, "coverageCurrent": {
@@ -159,7 +163,7 @@ def summarize(e):
     runs.set_status(sid, rid, "COMPLETED")
     events.append(sid, rid, "run_completed", "system",
                   f"Run completed · coverage {summary['coverageBefore']['percent'] if summary['coverageBefore'] else '?'}% → {rep.percent}% "
-                  f"({rep.covered}/{rep.total}) · unresolved: {', '.join(rep.uncoveredClusters) or 'none'}",
+                  f"({rep.covered}/{rep.total}) · still open: {', '.join(area_label(c, st.meta.get('clusterLabels')) for c in rep.uncoveredClusters) or 'none'}",
                   {"summary": summary})
     return summary
 

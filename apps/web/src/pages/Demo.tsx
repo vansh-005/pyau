@@ -1,25 +1,23 @@
-import { Loading } from "../components/Loading";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Check, Clock, Copy, RefreshCw } from "lucide-react";
 import { getMap, setClock } from "../api";
 import { CoordinatorPanel } from "../components/CoordinatorPanel";
 import { HostPanel } from "../components/HostPanel";
+import { Loading } from "../components/Loading";
 import { PhoneFrame } from "../components/PhoneFrame";
 import { RiderPanel } from "../components/RiderPanel";
+import { I, LangToggle, Segmented, Wordmark } from "../components/ui";
 import { useRun } from "../hooks";
+import { useLang } from "../i18n/lang";
 import { RIDER_LOCATIONS, useDemoSession } from "../session";
 
 const COACH_KEY = "pyau.coachDismissed";
 type Tab = "rider" | "coord" | "host";
 
-function clockText(c?: { date: string; time: string; label?: string }) {
-  if (!c) return "…";
-  const d = new Date(c.date + "T12:00:00");
-  return `${d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} ${c.time}${c.label ? ` (${c.label})` : ""}`;
-}
-
 /** /demo — one 1920×1080 screen: rider phone, coordinator centre, host phone. Every panel talks to the deployed API. */
 export default function Demo() {
+  const { t, lang } = useLang();
   const { session, error, fresh } = useDemoSession();
   const [coach, setCoach] = useState(() => {
     try {
@@ -42,9 +40,12 @@ export default function Demo() {
   const run = useRun(sid, zone, token, session?.scenarioDate ?? "");
 
   if (error) return <p className="p-4 text-gap">{error}</p>;
-  if (!session || !map.data) return <Loading>Starting a fresh demo session…</Loading>;
+  if (!session || !map.data) return <Loading>{t("loading.session")}</Loading>;
 
   const clock = map.data.clock;
+  const locale = lang === "hi" ? "hi-IN" : "en-GB";
+  const clockDay = new Date(clock.date + "T12:00:00").toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" });
+  const scenarioDate = new Date(map.data.planDate + "T12:00:00").toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
   const jump = async () => {
     setJumpErr("");
     try {
@@ -72,55 +73,55 @@ export default function Demo() {
       /* ignore */
     }
   };
+  const btn = "inline-flex min-h-10 items-center gap-2 rounded-lg border px-3 text-base font-medium disabled:opacity-50";
+  const btnPlain = `${btn} border-border bg-white`;
+  const btnPrimary = `${btn} border-water bg-water text-white`;
   return (
     <div className="flex h-full flex-col min-[1500px]:min-h-[1000px]">
-      <header className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border bg-panel px-4 py-2">
-        <span className="font-serif text-2xl font-semibold text-clay">Pyau</span>
-        <span className="text-base">Demo room · {map.data.zone.name}</span>
-        <span className="rounded-full bg-heat/15 px-3 py-1 text-base font-semibold text-heat-ink">{map.data.badge}</span>
-        <span className="rounded-full bg-ink px-3 py-1 font-mono text-base text-white">Demo timers: {session.demoTimersSeconds} s</span>
-        <span className="ml-auto text-base">
-          Clock: <strong className="font-mono">{clockText(clock)}</strong>
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-white px-4 py-2">
+        <Wordmark />
+        <span className="text-base text-muted">{map.data.zone.name}</span>
+        <span className="rounded-full bg-heat-soft px-3 py-1 text-base font-medium text-heat">{t("demo.badge", { date: scenarioDate })}</span>
+        <span className="rounded-full bg-ink px-3 py-1 text-base font-medium text-white tnum">{t("demo.timers", { s: session.demoTimersSeconds })}</span>
+        <span className="ml-auto" />
+        <LangToggle />
+        <span className="text-base">
+          {t("demo.clock")} <strong className="tnum">{clockDay} {clock.time}</strong>
+          <span className="text-muted"> ({t(`clock.${clock.label ?? "scenario day"}`)})</span>
         </span>
-        <button className="min-h-10 rounded-lg bg-heat-ink px-3 text-base font-semibold text-white disabled:opacity-50" onClick={() => void jump()} disabled={clock.time === "14:00"}>
-          Jump to 14:00 tomorrow
+        <button className={btnPrimary} onClick={() => void jump()} disabled={clock.time === "14:00"}>
+          <I icon={Clock} size={16} />{t("demo.jump")}
         </button>
-        <button className="min-h-10 rounded-lg border border-border px-3 text-base" onClick={() => void copy()} disabled={!run.runId}>
-          {copied ? "Copied ✓" : run.runId ? "Copy run ID" : "Run ID (after a run)"}
+        <button className={btnPlain} onClick={() => void copy()} disabled={!run.runId}>
+          <I icon={copied ? Check : Copy} size={16} />{copied ? t("demo.copied") : run.runId ? t("demo.copy") : t("demo.copyWait")}
         </button>
-        <button className="min-h-10 rounded-lg border border-border px-3 text-base" onClick={() => void fresh()}>
-          New session
+        <button className={btnPlain} onClick={() => void fresh()}>
+          <I icon={RefreshCw} size={16} />{t("demo.new")}
         </button>
       </header>
       {coach && (
-        <div className="flex items-center gap-3 bg-water/10 px-4 py-1.5 text-base">
-          <span>
-            <strong>1.</strong> Run the plan → <strong>2.</strong> Approve → <strong>3.</strong> Answer as a host → <strong>4.</strong> Ask as a rider
-          </span>
-          <button className="ml-auto text-base underline" onClick={dismissCoach}>Dismiss</button>
+        <div className="flex items-center gap-4 border-b border-border bg-water-soft px-4 py-2 text-base">
+          <span>{t("demo.coach")}</span>
+          <button className="ml-auto min-h-8 text-[15px] underline" onClick={dismissCoach}>{t("demo.dismiss")}</button>
         </div>
       )}
       {jumpErr && <p className="m-0 px-4 text-gap">{jumpErr}</p>}
-      <div className="flex gap-2 border-b border-border bg-white px-3 py-2 min-[1500px]:hidden" role="tablist" aria-label="Demo panels">
-        {([["rider", "Rider phone"], ["coord", "Coordinator"], ["host", "Host phone"]] as const).map(([k, label]) => (
-          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-            className={`min-h-12 flex-1 rounded-lg px-2 text-base font-semibold ${tab === k ? "bg-clay text-white" : "border border-border bg-white"}`}>
-            {label}
-          </button>
-        ))}
+      <div className="flex justify-center border-b border-border bg-white px-4 py-2 min-[1500px]:hidden">
+        <Segmented<Tab> label={t("demo.panels")} value={tab} onChange={setTab}
+          options={[{ value: "rider", label: t("demo.tabRider") }, { value: "coord", label: t("demo.tabCoord") }, { value: "host", label: t("demo.tabHost") }]} />
       </div>
-      <main className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-auto p-3 min-[1500px]:grid-cols-[430px_1fr_430px] min-[1500px]:overflow-visible">
+      <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-auto p-4 min-[1500px]:grid-cols-[430px_1fr_430px] min-[1500px]:overflow-visible">
         <div className={`${tab === "rider" ? "block" : "hidden"} justify-self-center min-[1500px]:block`}>
-          <PhoneFrame title="Rider">
+          <PhoneFrame title={t("demo.rider")}>
             <RiderPanel sessionId={sid} zoneId={zone} center={map.data.zone.center} hosts={map.data.hosts} locations={RIDER_LOCATIONS} />
           </PhoneFrame>
         </div>
-        <div className={`${tab === "coord" ? "block" : "hidden"} min-h-[900px] min-[1500px]:block min-[1500px]:min-h-0 overflow-hidden rounded-2xl`}>
+        <div className={`${tab === "coord" ? "block" : "hidden"} min-h-[900px] overflow-hidden rounded-lg border border-border bg-canvas min-[1500px]:block min-[1500px]:min-h-0`}>
           <CoordinatorPanel sessionId={sid} zoneId={zone} token={token} map={map.data} run={run} />
         </div>
         <div className={`${tab === "host" ? "block" : "hidden"} justify-self-center min-[1500px]:block`}>
-          <PhoneFrame title="Host">
-            <HostPanel sessionId={sid} token={token} />
+          <PhoneFrame title={t("demo.host")}>
+            <HostPanel sessionId={sid} token={token} hosts={map.data.hosts} />
           </PhoneFrame>
         </div>
       </main>

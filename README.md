@@ -4,7 +4,7 @@
 
 > A *pyau* (प्याऊ) is the old street-side water stall: a clay pot, a ladle, free water for anyone passing. Riders now depend on scattered goodwill they cannot see on any map. Pyau makes that goodwill findable, keeps it confirmed, and uses an AI agent to fill the gaps before the afternoon heat.
 
-**Live demo (no sign-up):** <https://main.d1lgs9hxx2cuwt.amplifyapp.com/demo> · host sign-up: [`/host`](https://main.d1lgs9hxx2cuwt.amplifyapp.com/host) · rider: [`/ride`](https://main.d1lgs9hxx2cuwt.amplifyapp.com/ride) · saved run: [`/replay/latest`](https://main.d1lgs9hxx2cuwt.amplifyapp.com/replay/latest)
+**Live demo (no sign-up):** <https://main.d1lgs9hxx2cuwt.amplifyapp.com/demo> · [landing page](https://main.d1lgs9hxx2cuwt.amplifyapp.com/) · [engineering](https://main.d1lgs9hxx2cuwt.amplifyapp.com/engineering) · host sign-up: [`/host`](https://main.d1lgs9hxx2cuwt.amplifyapp.com/host) · rider: [`/ride`](https://main.d1lgs9hxx2cuwt.amplifyapp.com/ride) · saved run: [`/replay/latest`](https://main.d1lgs9hxx2cuwt.amplifyapp.com/replay/latest)
 
 The demo runs on a **documented synthetic scenario on a real map** (East Delhi, 21 May 2026). All hosts, rider requests and temperatures are invented; the figures below are scenario arithmetic, **not measured outcomes**.
 
@@ -12,13 +12,15 @@ The demo runs on a **documented synthetic scenario on a real map** (East Delhi, 
 
 | Who | What they get |
 |---|---|
-| **Rider** (anonymous) | Taps or asks in Hindi — *"bhaiya paani kahan milega?"* — and gets the nearest open, **confirmed-today** water/shade/toilet/charging point, a scooter route, and a **spoken Hindi answer**. Afterwards: *Got it ✓* / *Problem ✗*. |
-| **Host** (shop, chemist, temple, RWA, home, dhaba) | Registers a point in under a minute (pin → address from Amazon Location Places, listed or standby, consent). Gets a morning "still serving water today?" check and, on hot days, a polite request from the coordinator. |
+| **Rider** (anonymous) | Taps or asks by voice in **English or Hindi** — *"bhaiya paani kahan milega?"* — and gets the nearest open, **confirmed-today** point with everything it offers (water, shade, toilet, charging), a scooter route, and a **spoken answer in the chosen language**. Afterwards: *Got it* / *Problem*. |
+| **Host** (shop, chemist, temple, RWA, home, dhaba) | Registers a point in under a minute (pin → address from Amazon Location Places, listed or standby, **preferred language**, consent). Gets a morning "still serving water today?" check and, on hot days, a polite request from the coordinator. |
 | **Coordinator** | Sees tomorrow's heat curve and the real coverage number, runs the **coverage agent**, reviews the plan (messages in Hindi + English, ordered hosts, unfilled gaps), approves in one click, and watches the outreach happen. Two rider problem reports pause a point automatically; the coordinator reactivates it. |
 
 ### The loop (East Delhi sample scenario)
 
 44 rider water requests fall in the 13:00–16:00 heat window; **22 of 44 (50.0%)** have an open, confirmed water point within 500 m. The agent finds cluster B (18 requests) and D (4) uncovered, proposes asking the Kirana store, then the RWA office for B, and flags D for a human (no host within 500 m). After approval, Step Functions asks the Kirana store → **no reply in 45 s (demo timer) → times out** → asks the RWA office → **accepts 12:00–17:00** → the point goes live → coverage becomes **40 of 44 (90.9%)**. D stays red. A rider in cluster B at 14:00 then gets the RWA office, 176 m away in a straight line (261 m by scooter route), with a Hindi voice answer.
+
+The coordinator reads each host's request in that host's own language (in the sample scenario the Kirana store is a Hindi host and the RWA office an English host), and areas are named in plain language (for example *Area B · Ganesh Nagar, Shakarpur*, from Amazon Location Places). The whole UI has an English / हिंदी toggle (English by default, one language at a time).
 
 Every number comes from code (`packages/domain`). The model plans, prioritises and writes the messages; it never computes distances, coverage, ranking or timing, and it cannot send, approve, add hosts or reorder candidates.
 
@@ -64,7 +66,7 @@ Everything below was run against the deployed stack with real AWS services (no m
 | Check | Command | Result |
 |---|---|---|
 | Fixture arithmetic | `python scripts/verify_fixture.py` | passes (13:00–16:00, 44, 22/44, B→[H4,H5], D→none, 40/44, rider→H5) |
-| Domain + validation tests | `python -m pytest` | 37 passed (coverage, candidates, heat window, proposal validation incl. invented host / reordering / money promise / missing window, trust rule, intents) |
+| Domain + validation tests | `python -m pytest` | 42 passed (coverage, candidates, heat window, proposal validation incl. invented host / reordering / money promise / missing window, trust rule, intents) |
 | Full loop on the deployed API | `python scripts/smoke_loop.py` | real Bedrock agent run → approval → 45 s timeout → late answer `409` → accept → 90.9% → rider answer; Step Functions history has both branches |
 | Authority + failure injection | `python scripts/gate_authority.py` | 13/13 (cross-session tokens refused, demo clock refuses live, Routes/Polly failure fall back honestly, Bedrock denied → run `FAILED`, prompt-injection host label stays data) |
 | Trust loop | `python scripts/smoke_trust.py` | two reports pause a point, coverage recomputes by code, `STALE_INPUT` if a host is paused after the proposal |
@@ -101,7 +103,7 @@ The Bedrock model is one config value: `npx cdk deploy -c bedrockModelId=<profil
 - **Synthetic scenario.** Hosts, requests and temperatures are invented; coverage is straight-line distance within 500 m; the demo policy (42 °C apparent temperature, 500 m radius, 45 s ask timeout) is unvalidated. No claim of lives saved, illness prevented or riders served.
 - **A host's yes is a promise** ("Host confirmed"), not verified water. Below the threshold is not "safe"; a missing forecast is `INSUFFICIENT_DATA`.
 - **No rider, host or coordinator has validated** the workflow, the timeout length or the radius.
-- **Hindi** (UI strings and model-written messages) needs native-speaker review; the coordinator reads every message before anything is sent.
+- **Hindi** (UI strings, the public pages and model-written messages) needs native-speaker review; the coordinator reads every message before anything is sent.
 - **Model:** the agent runs on Amazon Nova 2 Lite; Anthropic models were not enabled for this AWS account.
 - **Voice** was tested with a synthetic (Polly) voice through a fake microphone and Transcribe `hi-IN`, not with real riders.
 - **Roles** in the apps use signed demo-session tokens; the Cognito user pool, groups and a JWT-protected endpoint exist but sign-in screens are not built.

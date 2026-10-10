@@ -33,6 +33,7 @@ class Host(BaseModel):
     paused: bool = False
     pausedReason: Optional[str] = None
     consentToAsks: bool = True
+    language: Literal["en", "hi"] = "hi"  # the language this host is asked in (and sees their phone in)
 
 
 class Availability(BaseModel):

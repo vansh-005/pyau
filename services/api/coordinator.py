@@ -153,10 +153,10 @@ def approve(sid, proposal_id, body):
     for g in prop["gaps"]:
         order = [h for h in g["candidateOrder"] if h not in removed]
         if not order:
-            unresolved.append({"clusterId": g["clusterId"], "requests": g["requests"], "recommendation": "recruit_host_nearby",
+            unresolved.append({"clusterId": g["clusterId"], "label": g.get("label"), "requests": g["requests"], "recommendation": "recruit_host_nearby",
                                "note": "All candidate hosts were removed by the coordinator.", "reason": "COORDINATOR_REMOVED"})
             continue
-        gaps.append({"clusterId": g["clusterId"], "requests": g["requests"], "priority": g["priority"], "askWindow": g["askWindow"],
+        gaps.append({"clusterId": g["clusterId"], "label": g.get("label"), "requests": g["requests"], "priority": g["priority"], "askWindow": g["askWindow"],
                      "candidateOrder": order, "messages": {h: g["messages"][h] for h in order}})
     approved = {"gaps": gaps, "unresolved": unresolved, "removedHostIds": sorted(removed), "contentHash": prop["contentHash"],
                 "approvedAt": time.time()}

@@ -6,6 +6,7 @@ from .geo import haversine, hm
 HOST_TYPES = {"shop", "chemist", "temple", "rwa", "home", "dhaba", "other"}
 OFFERS = {"water", "shade", "toilet", "charging"}
 KINDS = {"listed", "standby"}
+LANGUAGES = {"en", "hi"}
 MAX_ZONE_DISTANCE_M = 6000
 _TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
@@ -40,12 +41,15 @@ def validate_registration(body: dict, zone_center: dict):
         errs["location"] = "Drop the pin on the map"
     elif haversine({"lat": lat, "lng": lng}, zone_center) > MAX_ZONE_DISTANCE_M:
         errs["location"] = "This pin is outside the zone"
+    language = body.get("language") or "en"
+    if language not in LANGUAGES:
+        errs["language"] = "Choose English or Hindi"
     if body.get("consentToAsks") is not True:
         errs["consentToAsks"] = "Tick the box so the coordinator may ask you on hot days"
     if errs:
         return errs, None
     return {}, {
         "label": label, "hostType": htype, "offers": sorted(set(offers)), "kind": kind, "hours": list(hours),
-        "lat": round(float(lat), 6), "lng": round(float(lng), 6), "consentToAsks": True,
+        "lat": round(float(lat), 6), "lng": round(float(lng), 6), "consentToAsks": True, "language": language,
         "contactHours": body.get("contactHours") if isinstance(body.get("contactHours"), list) else list(hours),
     }

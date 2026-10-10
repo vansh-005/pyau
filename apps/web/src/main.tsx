@@ -3,7 +3,9 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
+import { LangProvider } from "./i18n/lang";
 import Landing from "./pages/Landing";
+import Engineering from "./pages/Engineering";
 import Demo from "./pages/Demo";
 import Ride from "./pages/Ride";
 import Host from "./pages/Host";
@@ -15,9 +17,11 @@ const qc = new QueryClient();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={qc}>
+      <LangProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/engineering" element={<Engineering />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/ride" element={<Ride />} />
           <Route path="/host" element={<Host />} />
@@ -25,6 +29,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/coordinate/:zoneId" element={<Coordinate />} />
         </Routes>
       </BrowserRouter>
+      </LangProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

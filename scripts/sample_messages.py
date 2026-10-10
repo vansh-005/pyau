@@ -22,15 +22,15 @@ for i in range(N):
     res = json.loads(r["Payload"].read())
     p = runs.get_proposal(s["sessionId"], rid)
     ok = bool(p) and res.get("status") == "PROPOSED" and p["coverageProjected"]["percent"] == 90.9 and [g["clusterId"] for g in p["gaps"]] == ["B"] \
-        and p["gaps"][0]["candidateOrder"] == ["H4", "H5"] and [u["clusterId"] for u in p["unresolved"]] == ["D"]
+        and p["gaps"][0]["candidateOrder"] == ["H4", "H5"] and [u["clusterId"] for u in p["unresolved"]] == ["D"]         and p["gaps"][0]["messages"]["H4"]["lang"] == "hi" and p["gaps"][0]["messages"]["H5"]["lang"] == "en"
     rec = {"run": rid, "seconds": round(time.time() - t0), "status": res.get("status"), "ok": ok,
            "askWindow": p["gaps"][0]["askWindow"] if p else None, "unresolved": p["unresolved"] if p else None,
-           "messages": {h: {"hi": mm["hi"], "en": mm["en"], "chars": [len(mm["hi"]), len(mm["en"])]} for h, mm in (p["gaps"][0]["messages"].items() if p else [])},
+           "messages": {h: {"lang": mm["lang"], "text": mm["text"], "chars": len(mm["text"])} for h, mm in (p["gaps"][0]["messages"].items() if p else [])},
            "explanation": p["explanation"] if p else None}
     samples.append(rec)
     print(f"run {i + 1}: {rec['status']} ok={ok} window={rec['askWindow']} D={rec['unresolved'] and rec['unresolved'][0]['recommendation']} ({rec['seconds']}s) id={rid}")
     for h, mm in rec["messages"].items():
-        print(f"   {h} hi({mm['chars'][0]}): {mm['hi']}\n      en({mm['chars'][1]}): {mm['en']}")
+        print(f"   {h} [{mm['lang']}] ({mm['chars']}): {mm['text']}")
 if "--json" in sys.argv:
     Path(sys.argv[sys.argv.index("--json") + 1]).write_text(json.dumps(samples, ensure_ascii=False, indent=1), encoding="utf8")
 print("ALL VALID" if all(s["ok"] for s in samples) else "SOME INVALID")

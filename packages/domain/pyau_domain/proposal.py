@@ -5,7 +5,7 @@ import json
 import re
 from dataclasses import dataclass, field
 
-from .candidates import candidate_hosts, centroid
+from .candidates import area_label, candidate_hosts, centroid
 from .coverage import compute_coverage
 from .geo import fmt_hm, hm
 from .models import Availability, CoverageReport, DemandRecord, Host, Policy
@@ -13,6 +13,7 @@ from .models import Availability, CoverageReport, DemandRecord, Host, Policy
 RECOMMENDATIONS = {"recruit_host_nearby", "ask_municipal_water_point", "check_platform_rest_point", "accept_gap_low_demand"}
 MAX_MESSAGE_CHARS = 280
 MAX_EXPLANATION_WORDS = 120
+LOW_DEMAND_MAX_REQUESTS = 2  # accept_gap_low_demand is only for areas with 1 or 2 requests
 ASK_BUFFER_MIN = 60  # an ask may extend at most 1 h before/after the heat window (modest, predictable asks)
 
 BUTTONS = {
@@ -39,6 +40,7 @@ class ProposalContext:
     window: tuple[str, str]
     report: CoverageReport
     candidates: dict[str, list[dict]] = field(default_factory=dict)  # clusterId -> ranked candidates (code)
+    labels: dict[str, str] = field(default_factory=dict)  # clusterId -> place name (display only)
 
     def ensure_candidates(self, cluster_id: str) -> list[dict]:
         if cluster_id not in self.candidates:
@@ -63,7 +65,7 @@ def check_message(text: str, lang: str, windows: list[tuple[str, str]]) -> list[
         if dev < 15 or dev < 0.4 * len(re.sub(r"[\s\d:\-–.,;!?()/]", "", text)):
             errs.append("hi message must be written in Devanagari Hindi")
     elif _DEVANAGARI.search(text) or not _LATIN_WORD.search(text):
-        errs.append("en message must be in English")
+        errs.append("en message must be written in English only")
     if not any(a in text and b in text for a, b in windows):
         shown = " or ".join(f"{a}–{b}" for a, b in windows)
         errs.append(f"{lang} message must state the time window as 24-hour HH:MM ({shown})")
@@ -151,14 +153,17 @@ def validate_proposal(ctx: ProposalContext, gaps: list, unresolved: list, explan
             if not isinstance(m, dict):
                 errs.append(f"cluster {cid}: missing message for candidate {hid} (or drop it with a reason)")
                 continue
+            lang = host.language  # each host is written to in ONE language: their own
+            text = m.get("text") or m.get(lang)
             wins = [eff, (aw[0], aw[1])]
-            for lang in ("hi", "en"):
-                errs += [f"cluster {cid} host {hid}: {x}" for x in check_message(m.get(lang), lang, wins)]
-            norm_msgs[hid] = {"hi": m.get("hi"), "en": m.get("en"), "window": list(eff), "trimmed": eff != (aw[0], aw[1])}
+            errs += [f"cluster {cid} host {hid} (write in {'Hindi (Devanagari)' if lang == 'hi' else 'English'} only): {x}"
+                     for x in check_message(text, lang, wins)]
+            norm_msgs[hid] = {"lang": lang, "text": text, "hi": text if lang == "hi" else None, "en": text if lang == "en" else None,
+                              "window": list(eff), "trimmed": eff != (aw[0], aw[1])}
         pts = [r for r in ctx.demand if r.clusterId == cid and r.need == ctx.policy.need and hw0 <= hm(r.hour) < hw1]
         cen = centroid(pts)
         out_gaps.append({
-            "clusterId": cid, "requests": ctx.report.byCluster[cid].requests, "hours": list(ctx.window), "centroid": cen,
+            "clusterId": cid, "label": area_label(cid, ctx.labels), "requests": ctx.report.byCluster[cid].requests, "hours": list(ctx.window), "centroid": cen,
             "priority": pr if isinstance(pr, int) else 99, "askWindow": list(aw), "candidateOrder": order,
             "dropped": dropped, "candidates": cands, "messages": norm_msgs, "buttons": BUTTONS,
         })
@@ -175,12 +180,15 @@ def validate_proposal(ctx: ProposalContext, gaps: list, unresolved: list, explan
         seen.add(cid)
         if u.get("recommendation") not in RECOMMENDATIONS:
             errs.append(f"unresolved {cid}: recommendation must be one of {sorted(RECOMMENDATIONS)}")
+        elif u.get("recommendation") == "accept_gap_low_demand" and ctx.report.byCluster[cid].requests > LOW_DEMAND_MAX_REQUESTS:
+            errs.append(f"unresolved {cid}: accept_gap_low_demand is only for areas with 1 or 2 requests; this area has "
+                        f"{ctx.report.byCluster[cid].requests}, so recommend recruit_host_nearby or ask_municipal_water_point")
         note = u.get("note") or ""
         if not isinstance(note, str) or _FORBIDDEN.search(note) or _words(note) > 60:
             errs.append(f"unresolved {cid}: note must be plain text under 60 words with no links, phone numbers or money")
         has = bool(ctx.ensure_candidates(cid))
         out_unres.append({
-            "clusterId": cid, "requests": ctx.report.byCluster[cid].requests, "recommendation": u.get("recommendation"),
+            "clusterId": cid, "label": area_label(cid, ctx.labels), "requests": ctx.report.byCluster[cid].requests, "recommendation": u.get("recommendation"),
             "note": note, "reason": "AGENT_DEFERRED" if has else "NO_HOST_WITHIN_RADIUS",
         })
 
