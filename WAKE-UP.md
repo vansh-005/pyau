@@ -1,6 +1,6 @@
 # WAKE-UP — read this first
 
-> **UI FROZEN** at commit `2ba8a04`. Release gate T13 passed 3/3 (twice: before and after the prompt change) on the deployed URL; authority gates 13/13; visual gate OK. The deployed site matches this commit. Since the first freeze (`53c8579`) the only UI change is a **responsive fallback**: below 1500 px wide the demo room shows Rider / Coordinator / Host tabs instead of three columns (so a 1366 px laptop has no sideways scroll); at 1920×1080 the page is **pixel-identical** to before (verified by image diff) and a full real-browser loop passed after the change.
+> **UI FROZEN v2 018859a.** Redesigned UI (Lucide icons, water-blue system, English/हिंदी with per-host languages, plain-language area names), plus the landing page `/` and `/engineering`. Release gate re-run on this version: **3/3 consecutive full /demo loops** on the deployed URL (runs `9f02acc6b1a7dd114645`, `c1101d6ab34c3f9d4501`, `4cd8ad80608b92070522`), authority gates 13/13, visual gate OK, 42 tests, i18n check OK. The deployed site matches this commit; the hero numbers (22/44 → 40/44, 50% → 90.9%) and the flow are unchanged. Before/after screenshots: `docs/evidence/ui-v1/` and `docs/evidence/ui-v2/`.
 
 **Summary**
 1. **Done:** T00–T14 all built, deployed, verified and committed; extras 1–5 done (warmer Hindi prompt, fresh evidence, `RECORDING.md`, README + writeup, UI polish).
@@ -11,16 +11,25 @@
 
 ## Run IDs for your Step Functions / CloudWatch capture (S09)
 
-- Fresh verified run (all checks passed, timeout + accept branches): **`6d8648e4d5da8b98432c`** (execution name = run ID, region ap-south-1, state machine `pyau-CoverageRun`). Also in `docs/evidence/facts.json`.
+- Fresh verified run (all checks passed, timeout + accept branches): **`4cd8ad80608b92070522`** (execution name = run ID, region ap-south-1, state machine `pyau-CoverageRun`). Also in `docs/evidence/facts.json`.
 - For footage you record yourself, click **Copy run ID** in the demo-room header right after S06 and use *that* ID in the console (the S09 clip must match the S05/S06 clip).
 - Step Functions keeps execution history for 90 days; the DynamoDB session data behind a run expires after 48 h (the saved replay `/replay/latest` does not expire).
+
+## New in UI v2 — things to know
+- **Fill the video link:** `apps/web/src/links.ts` → `VIDEO_URL` (empty now; the landing's "Watch the 3-minute video" button points to `#video` until you set it). The GitHub link there is `https://github.com/vansh-005/pyau` (your `origin`); make the repo public before submission.
+- **Hindi review matters more now:** the whole UI, both new pages and the host phone have Hindi copy (`apps/web/src/i18n/hi.json` is flagged `_needsNativeReview`; the Hindi text on `/` and `/engineering` is in `Landing.tsx` / `Engineering.tsx`). I wrote it; a fluent reader should check tone.
+- **One deliberate wording change:** you asked for "Runs automatically every evening at 18:30 (EventBridge Scheduler) — run now for the demo." I show "Live zones run automatically every evening at 18:30 (EventBridge Scheduler). This demo zone: run it now." because demo sessions never use the schedule and no live zone exists, so the original line would claim something the demo does not do. Tell me if you want your exact text.
+- **Area names** come from Amazon Location Places (A near Laxmi Nagar Metro, B Ganesh Nagar Shakarpur, C near NH-24 Shakarpur, D near Nirman Vihar Metro). Your example "Area B · near Laxmi Nagar Metro" is 586 m from B's centre, and A is the area actually next to the metro (237 m), so I labelled by what is true.
+- **The Engineering page's Step Functions graph is drawn** from the real execution history of the verified run, not a console screenshot (the console needs a sign-in). Use S09 for the real console shot.
+- **Agent behaviour:** the agent now writes each host one message in the host's language (Kirana store = Hindi, RWA office = English). In ~1 of 4 early runs it recommended "accept this gap" for Area D (4 requests); that is now refused in code, 5/5 runs since recommend recruiting a host or a municipal water point.
+- **Rider answer time** (measured, one machine, 12 warm calls): median 0.47 s, p90 1.6 s, slowest 7.5 s — the number on `/engineering`.
 
 ## Needs you (all optional unless noted)
 
 1. **Record** per `RECORDING.md`. Please test the 🎤 once with your real voice and click **Allow** on the mic prompt before recording S03. I could only test with a synthetic Polly voice through a fake microphone.
 2. **Hindi review.** UI strings (`apps/web/src/i18n/hi.json`, flagged `needsNativeReview`) and the model-written requests (samples below) should be read by a fluent speaker if possible. The prompt now includes one good example request, so the messages are warm but near-identical between runs and between hosts (only the host type and offers change).
 3. **Anthropic models:** still not enabled for the account (Bedrock says the use-case form is missing). Agent runs on Amazon Nova 2 Lite. If access arrives: rerun `python scripts/t00_smoke.py bedrock <profile-id>` and redeploy with `npx cdk deploy -c bedrockModelId=<profile-id>` from `infra/`. Not needed for the submission.
-4. **Public repo hygiene:** commit `8e45c66` (T00 notes) still contains the IAM user name `[iam-user]` and the last 4 digits of the AWS account ID in `decisions.md` history. Low sensitivity, removed from the current tree. If you want it gone, tell me and I will rewrite history before the repo goes public (it has never been pushed). Everything else passed a secret scan (no keys, tokens, emails, full account IDs). `infra/outputs.json`, `.env.local` (test password) and `.venv` are gitignored.
+4. **Public repo hygiene (done):** history was rewritten as you pre-approved. The IAM user name and the account digits are gone from every commit (full-history grep over all refs and objects: 0 hits); `origin` only has the planning-pack commit, so a push fast-forwards. Secret scan of the tree is clean. `infra/outputs.json`, `.env.local` and `.venv` are gitignored.
 5. **Lambda concurrency:** your account's limit is **10** concurrent invocations (new-account default; the quota API refuses requests below 1000). Normal demo use is far below that, but a burst of >10 parallel calls returns 503s. If you expect several judges at once, open a Service Quotas / Support case to raise "Concurrent executions" for Lambda in ap-south-1.
 6. **Daily agent-run cap:** 40 real runs per UTC day by design (cost guard). I set an operator override to **100** (`PUBLIC#CAP#CONFIG`) so your recording cannot be blocked; today's count was 10 when I checked. Lower it again after judging if you prefer (README/`services/api/caps.py` explain how).
 7. **Do not publish/submit anything until you decide.** `docs/submission-writeup.md` and `README.md` are drafts with placeholders for the repo and video URLs.
