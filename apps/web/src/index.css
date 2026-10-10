@@ -37,6 +37,15 @@
   --scene-road: #d9c3a3;
   --scene-shade: rgb(60 40 20 / 0.16);
   --scene-leaf: #6f9a74;
+  --scene-haze: #f6b24a;
+  --scene-lamp: #f6b24a;
+  --scene-rider: #a44a27;
+  --scene-bag: #f6b24a;
+  --scene-bag-strip: #a44a27;
+  --scene-helmet: #f6b24a;
+  --pot-tile: #faede4;
+  --hero-glow: none;
+  --hero-image: linear-gradient(115deg, var(--heat-soft), var(--canvas) 38%, var(--water-soft) 62%, var(--clay-soft));
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -56,14 +65,23 @@
     --gap: #ff8f86;
     --gap-soft: #3d1c1a;
     --standby: #94a3b8;
-    --scene-sky-top: #2a2236;
-    --scene-sky-bottom: #4a3326;
+    --scene-sky-top: #0c1230;
+    --scene-sky-bottom: #25305c;
     --scene-sun: #f0a94b;
-    --scene-wall: #3a2e28;
-    --scene-wall-2: #2f2520;
-    --scene-road: #2b2622;
-    --scene-shade: rgb(0 0 0 / 0.35);
-    --scene-leaf: #3e6a4b;
+    --scene-wall: #2c3644;
+    --scene-wall-2: #232b38;
+    --scene-road: #1b222c;
+    --scene-shade: rgb(0 0 0 / 0.38);
+    --scene-leaf: #335f58;
+    --scene-haze: #8fa6d0;
+    --scene-lamp: #dbe6f7;
+    --scene-rider: #8ea3cc;
+    --scene-bag: #5cbbe0;
+    --scene-bag-strip: #0e2230;
+    --scene-helmet: #dbe6f7;
+    --pot-tile: #14212c;
+    --hero-glow: radial-gradient(ellipse 24% 44% at 98% 0%, rgb(240 169 75 / 0.14), transparent 100%);
+    --hero-image: linear-gradient(115deg, #0b1220, #0e2230);
   }
 }
 :root[data-theme="dark"] {
@@ -83,14 +101,23 @@
   --gap: #ff8f86;
   --gap-soft: #3d1c1a;
   --standby: #94a3b8;
-  --scene-sky-top: #2a2236;
-  --scene-sky-bottom: #4a3326;
+  --scene-sky-top: #0c1230;
+  --scene-sky-bottom: #25305c;
   --scene-sun: #f0a94b;
-  --scene-wall: #3a2e28;
-  --scene-wall-2: #2f2520;
-  --scene-road: #2b2622;
-  --scene-shade: rgb(0 0 0 / 0.35);
-  --scene-leaf: #3e6a4b;
+  --scene-wall: #2c3644;
+  --scene-wall-2: #232b38;
+  --scene-road: #1b222c;
+  --scene-shade: rgb(0 0 0 / 0.38);
+  --scene-leaf: #335f58;
+  --scene-haze: #8fa6d0;
+  --scene-lamp: #dbe6f7;
+  --scene-rider: #8ea3cc;
+  --scene-bag: #5cbbe0;
+  --scene-bag-strip: #0e2230;
+  --scene-helmet: #dbe6f7;
+  --pot-tile: #14212c;
+  --hero-glow: radial-gradient(ellipse 24% 44% at 98% 0%, rgb(240 169 75 / 0.14), transparent 100%);
+  --hero-image: linear-gradient(115deg, #0b1220, #0e2230);
 }
 
 @theme inline {
@@ -210,8 +237,9 @@ textarea {
   to { stroke-dashoffset: -24; }
 }
 .heat-shimmer {
-  background: linear-gradient(115deg, var(--heat-soft), var(--canvas) 38%, var(--water-soft) 62%, var(--clay-soft));
-  background-size: 260% 260%;
+  background: var(--hero-glow), var(--hero-image);
+  background-size: 100% 100%, 260% 260%;
+  background-repeat: no-repeat, no-repeat;
   animation: shimmer 24s ease-in-out infinite;
 }
 .reveal {

@@ -20,7 +20,7 @@ export function SunStreetScene({ label }: { label: string }) {
       <circle cx="790" cy="120" r="150" fill="url(#ss-sun)" />
       <circle cx="790" cy="120" r="58" fill="var(--scene-sun)" />
       {[330, 346, 362].map((y, i) => (
-        <path key={y} d={`M${-20 + i * 30} ${y} q40 -9 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0`} fill="none" stroke="var(--scene-sun)" strokeWidth="2" opacity="0.32" strokeDasharray="14 10" />
+        <path key={y} d={`M${-20 + i * 30} ${y} q40 -9 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0`} fill="none" stroke="var(--scene-haze)" strokeWidth="2" opacity="0.32" strokeDasharray="14 10" />
       ))}
       {/* far buildings */}
       <g fill="var(--scene-wall-2)" opacity="0.55">
@@ -81,7 +81,7 @@ export function SunStreetScene({ label }: { label: string }) {
       {/* street lamp */}
       <rect x="640" y="236" width="6" height="170" fill="var(--scene-wall-2)" />
       <path d="M643 240 h34" stroke="var(--scene-wall-2)" strokeWidth="6" strokeLinecap="round" />
-      <rect x="670" y="236" width="18" height="9" rx="3" fill="var(--scene-sun)" />
+      <rect x="670" y="236" width="18" height="9" rx="3" fill="var(--scene-lamp)" />
       {/* pavement and road */}
       <rect x="0" y="400" width="960" height="34" fill="var(--scene-wall-2)" />
       <rect x="0" y="434" width="960" height="106" fill="var(--scene-road)" />
@@ -99,14 +99,14 @@ export function SunStreetScene({ label }: { label: string }) {
         <path d="M784 420 h22" stroke="var(--ink)" strokeWidth="5" strokeLinecap="round" />
         <path d="M700 470 q-18 -4 -26 -22 h30 q10 8 8 22z" fill="var(--ink)" />
         {/* rider */}
-        <path d="M716 468 q4 -34 14 -50 h26 q4 14 -2 26 l-8 24 z" fill="var(--clay)" />
-        <path d="M752 428 q20 0 40 -8" fill="none" stroke="var(--clay)" strokeWidth="9" strokeLinecap="round" />
+        <path d="M716 468 q4 -34 14 -50 h26 q4 14 -2 26 l-8 24 z" fill="var(--scene-rider)" />
+        <path d="M752 428 q20 0 40 -8" fill="none" stroke="var(--scene-rider)" strokeWidth="9" strokeLinecap="round" />
         <path d="M738 462 l22 6 l-6 24" fill="none" stroke="var(--ink)" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
         <circle cx="752" cy="400" r="14" fill="var(--scene-wall)" stroke="var(--ink)" strokeWidth="2" />
-        <path d="M737 400 a15 15 0 0 1 30 0 z" fill="var(--scene-sun)" stroke="var(--ink)" strokeWidth="2" />
+        <path d="M737 400 a15 15 0 0 1 30 0 z" fill="var(--scene-helmet)" stroke="var(--ink)" strokeWidth="2" />
         {/* delivery bag */}
-        <rect x="686" y="404" width="44" height="46" rx="6" fill="var(--scene-sun)" stroke="var(--ink)" strokeWidth="2" />
-        <rect x="686" y="418" width="44" height="7" fill="var(--clay)" />
+        <rect x="686" y="404" width="44" height="46" rx="6" fill="var(--scene-bag)" stroke="var(--ink)" strokeWidth="2" />
+        <rect x="686" y="418" width="44" height="7" fill="var(--scene-bag-strip)" />
       </g>
     </svg>
   );

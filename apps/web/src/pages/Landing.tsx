@@ -1,16 +1,17 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, Bike, Calculator, ClipboardCheck, Handshake, MapPin, Play, Store, UserCheck, UserX, Hourglass, type LucideIcon } from "lucide-react";
+import { ArrowRight, Bike, Bot, Calculator, Mic, ClipboardCheck, Handshake, MapPin, Store, UserCheck, UserX, Hourglass, type LucideIcon } from "lucide-react";
 import { PhoneShot, PyauPot, SunStreetScene, ZoneMap } from "../components/art";
 import { AnimatedDots, Reveal } from "../components/motion";
 import { ExtLink, SiteFooter, SiteNav } from "../components/site";
-import { I } from "../components/ui";
+import { I, InfoTip } from "../components/ui";
 import { useLang } from "../i18n/lang";
 import { SRC, VIDEO_URL } from "../links";
 import { useTheme } from "../theme";
 import { C } from "./landing-content";
 
 const ROLE_ICONS: LucideIcon[] = [Bike, Store, ClipboardCheck];
+const STEP_ICONS: LucideIcon[] = [Mic, Store, Bot, ClipboardCheck];
 const TRUST_ICONS: LucideIcon[] = [UserX, Handshake, Calculator, UserCheck, Hourglass];
 const AWS_ICONS: string[][] = [
   ["AWS-Amplify"], ["Amazon-Location-Service"], ["Amazon-API-Gateway", "AWS-Lambda"], ["Amazon-DynamoDB"], ["AWS-Step-Functions"], ["Amazon-Bedrock"],
@@ -41,7 +42,7 @@ export default function Landing() {
     if (loc.hash) document.getElementById(loc.hash.slice(1))?.scrollIntoView();
   }, [loc.hash]);
   const shot = (name: string) => `/shots/${name}-${theme}.png`;
-  const btn = "inline-flex min-h-12 items-center gap-2 rounded-lg px-5 text-lg font-semibold no-underline";
+  const btn = "inline-flex min-h-12 items-center gap-2 rounded-lg px-4 text-[15px] font-semibold no-underline";
 
   return (
     <div className="min-h-full bg-canvas">
@@ -49,24 +50,26 @@ export default function Landing() {
 
       {/* Hero: heat-shimmer backdrop, headline left, the real rider screen floating over the sample zone right */}
       <div className="heat-shimmer">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-24 pt-12 md:grid-cols-[1.05fr_1fr] md:pt-16">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-24 pt-12 md:grid-cols-[1.3fr_1fr] md:pt-16">
           <div>
             <h1 className="display m-0 max-w-[16ch] text-[44px] leading-[1.04] md:text-[64px]">{c.h1}</h1>
             <p className="m-0 mt-5 max-w-[46ch] text-xl text-muted">{c.sub}</p>
-            <div className="mt-7 flex flex-wrap gap-2">
-              <Link to="/demo" className={`${btn} bg-water text-on-water`}>{c.demo}<I icon={ArrowRight} /></Link>
-              <a href={VIDEO_URL || "#video"} target="_blank" rel="noopener noreferrer" className={`${btn} border border-border bg-panel text-ink`}><I icon={Play} className="text-water" />{c.video}</a>
-              <Link to="/engineering" className={`${btn} border border-border bg-panel text-ink`}>{c.eng}</Link>
+            <div className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-3">
+              <Link to="/demo" className={`${btn} w-full justify-center bg-water text-on-water sm:w-auto`}>{c.demo}<I icon={ArrowRight} /></Link>
+              <a href={VIDEO_URL || "#video"} target="_blank" rel="noopener noreferrer" className={`${btn} w-full justify-center border border-border bg-panel text-ink sm:w-auto`}>{c.video}</a>
+              <Link to="/engineering" className="inline-flex min-h-12 items-center gap-1.5 text-[15px] font-semibold text-water no-underline hover:underline">{c.eng}<I icon={ArrowRight} /></Link>
             </div>
           </div>
-          <div className="relative mx-auto w-full max-w-[560px] pb-12">
-            <div className="relative h-[440px] overflow-hidden rounded-2xl border border-border">
-              <ZoneMap label={c.mapCaption} river={c.mapRiver} vikas={c.mapVikas} />
-              <p className="absolute bottom-3 left-3 m-0 hidden max-w-[200px] sm:block rounded-lg bg-panel/90 px-3 py-2 text-[13px] leading-snug text-muted">{c.mapCaption}</p>
+          <div className="mx-auto w-full max-w-[560px]">
+            <div className="relative pb-12">
+              <div className="h-[440px] overflow-hidden rounded-2xl border border-border">
+                <ZoneMap label={c.mapCaption} river={c.mapRiver} vikas={c.mapVikas} />
+              </div>
+              <div className="absolute bottom-0 right-3 w-[215px] md:right-5 md:w-[250px]">
+                <PhoneShot src={shot("rider")} alt={c.shotRider} width={250} />
+              </div>
             </div>
-            <div className="absolute -bottom-0 right-3 w-[215px] md:right-5 md:w-[250px]">
-              <PhoneShot src={shot("rider")} alt={c.shotRider} width={250} />
-            </div>
+            <p className="m-0 mt-1 flex items-center justify-end gap-1 text-[14px] text-muted">{c.zoneCaption}<InfoTip label={c.zoneInfoLabel}>{c.mapCaption}</InfoTip></p>
           </div>
         </div>
       </div>
@@ -95,7 +98,7 @@ export default function Landing() {
           <Reveal><p className="m-0 mt-5 max-w-[72ch] text-base text-muted">{c.ndma} <ExtLink href={SRC.mongabay}>{c.ndmaSrc}</ExtLink></p></Reveal>
         </section>
 
-        <Split id="what" flip title={c.pyauTitle} visual={<div className="flex justify-center rounded-2xl border border-border bg-clay-soft p-8"><PyauPot label={c.pyauAlt} /></div>}>
+        <Split id="what" flip title={c.pyauTitle} visual={<div className="flex justify-center rounded-2xl border border-border p-8" style={{ background: "var(--pot-tile)" }}><PyauPot label={c.pyauAlt} /></div>}>
           <p className="m-0 max-w-[52ch] text-lg leading-relaxed">{c.pyau}</p>
           <p className="m-0 mt-3 text-[15px]"><ExtLink href={SRC.piao}>{c.pyauSrc}</ExtLink></p>
         </Split>
@@ -129,7 +132,7 @@ export default function Landing() {
             {c.steps.map((s, i) => (
               <Reveal key={s.t} delay={i * 90}>
                 <li className="border-t-2 border-clay pt-3">
-                  <p className="display m-0 text-[22px] text-clay tnum">{i + 1}</p>
+                  <p className="display m-0 flex items-center gap-2 text-[22px] text-clay tnum"><span className="text-water"><I icon={STEP_ICONS[i]} size={22} /></span>{i + 1}</p>
                   <p className="m-0 text-lg font-semibold leading-snug">{s.t}</p>
                   <p className="m-0 mt-1 text-base text-muted">{s.x}</p>
                 </li>

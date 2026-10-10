@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Code, ExternalLink } from "lucide-react";
+import { Bot, Code, ExternalLink, Flag, FlaskConical, Heart, type LucideIcon } from "lucide-react";
 import { useLang } from "../i18n/lang";
 import { GITHUB_URL } from "../links";
 import { I, LangToggle, ThemeToggle, Wordmark } from "./ui";
@@ -36,7 +36,7 @@ export function SiteNav() {
         <span className="ml-auto flex items-center gap-2">
           <LangToggle />
           <ThemeToggle />
-          <Link to="/demo" className="inline-flex min-h-10 items-center rounded-lg bg-water px-4 text-base font-semibold text-on-water no-underline">{n.demo}</Link>
+          <Link to="/demo" className="inline-flex min-h-10 items-center whitespace-nowrap rounded-lg bg-water px-4 text-base font-semibold text-on-water no-underline">{n.demo}</Link>
         </span>
       </nav>
     </header>
@@ -84,11 +84,24 @@ export function SiteFooter() {
           <ExtLink href={`${GITHUB_URL}/blob/main/sources.md`}>{f.sources}</ExtLink>
           <span className="font-medium">{f.built}</span>
         </p>
-        <p className="m-0 max-w-[88ch]">{f.ai}</p>
-        <p className="m-0 max-w-[88ch]">{f.credits}</p>
-        <p className="m-0 max-w-[88ch]">{f.sample}</p>
-        <p className="m-0 max-w-[88ch]">{f.event} {f.icons}</p>
+        {([[Bot, f.ai], [Heart, f.credits], [FlaskConical, f.sample], [Flag, `${f.event} ${f.icons}`]] as [LucideIcon, string][]).map(([Ic, txt]) => (
+          <p key={txt} className="m-0 flex max-w-[88ch] gap-2"><span className="mt-0.5 shrink-0 text-water"><I icon={Ic} size={16} /></span><span>{txt}</span></p>
+        ))}
       </div>
     </footer>
+  );
+}
+
+/** A list whose items each carry a Lucide icon (one icon for all items, or one per item). */
+export function IconList({ items, icon, tone = "text-water" }: { items: ReactNode[]; icon: LucideIcon | LucideIcon[]; tone?: string }) {
+  return (
+    <ul className="m-0 list-none space-y-2 p-0 text-base">
+      {items.map((x, i) => (
+        <li key={i} className="flex gap-2.5">
+          <span className={`mt-0.5 shrink-0 ${tone}`}><I icon={Array.isArray(icon) ? icon[i] : icon} size={18} /></span>
+          <span>{x}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

@@ -32,29 +32,29 @@ export function AwsArchitecture({ labels }: { labels: Record<string, string> }) 
     polly: { cx: 781, cy: ROW.r2, icon: "Amazon-Polly", label: "Amazon Polly", sub: labels.polly, modes: ["rider"] },
     location: { cx: 781, cy: ROW.r3, icon: "Amazon-Location-Service", label: "Amazon Location", sub: labels.location, modes: ["rider"] },
     bedrock: { cx: 781, cy: ROW.r5, icon: "Amazon-Bedrock", label: "Amazon Bedrock", sub: labels.bedrock, modes: ["run"] },
-    ddb: { cx: 957, cy: ROW.r3, icon: "Amazon-DynamoDB", label: "Amazon DynamoDB", sub: labels.ddb, modes: ["rider", "run"] },
-    s3: { cx: 957, cy: ROW.r4, icon: "Amazon-Simple-Storage-Service", label: "Amazon S3", sub: labels.s3, modes: ["rider"] },
+    ddb: { cx: 965, cy: ROW.r3, icon: "Amazon-DynamoDB", label: "Amazon DynamoDB", sub: labels.ddb, modes: ["rider", "run"] },
+    s3: { cx: 965, cy: ROW.r4, icon: "Amazon-Simple-Storage-Service", label: "Amazon S3", sub: labels.s3, modes: ["rider"] },
     cw: { cx: 1120, cy: 520, icon: "Amazon-CloudWatch", label: "Amazon CloudWatch", sub: labels.cw, modes: ["run"] },
   };
   const n = N;
 
   type E = { d: string; modes: Mode[]; idle?: boolean; label?: { t: string; x: number; y: number; anchor?: "start" | "middle" | "end" } };
   const E: E[] = [
-    { d: `M100 ${n.browser.cy - 10} H146 V${n.amplify.cy - 10} H${n.amplify.cx - 27}`, modes: ["rider"], label: { t: labels.eLoad, x: 179, y: 75, anchor: "middle" } },
-    { d: `M100 ${n.browser.cy - 10} H${n.apigw.cx - 27}`, modes: ["rider", "run"], label: { t: "HTTPS", x: 186, y: n.browser.cy - 17, anchor: "middle" } },
+    { d: `M100 ${n.browser.cy - 10} H146 V${n.amplify.cy - 10} H${n.amplify.cx - 27}`, modes: ["rider"], label: { t: labels.eLoad, x: 146, y: 200, anchor: "middle" } },
+    { d: `M100 ${n.browser.cy - 10} H${n.apigw.cx - 27}`, modes: ["rider", "run"], label: { t: "HTTPS", x: 186, y: n.browser.cy - 6, anchor: "middle" } },
     { d: `M${R(n.apigw)} H332 V${n.apiL.cy - 10} H${n.apiL.cx - 27}`, modes: ["rider", "run"] },
     { d: `M${Bm(n.apigw)} V${n.cognito.cy - 38}`, modes: [], idle: true, label: { t: labels.eAuth, x: 247, y: 450, anchor: "start" } },
     { d: `M${Bm(n.apiL)} V${n.sfn.cy - 38}`, modes: ["run"], label: { t: labels.eStart, x: 428, y: 342, anchor: "start" } },
-    { d: `M${R(n.apiL)} H${n.polly.cx - 27}`, modes: ["rider"], label: { t: labels.eVoice, x: 560, y: 186, anchor: "middle" } },
+    { d: `M${R(n.apiL)} H${n.polly.cx - 27}`, modes: ["rider"], label: { t: labels.eVoice, x: 560, y: 199, anchor: "middle" } },
     { d: `M688 ${n.apiL.cy - 10} V${n.transcribe.cy - 10} H${n.transcribe.cx - 27}`, modes: ["rider"] },
     { d: `M688 ${n.apiL.cy - 10} V${n.location.cy - 10} H${n.location.cx - 27}`, modes: ["rider"] },
-    { d: `M470 ${n.apiL.cy - 10} V268 H905 V${n.ddb.cy - 10} H${n.ddb.cx - 27}`, modes: ["rider", "run"], label: { t: labels.eStore, x: 560, y: 262, anchor: "middle" } },
-    { d: `M905 268 V${n.s3.cy - 10} H${n.s3.cx - 27}`, modes: ["rider"] },
-    { d: `M${R(n.sfn)} H${n.wf.cx - 27}`, modes: ["run"], label: { t: labels.eTasks, x: 510, y: 407, anchor: "middle" } },
-    { d: `M${R(n.wf)} H905 V${n.ddb.cy - 10} H${n.ddb.cx - 27}`, modes: ["run"] },
+    { d: `M470 ${n.apiL.cy - 10} V268 H893 V${n.ddb.cy - 10} H${n.ddb.cx - 27}`, modes: ["rider", "run"], label: { t: labels.eStore, x: 560, y: 272, anchor: "middle" } },
+    { d: `M893 268 V${n.s3.cy - 10} H${n.s3.cx - 27}`, modes: ["rider"] },
+    { d: `M${R(n.sfn)} H${n.wf.cx - 27}`, modes: ["run"], label: { t: labels.eTasks, x: 510, y: 419, anchor: "middle" } },
+    { d: `M${R(n.wf)} H893 V${n.ddb.cy - 10} H${n.ddb.cx - 27}`, modes: ["run"] },
     { d: `M${Bm(n.evb)} V${n.wf.cy - 38}`, modes: [], idle: true, label: { t: labels.eSched, x: 608, y: 382, anchor: "start" } },
     { d: `M${Bm(n.sfn)} V${n.agent.cy - 38}`, modes: ["run"], label: { t: labels.ePlan, x: 412, y: 491, anchor: "end" } },
-    { d: `M${R(n.agent)} H${n.bedrock.cx - 27}`, modes: ["run"], label: { t: labels.eTools, x: 600, y: 516, anchor: "middle" } },
+    { d: `M${R(n.agent)} H${n.bedrock.cx - 27}`, modes: ["run"], label: { t: labels.eTools, x: 600, y: 529, anchor: "middle" } },
     { d: `M440 482 V488 H1070 V${n.cw.cy - 10} H${n.cw.cx - 27}`, modes: ["run"], idle: false, label: { t: labels.eLogs, x: 1000, y: 503, anchor: "middle" } },
   ];
 
@@ -101,7 +101,15 @@ export function AwsArchitecture({ labels }: { labels: Record<string, string> }) 
           })}
           {E.filter((e) => e.label).map((e, i) => {
             const on = e.modes.includes(mode);
-            return <text key={i} x={e.label!.x} y={e.label!.y} textAnchor={e.label!.anchor} fontSize="12.5" fontWeight={on ? 600 : 400} style={{ ...(on ? ink : muted), ...halo }} opacity={on || e.idle ? 1 : 0.7}>{e.label!.t}</text>;
+            const lb = e.label!;
+            const w = lb.t.length * 6.9 + 12;
+            const x0 = lb.anchor === "end" ? lb.x - w + 6 : lb.anchor === "start" ? lb.x - 6 : lb.x - w / 2;
+            return (
+              <g key={i} data-edge-label>
+                <rect x={x0} y={lb.y - 13} width={w} height={18} rx={5} style={{ fill: "var(--panel)", stroke: on ? "var(--water)" : "var(--border)" }} strokeWidth="1" />
+                <text x={lb.x} y={lb.y} textAnchor={lb.anchor} fontSize="12.5" fontWeight={on ? 600 : 400} style={on ? ink : muted}>{lb.t}</text>
+              </g>
+            );
           })}
           {Object.entries(N).map(([id, nd]) => {
             const active = nd.modes.includes(mode);

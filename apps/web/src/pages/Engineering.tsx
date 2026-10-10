@@ -2,13 +2,13 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
-  ArrowRight, Calculator, ClipboardCheck, Flag, Hourglass, Languages, MapPin, Mic, Repeat, Route as RouteIcon, ShieldCheck, Volume2, Workflow, CircleAlert, Bot, Play, Pause,
+  ArrowRight, Ban, Calculator, Check, ClipboardCheck, FileCheck, Flag, Gauge, MapPinned, Rocket, Search, Thermometer, TriangleAlert, Users, Hourglass, Languages, MapPin, Mic, Repeat, Route as RouteIcon, ShieldCheck, Volume2, Workflow, CircleAlert, Bot, Play, Pause,
   type LucideIcon,
 } from "lucide-react";
 import { api, type Receipt } from "../api";
 import { AwsArchitecture } from "../components/arch";
 import { ExecutionGraph, StepFlow } from "../components/diagrams";
-import { ExtLink, Section, SiteFooter, SiteNav } from "../components/site";
+import { ExtLink, IconList, Section, SiteFooter, SiteNav } from "../components/site";
 import { I } from "../components/ui";
 import exec from "../data/execution.json";
 import { useLang } from "../i18n/lang";
@@ -209,6 +209,7 @@ const C = {
   },
 };
 
+const TOOL_ICONS: LucideIcon[] = [MapPinned, Thermometer, Users, Gauge, Search, FileCheck];
 const FLOW_ICONS: LucideIcon[][] = [
   [Mic, Languages, ShieldCheck, RouteIcon, Volume2],
   [Bot, Pause, Workflow, MapPin, ClipboardCheck],
@@ -263,15 +264,15 @@ export default function Engineering() {
         <Section id="agent" title={c.agentTitle} intro={c.agentIntro}>
           <h3 className="m-0 mb-2 text-lg font-semibold">{c.toolsTitle}</h3>
           <ul className="m-0 grid list-none gap-x-8 gap-y-2 p-0 sm:grid-cols-2">
-            {c.tools.map(([n, d]) => (<li key={n} className="border-l-2 border-water pl-3"><code className="text-[15px] font-semibold">{n}</code><span className="block text-[15px] text-muted">{d}</span></li>))}
+            {c.tools.map(([n, d], i) => (<li key={n} className="flex gap-3 border-l-2 border-water pl-3"><span className="mt-0.5 shrink-0 text-water"><I icon={TOOL_ICONS[i]} size={20} /></span><span><code className="text-[15px] font-semibold">{n}</code><span className="block text-[15px] text-muted">{d}</span></span></li>))}
           </ul>
           <div className="mt-8 grid gap-8 md:grid-cols-2">
-            <div><h3 className="m-0 mb-2 text-lg font-semibold">{c.canTitle}</h3><ul className="m-0 space-y-1 pl-5 text-base">{c.can.map((x) => <li key={x}>{x}</li>)}</ul></div>
-            <div><h3 className="m-0 mb-2 text-lg font-semibold">{c.cannotTitle}</h3><ul className="m-0 space-y-1 pl-5 text-base">{c.cannot.map((x) => <li key={x}>{x}</li>)}</ul></div>
+            <div><h3 className="m-0 mb-2 text-lg font-semibold">{c.canTitle}</h3><IconList items={c.can} icon={Check} /></div>
+            <div><h3 className="m-0 mb-2 text-lg font-semibold">{c.cannotTitle}</h3><IconList items={c.cannot} icon={Ban} tone="text-gap" /></div>
           </div>
           <div className="mt-8 grid gap-8 md:grid-cols-2">
-            <div><h3 className="m-0 mb-2 text-lg font-semibold">{c.rulesTitle}</h3><ul className="m-0 space-y-1 pl-5 text-base">{c.rules.map((x) => <li key={x}>{x}</li>)}</ul></div>
-            <div><h3 className="m-0 mb-2 text-lg font-semibold">{c.budgetsTitle}</h3><ul className="m-0 space-y-1 pl-5 text-base">{c.budgets.map((x) => <li key={x}>{x}</li>)}</ul></div>
+            <div><h3 className="m-0 mb-2 text-lg font-semibold">{c.rulesTitle}</h3><IconList items={c.rules} icon={ShieldCheck} /></div>
+            <div><h3 className="m-0 mb-2 text-lg font-semibold">{c.budgetsTitle}</h3><IconList items={c.budgets} icon={Gauge} /></div>
           </div>
           <h3 className="m-0 mb-2 mt-8 text-lg font-semibold">{c.novaTitle}</h3>
           <p className="m-0 max-w-[72ch] text-base">{c.nova}</p>
@@ -307,9 +308,9 @@ export default function Engineering() {
         </Section>
 
         <Section id="limits" title={c.limitsTitle}>
-          <ul className="m-0 max-w-[72ch] space-y-2 pl-5 text-base">{c.limits.map((x) => <li key={x}>{x}</li>)}</ul>
+          <div className="max-w-[72ch]"><IconList items={c.limits} icon={TriangleAlert} tone="text-heat" /></div>
           <h3 className="m-0 mb-2 mt-6 text-lg font-semibold">{c.nextTitle}</h3>
-          <ul className="m-0 space-y-1 pl-5 text-base">{c.next.map((x) => <li key={x}>{x}</li>)}</ul>
+          <IconList items={c.next} icon={Rocket} />
           <p className="m-0 mt-8 flex flex-wrap items-center gap-x-8 gap-y-2 text-lg">
             <ExtLink href={GITHUB_URL}>{c.code}</ExtLink>
             <Link to="/replay/latest" className="inline-flex min-h-12 items-center gap-2 font-semibold text-water">{c.replay}<I icon={ArrowRight} /></Link>
