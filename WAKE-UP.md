@@ -1,6 +1,6 @@
 # WAKE-UP — read this first
 
-> **UI FROZEN** at commit `53c8579` (release gate T13 passed: 3/3 consecutive full `/demo` loops on the deployed URL, authority gates 13/13, visual gate OK). The deployed site matches that commit. Layout, hero numbers and flow have not changed since. Later commits touched only the agent prompt text (backend), docs, scripts and evidence — and the gate was re-run 3/3 after the prompt change.
+> **UI FROZEN** at commit `2ba8a04`. Release gate T13 passed 3/3 (twice: before and after the prompt change) on the deployed URL; authority gates 13/13; visual gate OK. The deployed site matches this commit. Since the first freeze (`53c8579`) the only UI change is a **responsive fallback**: below 1500 px wide the demo room shows Rider / Coordinator / Host tabs instead of three columns (so a 1366 px laptop has no sideways scroll); at 1920×1080 the page is **pixel-identical** to before (verified by image diff) and a full real-browser loop passed after the change.
 
 **Summary**
 1. **Done:** T00–T14 all built, deployed, verified and committed; extras 1–5 done (warmer Hindi prompt, fresh evidence, `RECORDING.md`, README + writeup, UI polish).

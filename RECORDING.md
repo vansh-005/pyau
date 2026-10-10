@@ -5,7 +5,7 @@ Filenames and audio rules come from `video-handoff.md`. The UI is frozen (see `W
 
 ## Setup (once, 5 min)
 
-1. Chrome, a clean profile window, **window/content area exactly 1920×1080** (e.g. DevTools → device toolbar off; or a screen recorder region of 1920×1080), bookmarks bar off, notifications off, no extensions that draw on pages.
+1. Chrome, a clean profile window (the three-panel room needs a window at least 1500 px wide; smaller windows show tabs), **window/content area exactly 1920×1080** (e.g. DevTools → device toolbar off; or a screen recorder region of 1920×1080), bookmarks bar off, notifications off, no extensions that draw on pages.
 2. Browser zoom **100%** for `/demo`; **80%** for `/host` (the page grows after registering).
 3. Recorder: 1920×1080, 30 fps, H.264. **System audio ON only for S03**; off for everything else.
 4. Open `/demo` once and dismiss the grey coach strip if you do not want it in shot (button "Dismiss" at the far right) — it re-appears only per browser tab.
