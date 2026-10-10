@@ -10,6 +10,7 @@ import { useRun } from "../hooks";
 import { RIDER_LOCATIONS, useDemoSession } from "../session";
 
 const COACH_KEY = "pyau.coachDismissed";
+type Tab = "rider" | "coord" | "host";
 
 function clockText(c?: { date: string; time: string; label?: string }) {
   if (!c) return "…";
@@ -29,6 +30,7 @@ export default function Demo() {
   });
   const [copied, setCopied] = useState(false);
   const [jumpErr, setJumpErr] = useState("");
+  const [tab, setTab] = useState<Tab>("coord");
   const sid = session?.sessionId ?? "", zone = session?.zoneId ?? "", token = session?.token ?? "";
 
   const map = useQuery({
@@ -71,7 +73,7 @@ export default function Demo() {
     }
   };
   return (
-    <div className="flex h-full min-h-[1000px] min-w-[1500px] flex-col">
+    <div className="flex h-full flex-col min-[1500px]:min-h-[1000px]">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border bg-panel px-4 py-2">
         <span className="font-serif text-2xl font-semibold text-clay">Pyau</span>
         <span className="text-base">Demo room · {map.data.zone.name}</span>
@@ -99,16 +101,28 @@ export default function Demo() {
         </div>
       )}
       {jumpErr && <p className="m-0 px-4 text-gap">{jumpErr}</p>}
-      <main className="grid min-h-0 flex-1 grid-cols-[430px_1fr_430px] gap-3 p-3">
-        <PhoneFrame title="Rider">
-          <RiderPanel sessionId={sid} zoneId={zone} center={map.data.zone.center} hosts={map.data.hosts} locations={RIDER_LOCATIONS} />
-        </PhoneFrame>
-        <div className="min-h-0 overflow-hidden rounded-2xl">
+      <div className="flex gap-2 border-b border-border bg-white px-3 py-2 min-[1500px]:hidden" role="tablist" aria-label="Demo panels">
+        {([["rider", "Rider phone"], ["coord", "Coordinator"], ["host", "Host phone"]] as const).map(([k, label]) => (
+          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+            className={`min-h-12 flex-1 rounded-lg px-2 text-base font-semibold ${tab === k ? "bg-clay text-white" : "border border-border bg-white"}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+      <main className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-auto p-3 min-[1500px]:grid-cols-[430px_1fr_430px] min-[1500px]:overflow-visible">
+        <div className={`${tab === "rider" ? "block" : "hidden"} justify-self-center min-[1500px]:block`}>
+          <PhoneFrame title="Rider">
+            <RiderPanel sessionId={sid} zoneId={zone} center={map.data.zone.center} hosts={map.data.hosts} locations={RIDER_LOCATIONS} />
+          </PhoneFrame>
+        </div>
+        <div className={`${tab === "coord" ? "block" : "hidden"} min-h-[900px] min-[1500px]:block min-[1500px]:min-h-0 overflow-hidden rounded-2xl`}>
           <CoordinatorPanel sessionId={sid} zoneId={zone} token={token} map={map.data} run={run} />
         </div>
-        <PhoneFrame title="Host">
-          <HostPanel sessionId={sid} token={token} />
-        </PhoneFrame>
+        <div className={`${tab === "host" ? "block" : "hidden"} justify-self-center min-[1500px]:block`}>
+          <PhoneFrame title="Host">
+            <HostPanel sessionId={sid} token={token} />
+          </PhoneFrame>
+        </div>
       </main>
     </div>
   );

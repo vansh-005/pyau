@@ -39,7 +39,7 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
       {cov.error && <p className="m-0 text-gap">{(cov.error as Error).message}</p>}
       {!d && !cov.error && <Loading>Loading coverage…</Loading>}
       {d && (
-        <div className="grid shrink-0 grid-cols-[1fr_330px] gap-3">
+        <div className="grid shrink-0 grid-cols-1 gap-3 min-[900px]:grid-cols-[1fr_330px]">
           <section className="card p-2">
             <h2 className="m-0 text-base font-semibold">Tomorrow's heat · {d.date}</h2>
             <HeatCurve data={d} />
@@ -68,7 +68,7 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
           </section>
         </div>
       )}
-      <div className="grid min-h-0 flex-1 grid-cols-[1fr_1.15fr] gap-3">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 min-[900px]:grid-cols-[1fr_1.15fr]">
         <section className="card relative min-h-[260px] overflow-hidden">
           {d && <MapView center={map.zone.center} zoom={15} hosts={map.hosts} clusters={d.clusters} fitAll />}
         </section>
