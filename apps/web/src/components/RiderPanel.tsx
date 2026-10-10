@@ -126,7 +126,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
           <span className="text-muted">Demo location:</span>
           {locations.map((l) => (
             <button key={l.id} aria-pressed={locId === l.id} onClick={() => { setLocId(l.id); setAnswer(null); setFb(null); }}
-              className={`min-h-9 rounded-full px-3 font-semibold ${locId === l.id ? "bg-water text-white" : "border border-border"}`}>
+              className={`min-h-12 rounded-full px-3 font-semibold ${locId === l.id ? "bg-water text-white" : "border border-border"}`}>
               {l.label}
             </button>
           ))}

@@ -284,6 +284,14 @@ export class PyauStack extends cdk.Stack {
       api.addRoutes({ path: `/${prefix}/{proxy+}`, methods, integration });
     }
 
+    // Route throttling (guardrail): global default plus tighter limits on session creation and rider/voice endpoints.
+    const cfnStage = api.defaultStage!.node.defaultChild as apigwv2.CfnStage;
+    cfnStage.defaultRouteSettings = { throttlingBurstLimit: 60, throttlingRateLimit: 30 };
+    cfnStage.routeSettings = {
+      "POST /demo/{proxy+}": { ThrottlingBurstLimit: 20, ThrottlingRateLimit: 5 },
+      "POST /help/{proxy+}": { ThrottlingBurstLimit: 30, ThrottlingRateLimit: 10 },
+    };
+
     // ---- Amplify Hosting (manual zip deploys via scripts/deploy_web.py) ----
     const amp = new amplify.CfnApp(this, "WebApp", {
       name: "pyau-web",

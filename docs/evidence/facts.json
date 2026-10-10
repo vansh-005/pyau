@@ -1,0 +1,100 @@
+{
+ "verifiedFromRunId": "d10a4ffb5c5d9f0f8004",
+ "executionName": "d10a4ffb5c5d9f0f8004",
+ "sessionMode": "demo",
+ "scenarioDate": "2026-05-21",
+ "zone": "East Delhi sample zone",
+ "heatWindow": [
+  "13:00",
+  "16:00"
+ ],
+ "requestsInWindow": 44,
+ "clusterB": {
+  "requests": 18,
+  "candidateOrder": [
+   "H4",
+   "H5"
+  ]
+ },
+ "coverageBefore": {
+  "percent": 50,
+  "covered": 22,
+  "total": 44
+ },
+ "coverageProjectedIfFirstChoiceAccepts": {
+  "covered": 40,
+  "percent": 90.9,
+  "total": 44
+ },
+ "coverageAfter": {
+  "covered": 40,
+  "total": 44,
+  "percent": 90.9
+ },
+ "unresolved": [
+  {
+   "clusterId": "D",
+   "requests": 4,
+   "recommendation": "accept_gap_low_demand"
+  }
+ ],
+ "outreach": {
+  "timedOutHost": "H4",
+  "acceptedHost": "H5",
+  "acceptedWindow": [
+   "12:00",
+   "17:00"
+  ]
+ },
+ "askTimeoutSecondsDemo": 45,
+ "bedrockModelId": "global.amazon.nova-2-lite-v1:0",
+ "stateMachineStatesEntered": [
+  "PlanWithAgent",
+  "HasProposal",
+  "AwaitApproval",
+  "OutreachPerGap",
+  "PickNextHost",
+  "HasHost",
+  "AskHost",
+  "MarkTimedOut",
+  "PickNextHost",
+  "HasHost",
+  "AskHost",
+  "HostDecision",
+  "PublishPoint",
+  "Summarize",
+  "Done"
+ ],
+ "awsServices": [
+  "AWS Amplify Hosting",
+  "Amazon Location Service",
+  "Amazon API Gateway",
+  "AWS Lambda",
+  "AWS Step Functions",
+  "Amazon Bedrock",
+  "Amazon DynamoDB",
+  "Amazon S3",
+  "Amazon Polly",
+  "Amazon Transcribe",
+  "Amazon CloudWatch",
+  "Amazon ECR (agent container image)",
+  "AWS Secrets Manager"
+ ],
+ "awsServicesProvisionedNotShownInDemo": [
+  "Amazon EventBridge Scheduler (07:30 and 18:30 IST rules; no live zone configured, so they have never acted)",
+  "Amazon Cognito (user pool + groups + JWT-protected whoami; demo roles use signed demo tokens)"
+ ],
+ "openSource": [
+  "Strands Agents SDK",
+  "MapLibre GL JS",
+  "React",
+  "Vite",
+  "Tailwind CSS",
+  "TanStack Query",
+  "Pydantic",
+  "AWS CDK"
+ ],
+ "appUrl": "https://main.d1lgs9hxx2cuwt.amplifyapp.com",
+ "dataNote": "Sample scenario: hosts, requests and temperatures are invented; nothing here is an observed outcome.",
+ "exportedAt": "2026-10-10T01:02:53Z"
+}

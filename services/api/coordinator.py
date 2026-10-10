@@ -12,7 +12,7 @@ from pyau_domain.coverage import compute_coverage
 from pyau_domain.geo import hm
 from pyau_domain.heat import heat_outlook
 
-from . import asks, ddb, events, hosts as hostsmod, runs, sessions, state
+from . import asks, caps, ddb, events, hosts as hostsmod, replays, runs, sessions, state
 
 TERMINAL = {"COMPLETED", "INSUFFICIENT_DATA", "NO_GAPS", "REJECTED", "APPROVAL_EXPIRED", "FAILED"}
 APPROVAL_TIMEOUT_DEMO_S = 900
@@ -27,8 +27,8 @@ def sfn():
 
 
 class Api(Exception):
-    def __init__(self, status, code, message, retryable=False):
-        self.status, self.code, self.message, self.retryable = status, code, message, retryable
+    def __init__(self, status, code, message, retryable=False, extra=None):
+        self.status, self.code, self.message, self.retryable, self.extra = status, code, message, retryable, extra or {}
 
 
 def _idem_get(sid, actor, op, key):
@@ -70,6 +70,12 @@ def start_run(sid, zone_id, body):
     active = [r for r in list_runs(sid, zone_id) if r["status"] not in TERMINAL]
     if active:
         raise Api(409, "ACTIVE_RUN_EXISTS", f"A run is already active for this zone ({active[0]['id']})")
+    if sid != "live":
+        try:
+            caps.take_agent_run()  # global daily cap on real agent runs across all demo sessions
+        except caps.CapReached as e:
+            raise Api(429, "DEMO_CAP_REACHED", f"The daily limit of {e.limit} live agent runs for the demo has been reached. "
+                      "You can watch a saved run replay instead.", False, {"replayId": replays.latest_id()})
     mode = "live" if sid == "live" else "demo"
     timeout = st.policy.askTimeoutSecondsLive if mode == "live" else st.policy.askTimeoutSecondsDemo
     approval_timeout = 6 * 3600 if mode == "live" else APPROVAL_TIMEOUT_DEMO_S

@@ -1,0 +1,41 @@
+{
+ "url": "https://main.d1lgs9hxx2cuwt.amplifyapp.com",
+ "consecutivePasses": 3,
+ "required": 3,
+ "loops": [
+  {
+   "loop": 1,
+   "uiOk": true,
+   "runId": "df3a4135c7fe08dca573",
+   "seconds": 80,
+   "executionStatus": "SUCCEEDED",
+   "timeoutBranch": true,
+   "acceptBranch": true,
+   "stateMachineLogEvents": 5,
+   "pass": true
+  },
+  {
+   "loop": 2,
+   "uiOk": true,
+   "runId": "e8b259d0e16380422d2f",
+   "seconds": 80,
+   "executionStatus": "SUCCEEDED",
+   "timeoutBranch": true,
+   "acceptBranch": true,
+   "stateMachineLogEvents": 5,
+   "pass": true
+  },
+  {
+   "loop": 3,
+   "uiOk": true,
+   "runId": "d10a4ffb5c5d9f0f8004",
+   "seconds": 80,
+   "executionStatus": "SUCCEEDED",
+   "timeoutBranch": true,
+   "acceptBranch": true,
+   "stateMachineLogEvents": 5,
+   "pass": true
+  }
+ ],
+ "at": "2026-10-10T06:32:19+0530"
+}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getEvents, getRun, listRuns, startRun, type Receipt, type RunDetail } from "./api";
+import { ApiError, getEvents, getRun, listRuns, startRun, type Receipt, type RunDetail } from "./api";
 
 const TERMINAL = ["COMPLETED", "INSUFFICIENT_DATA", "NO_GAPS", "REJECTED", "APPROVAL_EXPIRED", "FAILED"];
 export const isTerminal = (s?: string) => !!s && TERMINAL.includes(s);
@@ -23,6 +23,7 @@ export function useRun(sessionId: string, zoneId: string, token: string, date: s
   const [events, setEvents] = useState<Receipt[]>([]);
   const lastSeq = useRef(0);
   const [startError, setStartError] = useState("");
+  const [replayId, setReplayId] = useState<string | null>(null);
 
   // New session => forget everything.
   useEffect(() => {
@@ -85,6 +86,7 @@ export function useRun(sessionId: string, zoneId: string, token: string, date: s
 
   const start = useCallback(async () => {
     setStartError("");
+    setReplayId(null);
     try {
       const r = await startRun(zoneId, sessionId, token, date, crypto.randomUUID());
       lastSeq.current = 0;
@@ -92,6 +94,7 @@ export function useRun(sessionId: string, zoneId: string, token: string, date: s
       setRunId(r.id);
     } catch (e) {
       setStartError((e as Error).message);
+      if (e instanceof ApiError && typeof e.data.replayId === "string") setReplayId(e.data.replayId);
     }
   }, [zoneId, sessionId, token, date]);
 
@@ -101,7 +104,7 @@ export function useRun(sessionId: string, zoneId: string, token: string, date: s
     void qc.invalidateQueries({ queryKey: ["map", sessionId] });
   }, [qc, sessionId, runId]);
 
-  return { runId, detail: detail.data, events, start, startError, refresh };
+  return { runId, detail: detail.data, events, start, startError, replayId, refresh };
 }
 
 /** Seconds left from the server's expiresAt, corrected by the server clock offset (no fake timers). */

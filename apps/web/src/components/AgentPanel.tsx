@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { Receipt, RunDetail } from "../api";
 
 const fmtTime = (t: number) => new Date(t * 1000).toLocaleTimeString("en-GB", { hour12: false });
@@ -10,8 +11,8 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 /** Real run events: tool receipts (not reasoning) and workflow transitions, newest at the bottom. */
-export function AgentPanel({ events, detail, onRun, canRun, startError }: {
-  events: Receipt[]; detail?: RunDetail; onRun: () => void; canRun: boolean; startError: string;
+export function AgentPanel({ events, detail, onRun, canRun, startError, replayId, readOnly }: {
+  events: Receipt[]; detail?: RunDetail; onRun: () => void; canRun: boolean; startError: string; replayId?: string | null; readOnly?: boolean;
 }) {
   const run = detail?.run;
   const started = events[0]?.at;
@@ -23,15 +24,22 @@ export function AgentPanel({ events, detail, onRun, canRun, startError }: {
         <h2 className="m-0 text-lg font-semibold">Coverage agent</h2>
         {run && <span className="rounded-full bg-canvas px-2 py-0.5 font-mono text-sm">{run.status}</span>}
         {started && <span className="font-mono text-sm text-muted">{elapsed}s</span>}
-        <button
-          className="ml-auto min-h-11 rounded-lg bg-clay px-4 text-base font-semibold text-white disabled:opacity-50"
-          onClick={onRun}
-          disabled={!canRun}
-        >
-          Run coverage plan
-        </button>
+        {!readOnly && (
+          <button
+            className="ml-auto min-h-11 rounded-lg bg-clay px-4 text-base font-semibold text-white disabled:opacity-50"
+            onClick={onRun}
+            disabled={!canRun}
+          >
+            Run coverage plan
+          </button>
+        )}
       </div>
-      {startError && <p className="m-0 mt-2 text-gap">{startError}</p>}
+      {startError && (
+        <p className="m-0 mt-2 text-gap">
+          {startError}{" "}
+          {replayId && <Link to={`/replay/${replayId}`} className="font-semibold underline">Open the saved run replay</Link>}
+        </p>
+      )}
       {run?.status === "FAILED" && <p className="m-0 mt-2 text-gap">Run failed: {run.error ?? "see events"}. Starting again creates a new run.</p>}
       {events.length === 0 && !run && <p className="m-0 mt-2 text-muted">Idle. The agent reads the heat outlook, demand and coverage, then proposes who to ask.</p>}
       <ol className="m-0 mt-2 list-none space-y-1 p-0">

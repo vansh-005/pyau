@@ -35,7 +35,7 @@ export interface DemoSession {
 }
 
 export class ApiError extends Error {
-  constructor(public status: number, public code: string, message: string) {
+  constructor(public status: number, public code: string, message: string, public data: Record<string, unknown> = {}) {
     super(message);
   }
 }
@@ -47,7 +47,7 @@ export async function api<T>(method: string, path: string, body?: unknown, token
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new ApiError(r.status, data.code ?? "ERROR", data.message ?? "Request failed");
+  if (!r.ok) throw new ApiError(r.status, data.code ?? "ERROR", data.message ?? "Request failed", data);
   return data as T;
 }
 

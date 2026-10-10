@@ -51,3 +51,10 @@ All hosts, requests and temperatures in the hero scenario are invented; coordina
 - Agent model verified in a real run: `global.amazon.nova-2-lite-v1:0`. Hindi messages: acceptable for short requests (Devanagari, correct प्याऊ after prompt guidance), plain register; all model-written messages are shown to the coordinator before sending and need native review.
 - Prompt policy: askWindow = heat window widened by 1 h each side, clipped to host hours (so the fixture's 12:00-17:00 host acceptance is consistent). Code validates that askWindow contains the heat window.
 - Rider requests logged from the rider screen are stored separately (`RIDERREQ`), not in the coverage denominator, so the sample scenario's 44 stays exact.
+
+## Overnight decisions (10 Oct 2026)
+- Demo roles stay on signed demo tokens (all roles inside one session). Cognito sign-in screens were not built; the pool/groups and a JWT-protected `/auth/whoami` exist.
+- EventBridge Scheduler rules exist for 07:30 and 18:30 IST but act only on live zones (`PUBLIC#LIVEZONES`), none of which exist; demos use the manual trigger. Claimed as "wired", never as "ran".
+- Route throttling is per route across all clients (API Gateway), so limits are set above single-demo needs but below runaway levels.
+- Account Lambda concurrency limit is 10 (new-account default; the quota API refuses requests under the 1000 default). Normal demo use stays well under; a burst of >10 parallel calls returns 503.
+- Cap override item `PUBLIC#CAP#CONFIG` lets an operator lower/raise the agent-run and session caps without a redeploy.

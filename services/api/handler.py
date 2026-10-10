@@ -8,7 +8,7 @@ from pyau_domain.status import host_state
 
 from urllib.parse import unquote
 
-from . import asks, auth, coordinator, hosts as hostsmod, trust, coverage as coveragemod, ddb, events, help as helpmod, sessions
+from . import asks, auth, caps, coordinator, replays, hosts as hostsmod, trust, coverage as coveragemod, ddb, events, help as helpmod, sessions
 
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
@@ -73,7 +73,14 @@ def handler(event, context):
         if path == "/auth/whoami":
             claims = event["requestContext"].get("authorizer", {}).get("jwt", {}).get("claims", {})
             return resp(200, {"sub": claims.get("sub"), "groups": claims.get("cognito:groups")})
+        if method == "GET" and len(parts) == 2 and parts[0] == "replays":
+            r = replays.get(parts[1])
+            return resp(200, r) if r else err(404, "NOT_FOUND", "No such replay")
         if method == "POST" and parts == ["demo", "sessions"]:
+            try:
+                caps.take_session()
+            except caps.CapReached:
+                return err(429, "DEMO_CAP_REACHED", "The demo is very busy today. Please try again tomorrow.", False)
             s = sessions.create_session()
             s["token"] = auth.sign(s["sessionId"])
             return resp(201, s)
@@ -125,7 +132,8 @@ def handler(event, context):
             if method == "POST" and len(parts) == 3 and parts[0] == "asks" and parts[2] == "respond":
                 return resp(200, coordinator.respond(sid, unquote(parts[1]), body))
         except coordinator.Api as a:
-            return err(a.status, a.code, a.message, a.retryable)
+            out = {"code": a.code, "message": a.message, "retryable": a.retryable, **a.extra}
+            return resp(a.status, out)
         except trust.TrustError as t:
             return err(t.status, t.code, t.message)
         except hostsmod.HostError as h:

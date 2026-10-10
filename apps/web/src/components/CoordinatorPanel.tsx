@@ -88,7 +88,7 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
             <PlanReview proposal={detail.proposal} sessionId={sessionId} token={token} onDone={run.refresh} />
           )}
           <ProblemQueue sessionId={sessionId} zoneId={zoneId} token={token} />
-          <AgentPanel events={run.events} detail={detail} onRun={() => void run.start()} canRun={!busy} startError={run.startError} />
+          <AgentPanel events={run.events} detail={detail} onRun={() => void run.start()} canRun={!busy} startError={run.startError} replayId={run.replayId} />
         </div>
       </div>
     </div>

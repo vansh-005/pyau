@@ -3,13 +3,13 @@ import { approveProposal, rejectProposal, type Proposal } from "../api";
 
 const shortName = (l: string) => l.split("·").pop()!.split("(")[0].trim();
 
-export function PlanReview({ proposal, sessionId, token, onDone }: { proposal: Proposal; sessionId: string; token: string; onDone: () => void }) {
+export function PlanReview({ proposal, sessionId, token, onDone, readOnly }: { proposal: Proposal; sessionId: string; token: string; onDone: () => void; readOnly?: boolean }) {
   const [ack, setAck] = useState(false);
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [key] = useState(() => crypto.randomUUID());
-  const decided = proposal.status !== "PROPOSED";
+  const decided = readOnly || proposal.status !== "PROPOSED";
 
   const act = async (fn: () => Promise<unknown>) => {
     setBusy(true);
