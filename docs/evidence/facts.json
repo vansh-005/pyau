@@ -1,6 +1,6 @@
 {
- "verifiedFromRunId": "d10a4ffb5c5d9f0f8004",
- "executionName": "d10a4ffb5c5d9f0f8004",
+ "verifiedFromRunId": "6d8648e4d5da8b98432c",
+ "executionName": "6d8648e4d5da8b98432c",
  "sessionMode": "demo",
  "scenarioDate": "2026-05-21",
  "zone": "East Delhi sample zone",
@@ -22,9 +22,9 @@
   "total": 44
  },
  "coverageProjectedIfFirstChoiceAccepts": {
-  "covered": 40,
+  "total": 44,
   "percent": 90.9,
-  "total": 44
+  "covered": 40
  },
  "coverageAfter": {
   "covered": 40,
@@ -35,7 +35,7 @@
   {
    "clusterId": "D",
    "requests": 4,
-   "recommendation": "accept_gap_low_demand"
+   "recommendation": "recruit_host_nearby"
   }
  ],
  "outreach": {
@@ -96,5 +96,5 @@
  ],
  "appUrl": "https://main.d1lgs9hxx2cuwt.amplifyapp.com",
  "dataNote": "Sample scenario: hosts, requests and temperatures are invented; nothing here is an observed outcome.",
- "exportedAt": "2026-10-10T01:02:53Z"
+ "exportedAt": "2026-10-10T01:15:43Z"
 }
