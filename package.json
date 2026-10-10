@@ -1,10 +1,15 @@
 {
   "name": "pyau",
   "private": true,
-  "workspaces": ["infra", "apps/web"],
+  "workspaces": [
+    "infra",
+    "apps/web"
+  ],
   "scripts": {
     "infra:stage": "python scripts/stage_backend.py",
     "infra:synth": "npm run infra:stage && npm run synth --workspace infra",
-    "infra:deploy": "npm run infra:stage && npm run deploy --workspace infra"
+    "infra:deploy": "npm run infra:stage && npm run deploy --workspace infra",
+    "web:deploy": "python scripts/deploy_web.py",
+    "web:build": "npm run build --workspace apps/web"
   }
 }

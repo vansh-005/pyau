@@ -1,5 +1,7 @@
 # WAKE-UP — read this first
 
+> **UI FROZEN** at commit `53c8579` (release gate T13 passed: 3/3 consecutive full /demo loops on the deployed URL, authority gates 13/13, visual gate OK). The deployed site matches this commit. Layout, hero numbers and flow will not change. Later commits touch only backend prompt text, docs and scripts.
+
 **Summary (updated as I work)**
 1. **Done:** T00–T11 built, deployed and verified on AWS (agent, Step Functions loop, demo room, voice, host registration, trust loop). T12–T14 in progress overnight.
 2. **Live:** https://main.d1lgs9hxx2cuwt.amplifyapp.com — open `/demo` (the recording surface), `/host`, `/ride`.
