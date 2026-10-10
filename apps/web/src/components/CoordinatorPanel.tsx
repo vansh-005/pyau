@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getCoverage, type MapResponse } from "../api";
 import { isTerminal, type useRun } from "../hooks";
 import { AgentPanel } from "./AgentPanel";
+import { Loading } from "./Loading";
 import { HeatCurve } from "./HeatCurve";
 import { MapView } from "./MapView";
 import { OutreachBoard } from "./OutreachBoard";
@@ -36,6 +37,7 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
   return (
     <div className="flex h-full flex-col gap-3 overflow-hidden p-3">
       {cov.error && <p className="m-0 text-gap">{(cov.error as Error).message}</p>}
+      {!d && !cov.error && <Loading>Loading coverage…</Loading>}
       {d && (
         <div className="grid shrink-0 grid-cols-[1fr_330px] gap-3">
           <section className="card p-2">
@@ -44,7 +46,7 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
           </section>
           <section className="card flex flex-col justify-center p-3" aria-live="polite">
             {d.heat.status !== "OK" || !d.coverage ? (
-              <p className="m-0 font-semibold text-heat">
+              <p className="m-0 font-semibold text-heat-ink">
                 {d.heat.status === "INSUFFICIENT_DATA" ? "Insufficient forecast data — not treated as safe" : "No hours at or above the demo threshold"}
               </p>
             ) : (
@@ -56,13 +58,13 @@ export function CoordinatorPanel({ sessionId, zoneId, token, map, run }: Coordin
                   of <strong className="font-mono">{d.coverage.total}</strong> rider requests are near an open water point,{" "}
                   <strong className="font-mono">{d.coverage.window[0]}–{d.coverage.window[1]}</strong>
                 </p>
-                <p className="m-0 mt-1 font-mono text-sm text-muted">{d.coverage.covered}/{d.coverage.total} · radius {d.policy.coverageRadiusMeters} m</p>
-                <p className="m-0 mt-1 text-sm font-semibold text-gap">
+                <p className="m-0 mt-1 font-mono text-base text-muted">{d.coverage.covered}/{d.coverage.total} · radius {d.policy.coverageRadiusMeters} m</p>
+                <p className="m-0 mt-1 text-base font-semibold text-gap">
                   {d.coverage.uncoveredClusters.length ? `Uncovered: cluster ${d.coverage.uncoveredClusters.join(", ")}` : "Every cluster covered"}
                 </p>
               </>
             )}
-            <p className="m-0 mt-1 text-xs text-muted">Demo policy ({d.policy.heatThresholdC} °C, unvalidated). Sample scenario.</p>
+            <p className="m-0 mt-1 text-[14px] text-muted">Demo policy ({d.policy.heatThresholdC} °C, unvalidated). Sample scenario.</p>
           </section>
         </div>
       )}

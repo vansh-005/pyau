@@ -1,3 +1,4 @@
+import { Loading } from "../components/Loading";
 import { useQuery } from "@tanstack/react-query";
 import { getMap } from "../api";
 import { CoordinatorPanel } from "../components/CoordinatorPanel";
@@ -16,7 +17,7 @@ export default function Coordinate() {
   });
   const run = useRun(sid, session?.zoneId ?? "", session?.token ?? "", session?.scenarioDate ?? "");
   if (error) return <p className="p-4 text-gap">{error}</p>;
-  if (!session || !map.data) return <p className="p-4">Loading…</p>;
+  if (!session || !map.data) return <Loading>Loading the coordinator screen…</Loading>;
   return (
     <div className="mx-auto h-full max-w-6xl">
       <CoordinatorPanel sessionId={sid} zoneId={session.zoneId} token={session.token} map={map.data} run={run} />

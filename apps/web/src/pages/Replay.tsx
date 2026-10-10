@@ -1,3 +1,4 @@
+import { Loading } from "../components/Loading";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { api, type Ask, type CovNum, type Proposal, type Receipt } from "../api";
@@ -14,7 +15,7 @@ interface Replay {
 export default function ReplayPage() {
   const { id = "latest" } = useParams();
   const q = useQuery({ queryKey: ["replay", id], queryFn: () => api<Replay>("GET", `/replays/${id}`) });
-  if (q.isLoading) return <p className="p-4">Loading replay…</p>;
+  if (q.isLoading) return <Loading>Loading the saved run…</Loading>;
   if (q.error || !q.data) return <p className="p-4 text-gap">No such replay.</p>;
   const r = q.data;
   const before = r.proposal.coverageBefore, after = r.run.coverageCurrent;

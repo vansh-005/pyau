@@ -29,7 +29,7 @@ export function AskCard({ ask, serverTime, sessionId, token, onChanged }: { ask:
   if (fresh)
     return (
       <section className="card p-3">
-        <p className="m-0 text-sm font-semibold text-muted">Morning check · {ask.hostLabel}</p>
+        <p className="m-0 text-[15px] font-semibold text-muted">Morning check · {ask.hostLabel}</p>
         <p className="hi m-0 mt-1 text-xl font-semibold">{ask.message.hi}</p>
         <p className="m-0 text-base text-muted">{ask.message.en}</p>
         {ask.status === "OPEN" && (
@@ -49,12 +49,12 @@ export function AskCard({ ask, serverTime, sessionId, token, onChanged }: { ask:
     );
   return (
     <section className="card p-3">
-      <p className="m-0 text-sm font-semibold text-muted">Request from the Pyau coordinator</p>
+      <p className="m-0 text-[15px] font-semibold text-muted">Request from the Pyau coordinator</p>
       <p className="hi m-0 mt-1 text-[17px] leading-snug">{ask.message.hi}</p>
       <p className="m-0 mt-1 text-[15px] text-muted">{ask.message.en}</p>
       <p className="m-0 mt-2 font-mono text-base font-bold">{ask.window[0]}–{ask.window[1]}</p>
       {ask.status === "OPEN" && (
-        <p className="m-0 mt-1 inline-block rounded-full bg-heat/15 px-3 py-1 font-mono text-sm font-semibold text-heat">
+        <p className="m-0 mt-1 inline-block rounded-full bg-heat/15 px-3 py-1 font-mono text-[15px] font-semibold text-heat-ink">
           {open ? `${fmtClock(left ?? 0)} left` : "time is up"}
         </p>
       )}

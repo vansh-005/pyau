@@ -22,8 +22,8 @@ export function AgentPanel({ events, detail, onRun, canRun, startError, replayId
     <section className="card p-3">
       <div className="flex items-center gap-3">
         <h2 className="m-0 text-lg font-semibold">Coverage agent</h2>
-        {run && <span className="rounded-full bg-canvas px-2 py-0.5 font-mono text-sm">{run.status}</span>}
-        {started && <span className="font-mono text-sm text-muted">{elapsed}s</span>}
+        {run && <span className="rounded-full bg-canvas px-2 py-0.5 font-mono text-base">{run.status}</span>}
+        {started && <span className="font-mono text-base text-muted">{elapsed}s</span>}
         {!readOnly && (
           <button
             className="ml-auto min-h-11 rounded-lg bg-clay px-4 text-base font-semibold text-white disabled:opacity-50"
@@ -47,11 +47,11 @@ export function AgentPanel({ events, detail, onRun, canRun, startError, replayId
           <li key={e.seq} className="text-[15px]">
             <details>
               <summary className="cursor-pointer list-none">
-                <span className="font-mono text-sm text-muted">{fmtTime(e.at)}</span>{" "}
-                <span className="rounded bg-canvas px-1.5 py-0.5 font-mono text-xs uppercase text-muted">{TYPE_LABEL[e.type] ?? e.type}</span>{" "}
+                <span className="font-mono text-base text-muted">{fmtTime(e.at)}</span>{" "}
+                <span className="rounded bg-canvas px-1.5 py-0.5 font-mono text-[14px] uppercase text-muted">{TYPE_LABEL[e.type] ?? e.type}</span>{" "}
                 <span>{e.summary}</span>
               </summary>
-              <pre className="m-1 overflow-auto rounded-lg bg-canvas p-2 font-mono text-xs">
+              <pre className="m-1 overflow-auto rounded-lg bg-canvas p-2 font-mono text-[14px]">
                 {e.type === "tool_receipt"
                   ? `${(e.data as { tool?: string }).tool}(${(e.data as { input?: string }).input ?? ""})  ${(e.data as { durationMs?: number }).durationMs} ms\n→ ${(e.data as { output?: string }).output ?? ""}`
                   : JSON.stringify(e.data, null, 1)}

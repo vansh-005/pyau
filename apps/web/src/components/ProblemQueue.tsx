@@ -31,7 +31,7 @@ export function ProblemQueue({ sessionId, zoneId, token }: { sessionId: string; 
               <span className="font-semibold text-gap">⏸ Paused</span>
               <button className="ml-auto min-h-10 rounded-lg border border-border bg-white px-3 font-semibold" onClick={() => void act(p.hostId)}>Reactivate</button>
             </p>
-            <p className="m-0 text-sm text-muted">
+            <p className="m-0 text-base text-muted">
               {p.reason}{p.seeded ? " (sample scenario)" : ""}
               {p.reports.length > 0 && <> · reports: {p.reports.map((r) => KIND[r.kind] ?? r.kind).join(", ")}</>}
             </p>

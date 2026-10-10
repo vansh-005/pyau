@@ -122,7 +122,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
   return (
     <div className="flex h-full flex-col bg-canvas text-[15px]">
       {locations.length > 1 && (
-        <div className="flex items-center gap-2 border-b border-border bg-white px-2 py-1 text-sm" role="group" aria-label="Demo rider location">
+        <div className="flex items-center gap-2 border-b border-border bg-white px-2 py-1 text-[15px]" role="group" aria-label="Demo rider location">
           <span className="text-muted">Demo location:</span>
           {locations.map((l) => (
             <button key={l.id} aria-pressed={locId === l.id} onClick={() => { setLocId(l.id); setAnswer(null); setFb(null); }}
@@ -148,22 +148,22 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
             {answer.host && (
               <p className="m-0 flex flex-wrap items-baseline gap-x-2">
                 <strong className="text-lg">{answer.host.label}</strong>
-                <span className="font-mono text-sm text-muted">{answer.host.id}</span>
+                <span className="font-mono text-[15px] text-muted">{answer.host.id}</span>
               </p>
             )}
             <p className="hi m-0 mt-1 text-base leading-snug">{answer.answer.hi}</p>
-            <p className="m-0 mt-1 text-sm text-muted">{answer.answer.en}</p>
+            <p className="m-0 mt-1 text-[15px] text-muted">{answer.answer.en}</p>
             {answer.found && answer.host && (
-              <p className="m-0 mt-2 text-sm">
+              <p className="m-0 mt-2 text-[15px]">
                 <span className="font-mono font-semibold">
                   {answer.distanceM} m
                   {answer.route ? ` · ~${Math.max(1, Math.round(answer.route.durationS / 60))} min by scooter` : ""}
                 </span>
-                {answer.approximate && <span className="text-heat"> · approximate</span>}
+                {answer.approximate && <span className="text-heat-ink"> · approximate</span>}
               </p>
             )}
             {!answer.found && (
-              <p className="m-0 mt-2 text-sm font-medium text-gap">
+              <p className="m-0 mt-2 text-[15px] font-medium text-gap">
                 {hi.nothingNearby} · {en.nothingNearby}
               </p>
             )}
@@ -189,7 +189,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
                   </div>
                 )}
                 {fb?.result && (
-                  <p className="m-0 text-sm font-semibold" role="status">
+                  <p className="m-0 text-[15px] font-semibold" role="status">
                     {fb.result.kind === "got_it"
                       ? "Thanks! 🙏 Good to hear."
                       : fb.result.pausedNow
@@ -197,7 +197,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
                         : `Thanks — reported (${fb.result.problemCount} of ${fb.result.threshold} before a point is paused).`}
                   </p>
                 )}
-                {fb?.error && <p className="m-0 text-sm font-semibold text-gap">{fb.error}</p>}
+                {fb?.error && <p className="m-0 text-[15px] font-semibold text-gap">{fb.error}</p>}
               </div>
             )}
             <div className="mt-2 flex gap-2">
@@ -207,7 +207,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
                   {playing === "blocked" ? " (tap)" : ""}
                 </button>
               ) : (
-                <span className="flex-1 self-center text-sm text-muted">Audio unavailable — text answer above</span>
+                <span className="flex-1 self-center text-[15px] text-muted">Audio unavailable — text answer above</span>
               )}
               {answer.route && (
                 <button
@@ -222,7 +222,7 @@ export function RiderPanel({ sessionId, zoneId, center, hosts, locations, onAnsw
           </section>
         )}
         {transcript !== null && (
-          <p className="m-0 rounded-lg bg-white p-2 text-sm" aria-live="polite">
+          <p className="m-0 rounded-lg bg-white p-2 text-[15px]" aria-live="polite">
             <span className="text-muted">सुना / Heard:</span> <span className="hi font-semibold">“{transcript || "…"}”</span>
           </p>
         )}

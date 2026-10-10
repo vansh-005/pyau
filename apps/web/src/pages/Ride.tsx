@@ -1,3 +1,4 @@
+import { Loading } from "../components/Loading";
 import { useQuery } from "@tanstack/react-query";
 import { getMap } from "../api";
 import { RiderPanel } from "../components/RiderPanel";
@@ -13,7 +14,7 @@ export default function Ride() {
     refetchInterval: 5000,
   });
   if (error) return <p className="p-4 text-gap">{error}</p>;
-  if (!session || !map.data) return <p className="p-4">Loading…</p>;
+  if (!session || !map.data) return <Loading>Loading the rider screen…</Loading>;
   return (
     <div className="mx-auto h-full max-w-md">
       <RiderPanel

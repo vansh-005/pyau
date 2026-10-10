@@ -36,7 +36,7 @@ export function PlanReview({ proposal, sessionId, token, onDone, readOnly }: { p
     <section className="card p-3">
       <div className="flex items-center gap-3">
         <h2 className="m-0 text-lg font-semibold">Plan for review</h2>
-        <span className="rounded-full bg-canvas px-2 py-0.5 font-mono text-sm">{proposal.status}</span>
+        <span className="rounded-full bg-canvas px-2 py-0.5 font-mono text-base">{proposal.status}</span>
       </div>
       <p className="m-0 mt-1 text-[15px] text-muted">{proposal.explanation}</p>
       {proposal.gaps.map((g) => (
@@ -45,7 +45,7 @@ export function PlanReview({ proposal, sessionId, token, onDone, readOnly }: { p
             Cluster {g.clusterId} · <span className="font-mono">{g.requests}</span> requests · ask window{" "}
             <span className="font-mono">{g.askWindow[0]}–{g.askWindow[1]}</span>
           </p>
-          <p className="m-0 mt-1 text-sm text-muted">Ask in this order (fixed by code):</p>
+          <p className="m-0 mt-1 text-base text-muted">Ask in this order (fixed by code):</p>
           {g.candidateOrder.map((h, i) => {
             const m = g.messages[h];
             const c = g.candidates.find((x) => x.hostId === h);
@@ -56,14 +56,14 @@ export function PlanReview({ proposal, sessionId, token, onDone, readOnly }: { p
                   <span className="font-semibold">{c ? shortName(c.label) : ""}</span>
                   {c && <span className="text-muted">· {c.distanceM} m from cluster centre · {c.kind}</span>}
                   {!decided && (
-                    <button className="ml-auto rounded border border-border bg-white px-2 py-0.5 text-sm" onClick={() => toggle(h)}>
+                    <button className="ml-auto rounded border border-border bg-white px-2 py-0.5 text-base" onClick={() => toggle(h)}>
                       {removed.has(h) ? "Keep" : "Remove"}
                     </button>
                   )}
                 </div>
                 <p className="hi m-0 mt-1 text-base leading-snug">{m.hi}</p>
-                <p className="m-0 mt-1 text-sm text-muted">{m.en}</p>
-                <p className="m-0 mt-1 font-mono text-sm">window {m.window[0]}–{m.window[1]}{m.trimmed ? " (trimmed to host hours)" : ""} · buttons: हाँ / Yes · नहीं / No</p>
+                <p className="m-0 mt-1 text-base text-muted">{m.en}</p>
+                <p className="m-0 mt-1 font-mono text-base">window {m.window[0]}–{m.window[1]}{m.trimmed ? " (trimmed to host hours)" : ""} · buttons: हाँ / Yes · नहीं / No</p>
               </div>
             );
           })}

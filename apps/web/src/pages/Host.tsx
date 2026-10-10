@@ -1,3 +1,4 @@
+import { Loading } from "../components/Loading";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FieldError, getMap, hostAsks, registerHost, reverseGeocode, runFreshness, type Ask, type RegisteredHost } from "../api";
@@ -120,7 +121,7 @@ export default function Host() {
     }
   };
 
-  if (!session || !map.data) return <p className="p-4">Loading…</p>;
+  if (!session || !map.data) return <Loading>Loading the host screen…</Loading>;
   const myState = (id: string) => map.data!.hosts.find((h) => h.id === id);
   const toggleOffer = (o: string) => setOffers((v) => (v.includes(o) ? v.filter((x) => x !== o) : [...v, o]));
   const Err = ({ k }: { k: string }) => (fields[k] ? <p className="m-0 mt-1 text-sm font-semibold text-gap" role="alert">{fields[k]}</p> : null);
@@ -136,7 +137,7 @@ export default function Host() {
           <p className="hi m-0 text-lg">अपना पानी पॉइंट जोड़ें</p>
           <p className="m-0 text-sm text-muted">Sample scenario · demo session {sid.slice(0, 6)}</p>
         </header>
-        {notice && <p className="m-0 rounded-lg bg-ok/10 p-2 font-medium text-ok" role="status">{notice}</p>}
+        {notice && <p className="m-0 rounded-lg border border-ok bg-white p-2 font-medium text-ok" role="status">{notice}</p>}
         {(inbox.data ?? []).length > 0 && (
           <section className="space-y-2" aria-label="Inbox">
             {(inbox.data as Ask[]).map((a) => (

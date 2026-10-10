@@ -1,3 +1,4 @@
+import { Loading } from "../components/Loading";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { getMap, setClock } from "../api";
@@ -39,7 +40,7 @@ export default function Demo() {
   const run = useRun(sid, zone, token, session?.scenarioDate ?? "");
 
   if (error) return <p className="p-4 text-gap">{error}</p>;
-  if (!session || !map.data) return <p className="p-4">Starting a fresh demo session…</p>;
+  if (!session || !map.data) return <Loading>Starting a fresh demo session…</Loading>;
 
   const clock = map.data.clock;
   const jump = async () => {
@@ -74,12 +75,12 @@ export default function Demo() {
       <header className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border bg-panel px-4 py-2">
         <span className="font-serif text-2xl font-semibold text-clay">Pyau</span>
         <span className="text-base">Demo room · {map.data.zone.name}</span>
-        <span className="rounded-full bg-heat/15 px-3 py-1 text-base font-semibold text-heat">{map.data.badge}</span>
+        <span className="rounded-full bg-heat/15 px-3 py-1 text-base font-semibold text-heat-ink">{map.data.badge}</span>
         <span className="rounded-full bg-ink px-3 py-1 font-mono text-base text-white">Demo timers: {session.demoTimersSeconds} s</span>
         <span className="ml-auto text-base">
           Clock: <strong className="font-mono">{clockText(clock)}</strong>
         </span>
-        <button className="min-h-10 rounded-lg bg-heat px-3 text-base font-semibold text-white disabled:opacity-50" onClick={() => void jump()} disabled={clock.time === "14:00"}>
+        <button className="min-h-10 rounded-lg bg-heat-ink px-3 text-base font-semibold text-white disabled:opacity-50" onClick={() => void jump()} disabled={clock.time === "14:00"}>
           Jump to 14:00 tomorrow
         </button>
         <button className="min-h-10 rounded-lg border border-border px-3 text-base" onClick={() => void copy()} disabled={!run.runId}>
@@ -94,7 +95,7 @@ export default function Demo() {
           <span>
             <strong>1.</strong> Run the plan → <strong>2.</strong> Approve → <strong>3.</strong> Answer as a host → <strong>4.</strong> Ask as a rider
           </span>
-          <button className="ml-auto text-sm underline" onClick={dismissCoach}>Dismiss</button>
+          <button className="ml-auto text-base underline" onClick={dismissCoach}>Dismiss</button>
         </div>
       )}
       {jumpErr && <p className="m-0 px-4 text-gap">{jumpErr}</p>}

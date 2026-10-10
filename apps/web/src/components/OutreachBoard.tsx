@@ -6,7 +6,7 @@ const name = (a: Ask) => a.hostLabel ?? a.hostId;
 function Step({ ask, serverTime }: { ask: Ask; serverTime: number }) {
   const left = useCountdown(ask.status === "OPEN" ? ask.expiresAt : null, serverTime);
   if (ask.status === "OPEN")
-    return <li className="text-heat">⏳ Asking <strong>{name(ask)}</strong> · <span className="font-mono">{fmtClock(left ?? 0)} left</span></li>;
+    return <li className="text-heat-ink">⏳ Asking <strong>{name(ask)}</strong> · <span className="font-mono">{fmtClock(left ?? 0)} left</span></li>;
   if (ask.status === "TIMED_OUT") return <li className="text-gap">✗ {name(ask)}: no reply — timed out</li>;
   if (ask.status === "DECLINED") return <li className="text-gap">✗ {name(ask)} said No</li>;
   return <li className="text-ok">✓ {name(ask)} accepted <span className="font-mono">{ask.window[0]}–{ask.window[1]}</span> (host confirmed)</li>;
