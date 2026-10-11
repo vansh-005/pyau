@@ -1,10 +1,10 @@
 {
  "verifiedRun": {
-  "runId": "e6797b6498180215fe97",
-  "executionArnSuffix": "execution:pyau-CoverageRun:e6797b6498180215fe97",
+  "runId": "52900492601e15d3b307",
+  "executionArnSuffix": "execution:pyau-CoverageRun:52900492601e15d3b307",
   "executionStatus": "SUCCEEDED",
-  "startedAt": "2026-10-10T21:44:18.406000+05:30",
-  "stoppedAt": "2026-10-10T21:45:29.051000+05:30",
+  "startedAt": "2026-10-11T09:47:41.579000+05:30",
+  "stoppedAt": "2026-10-11T09:49:34.191000+05:30",
   "events": [
    {
     "seq": 1,
@@ -49,50 +49,55 @@
    {
     "seq": 9,
     "type": "tool_receipt",
-    "summary": "Proposal submitted · projected 40/44 if first choices accept"
+    "summary": "Proposal rejected by validation (1 issue)"
    },
    {
     "seq": 10,
+    "type": "tool_receipt",
+    "summary": "Proposal submitted · projected 40/44 if first choices accept"
+   },
+   {
+    "seq": 11,
     "type": "proposal_ready",
     "summary": "Proposal ready for coordinator review"
    },
    {
-    "seq": 11,
+    "seq": 12,
     "type": "awaiting_approval",
     "summary": "Waiting for coordinator approval"
    },
    {
-    "seq": 12,
+    "seq": 13,
     "type": "plan_approved",
     "summary": "Coordinator approved the plan · 1 gap(s) to work"
    },
    {
-    "seq": 13,
+    "seq": 14,
     "type": "ask_sent",
     "summary": "Asking Kirana store · 45 s to answer"
    },
    {
-    "seq": 14,
+    "seq": 15,
     "type": "ask_timed_out",
     "summary": "No reply from Kirana store — timed out, moving to the next host"
    },
    {
-    "seq": 15,
+    "seq": 16,
     "type": "ask_sent",
     "summary": "Asking RWA office · 45 s to answer"
    },
    {
-    "seq": 16,
+    "seq": 17,
     "type": "ask_answered",
     "summary": "RWA office said Yes · 12:00–17:00"
    },
    {
-    "seq": 17,
+    "seq": 18,
     "type": "point_published",
     "summary": "RWA office is live for riders 12:00–17:00 (host confirmed) · coverage 40/44 (90.9%)"
    },
    {
-    "seq": 18,
+    "seq": 19,
     "type": "run_completed",
     "summary": "Run completed · coverage 50% → 90.9% (40/44) · still open: Area D · near Nirman Vihar Metro"
    }
