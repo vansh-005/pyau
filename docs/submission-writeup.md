@@ -1,6 +1,6 @@
 # Pyau — submission writeup
 
-**Project:** Pyau · **Track:** 02 Heat and Water · **Repo:** https://github.com/vansh-005/pyau · **Live demo:** https://main.d1lgs9hxx2cuwt.amplifyapp.com/demo · **Video:** <<VIDEO_URL>>
+**Project:** Pyau · **Track:** 02 Heat and Water · **Repo:** https://github.com/vansh-005/pyau · **Live demo:** https://main.d1lgs9hxx2cuwt.amplifyapp.com/demo · **Video:** https://www.youtube.com/watch?v=E_DlsfEabYc
 
 Every sentence below is limited to behaviour verified on the deployed app (see `docs/evidence/` and `tasks.md`). The demo uses a documented synthetic East Delhi scenario on a real map; its numbers are scenario arithmetic, not measured impact.
 
@@ -35,11 +35,11 @@ In our synthetic East Delhi scenario, 44 rider water requests fall in the 13:00�
 
 ## Honest limits
 
-Sample data; the 42 °C / 500 m / 45 s demo policy is unvalidated; a host's yes is a promise, not verified water; Hindi needs native review (coordinators read every message before anything is sent); the voice question in the video is a synthetic voice (Amazon Polly) played into the microphone, not a real rider; no rider, host or coordinator has validated the workflow; the forecast in the demo is the fixture curve; the agent runs on Nova 2 Lite because Anthropic models were not enabled for this account; one of about ten scripted browser loops stalled once on a UI wait (backend healthy) and could not be reproduced afterwards.
+Sample data; the 42 °C / 500 m / 45 s demo policy is unvalidated; a host's yes is a promise, not verified water; Hindi needs native review (coordinators read every message before anything is sent); the rider's voice question in the video is a synthetic Amazon Polly voice played into the microphone, not a real rider; no rider, host or coordinator has validated the workflow; the forecast in the demo is the fixture curve; the agent runs on Nova 2 Lite because Anthropic models were not enabled for this account; one of about ten scripted browser loops stalled once on a UI wait (backend healthy) and could not be reproduced afterwards.
 
 ## AI disclosure
 
-We used Claude Code (Claude Opus 5.5 and Claude Sonnet 5.5) to write and debug most of the application, infrastructure code, tests and scripts under our direction, to record the demo footage with Playwright scripts against the deployed app, and, with Remotion, to assemble the video. We reviewed generated code and verified it with unit tests, deployed end-to-end checks, a failure-injection gate and consecutive real-browser loops on the deployed URL. At runtime Pyau uses Strands Agents with Amazon Nova 2 Lite on Amazon Bedrock, Amazon Polly (Kajal) and Amazon Transcribe. The rider's spoken question in the video is synthetic (Amazon Polly); everything else on screen is the real app on AWS with sample-scenario data. Map data © AWS, HERE. AWS Architecture Icons © Amazon Web Services.
+We used Claude Code (Claude Opus 5.5 and Claude Sonnet 5.5) to write and debug most of the application, infrastructure code, tests and scripts under our direction, and to record the demo footage with Playwright scripts against the deployed app. The video was made with Remotion and Claude Code; its narration is Kokoro-82M, a stock AI voice. We reviewed generated code and verified it with unit tests, deployed end-to-end checks, a failure-injection gate and consecutive real-browser loops on the deployed URL. At runtime Pyau uses Strands Agents with Amazon Nova 2 Lite on Amazon Bedrock, Amazon Polly (Kajal) and Amazon Transcribe. In the video, the rider's spoken question is a synthetic Amazon Polly voice played into the microphone; the app's spoken answers are real Polly output; everything else on screen is the real app on AWS with sample-scenario data. Map data © AWS, HERE. AWS Architecture Icons © Amazon Web Services.
 
 ## Blog outline (optional, Builder Center)
 

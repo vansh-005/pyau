@@ -1,5 +1,12 @@
 # WAKE-UP — read this first
 
+## SUBMISSION PREP DONE (11 Oct 2026)
+
+- `VIDEO_URL` = https://www.youtube.com/watch?v=E_DlsfEabYc, deployed; the landing's "Watch the 3-minute video" button opens it in a new tab and the video plays signed out.
+- AI disclosure updated everywhere (site footer en/hi, README, `docs/submission-writeup.md`, `docs/youtube.md`, `docs/SUBMIT.md`): Kokoro-82M narration, synthetic Polly rider question, real Polly answers, Claude Code, Remotion, Strands + Nova 2 Lite.
+- Agent-run cap override lowered to **40** (stored setting, effective immediately; no stack redeploy needed). Final signed-out checks passed: `/`, full `/demo` loop (run `9a2c10e0ca9aac9987cb`), `/engineering`, `/replay/latest`; repo public; no `.env` or secrets tracked.
+- Copy-paste form blocks: `docs/SUBMIT.md`. Nothing has been submitted for you.
+
 ## FINAL-DAY REPORT (11 Oct 2026): footage, evidence and submission text are ready
 
 **Status:** all eight clips are recorded on the deployed app and copied to `../pyau-video/public/footage/`; evidence and cue sheet are in `../pyau-video/evidence/`. The product was not touched (no UI or behaviour change). Waiting only for the YouTube link (step 5).

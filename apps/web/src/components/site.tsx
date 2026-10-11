@@ -57,7 +57,7 @@ export function Section({ id, title, children, intro }: { id?: string; title: Re
 const FOOT = {
   en: {
     repo: "Source code on GitHub", sources: "All sources", built: "Built by Vansh Deep Singh",
-    ai: "AI tools used: Claude Code (Claude Opus 5.5 and Claude Sonnet 5.5) wrote and debugged most of the code under direction, checked by tests and deployed end-to-end checks. At runtime Pyau uses Strands Agents with Amazon Nova 2 Lite on Amazon Bedrock, Amazon Polly and Amazon Transcribe.",
+    ai: "AI tools used: Claude Code (Claude Opus 5.5 and Claude Sonnet 5.5) wrote and debugged most of the code under direction, checked by tests and deployed end-to-end checks. The video was made with Remotion and Claude Code; its narration is Kokoro-82M, a stock AI voice. At runtime Pyau uses Strands Agents with Amazon Nova 2 Lite on Amazon Bedrock, Amazon Polly (the app's spoken answers are real Polly output) and Amazon Transcribe. The rider's spoken question in the demo video is a synthetic Polly voice.",
     credits: "Credits: MapLibre GL JS, React, Vite, Tailwind CSS, TanStack Query, Lucide icons, Inter and Noto Sans Devanagari (Fontsource), Pydantic, AWS CDK. Map data © AWS, HERE.",
     sample: "The demo uses a documented synthetic scenario on a real map. Hosts, requests and temperatures are invented.",
     event: "Made for WeMakeDevs × AWS Environmental Hacks, Track 02 Heat and Water.",
@@ -65,7 +65,7 @@ const FOOT = {
   },
   hi: {
     repo: "GitHub पर सोर्स कोड", sources: "सभी स्रोत", built: "वंश दीप सिंह द्वारा बनाया गया",
-    ai: "इस्तेमाल किए गए AI टूल: Claude Code (Claude Opus 5.5 और Claude Sonnet 5.5) ने निर्देश के तहत ज़्यादातर कोड लिखा और जाँचा, जिसे टेस्ट और डिप्लॉय किए गए एंड-टू-एंड परीक्षणों से परखा गया। चलते समय प्याऊ Amazon Bedrock पर Strands Agents और Amazon Nova 2 Lite, Amazon Polly और Amazon Transcribe इस्तेमाल करता है।",
+    ai: "इस्तेमाल किए गए AI टूल: Claude Code (Claude Opus 5.5 और Claude Sonnet 5.5) ने निर्देश के तहत ज़्यादातर कोड लिखा और जाँचा, जिसे टेस्ट और डिप्लॉय किए गए एंड-टू-एंड परीक्षणों से परखा गया। वीडियो Remotion और Claude Code से बना है; उसकी नैरेशन Kokoro-82M है, एक स्टॉक AI आवाज़। चलते समय प्याऊ Amazon Bedrock पर Strands Agents और Amazon Nova 2 Lite, Amazon Polly (ऐप के बोले हुए जवाब असली Polly आउटपुट हैं) और Amazon Transcribe इस्तेमाल करता है। डेमो वीडियो में राइडर का बोला हुआ सवाल एक कृत्रिम Polly आवाज़ है।",
     credits: "श्रेय: MapLibre GL JS, React, Vite, Tailwind CSS, TanStack Query, Lucide आइकन, Inter और Noto Sans Devanagari (Fontsource), Pydantic, AWS CDK. नक्शे का डेटा © AWS, HERE.",
     sample: "डेमो असली नक्शे पर एक दर्ज किए गए कृत्रिम परिदृश्य का इस्तेमाल करता है। होस्ट, अनुरोध और तापमान काल्पनिक हैं।",
     event: "WeMakeDevs × AWS Environmental Hacks, ट्रैक 02 गर्मी और पानी के लिए बनाया गया।",

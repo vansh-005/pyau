@@ -1,6 +1,6 @@
 # YouTube upload text — Pyau
 
-Fill `<<VIDEO_URL>>` references after upload (the writeup uses the same token). Nothing here has been uploaded.
+Fill `https://www.youtube.com/watch?v=E_DlsfEabYc` references after upload (the writeup uses the same token). Nothing here has been uploaded.
 
 ## Title (pick one; each is under 100 characters)
 
@@ -28,7 +28,7 @@ Try it (no sign-up): https://main.d1lgs9hxx2cuwt.amplifyapp.com/demo
 Source code: https://github.com/vansh-005/pyau
 How it is built: https://main.d1lgs9hxx2cuwt.amplifyapp.com/engineering
 
-AI tools used: Claude Code (Claude Opus 5.5 and Claude Sonnet 5.5) wrote and debugged most of the code, recorded the demo footage with Playwright scripts, and, with Remotion, helped assemble this video; at runtime the app uses Amazon Nova 2 Lite on Amazon Bedrock. Everything on screen is the real app on AWS with sample data.
+AI tools used: Claude Code (Claude Opus 5.5 and Claude Sonnet 5.5) wrote and debugged most of the code and recorded the demo footage with Playwright scripts; the video was made with Remotion and Claude Code; the narration is Kokoro-82M, a stock AI voice. At runtime the app uses Strands Agents with Amazon Nova 2 Lite on Amazon Bedrock, Amazon Polly and Amazon Transcribe. The rider's spoken question in this video is a synthetic Amazon Polly voice; the app's spoken answers are real Polly output; everything else on screen is the real app on AWS with sample data.
 
 Made for the WeMakeDevs × AWS Environmental Hacks, Track 02: Heat and Water.
 Map data © AWS, HERE. AWS Architecture Icons © Amazon Web Services.

@@ -1,6 +1,6 @@
-/** External links used by the public pages. Fill VIDEO_URL when the 3-minute video is uploaded. */
+/** External links used by the public pages. */
 export const GITHUB_URL = "https://github.com/vansh-005/pyau";
-export const VIDEO_URL = ""; // placeholder: set to the YouTube link before submission
+export const VIDEO_URL = "https://www.youtube.com/watch?v=E_DlsfEabYc";
 export const SOURCES_URL = `${GITHUB_URL}/blob/main/sources.md`;
 
 export const SRC = {
